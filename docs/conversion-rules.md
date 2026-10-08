@@ -8,6 +8,13 @@ Every rule below is implemented in `src/` and covered by tests in `tests/`.
    Characters are checked **before** case mapping, because `toUpperCase()` can change the length of
    non-ASCII text. Typographic dashes (`—`) get a specific hint.
 2. Lowercase and surrounding whitespace are normalized with a warning; `strictInput: true` rejects them.
+   Two conventions of web symbol lists are also undone (warnings, rejected by `strictInput`):
+   - `—` is read as `---` and `–` as `--`, only when the result has exactly 15 characters
+     (`TYPOGRAPHIC_DASHES_REPAIRED`).
+   - A `*` in positions 11-15 where the matching 2525C table row has a fixed value is replaced by it:
+     the `X` of tactical graphics, the installation `H`, the METOC graphic type and unused tail
+     (`FIXED_POSITIONS_FILLED`). Only done when every table row that fits the input agrees on the
+     value; `WO-DHCF--*****` stays invalid because Foreshore exists as point, line and area.
 3. Exactly 15 characters. Shorter forms (10- or 12-character prefixes) are rejected: positions are
    never guessed.
 4. Field values are checked against the table of the coding scheme in position 1

@@ -147,7 +147,10 @@ describe("input validation", () => {
     it("rejects * outside the user-defined positions", () => {
       expect(validateSidc("SFGPUC*--------").valid).toBe(false);
       expect(validateSidc("*FGPUCI--------").valid).toBe(false);
-      expect(validateSidc("WAS-PL----P---*").valid).toBe(false);
+      expect(validateSidc("WAS-*L----P----").valid).toBe(false);
+      expect(validateSidc("WAS-PL----P---*", { strictInput: true }).valid).toBe(
+        false,
+      );
     });
     it("rejects partial wildcards that no table value completes", () => {
       expect(validateSidc("SFGPUCI---Z*---").valid).toBe(false);
@@ -162,5 +165,45 @@ describe("hostile input objects", () => {
     const r = convertSidc({ toString: 0 } as unknown as string);
     expect(r.success).toBe(false);
     expect(r.diagnostics[0]?.code).toBe("INVALID_TYPE");
+  });
+});
+
+describe("codes copied from web lists", () => {
+  const v = (s: string, o = {}) => {
+    const r = validateSidc(s, o);
+    return [r.valid, r.normalized, r.diagnostics.map((x) => x.code)];
+  };
+
+  it("reads an em dash as --- and an en dash as -- when that gives 15 characters", () => {
+    expect(v("SFAPMFF—*****")).toEqual([
+      true,
+      "SFAPMFF---*****",
+      ["TYPOGRAPHIC_DASHES_REPAIRED"],
+    ]);
+    expect(v("SFGPUCI–-*****")[1]).toBe("SFGPUCI---*****");
+    // 12 characters after repair: still an error, nothing is guessed.
+    expect(v("SFGPUCI—–")[0]).toBe(false);
+  });
+
+  it("strictInput rejects typographic dashes", () => {
+    expect(v("SFAPMFF—*****", { strictInput: true })[2]).toContain(
+      "INVALID_CHARACTERS",
+    );
+  });
+
+  it.each([
+    ["GFTPA-----*****", "GFTPA-----****X"], // Table B-I: X in position 15
+    ["SFGPIXH---*****", "SFGPIXH---H****"], // installation indicator
+    ["WAS-WSVE--*****", "WAS-WSVE--P----"], // METOC graphic type and unused tail
+    ["WO-DHPBA--*L***", "WO-DHPBA---L---"], // given characters pick the table row
+  ])("fills fixed positions of %s", (input, out) => {
+    expect(v(input)).toEqual([true, out, ["FIXED_POSITIONS_FILLED"]]);
+  });
+
+  it("leaves user-defined positions and strict input alone", () => {
+    expect(v("SFGPUCI---*****")).toEqual([true, "SFGPUCI---*****", []]);
+    expect(v("GFTPA-----*****", { strictInput: true })[1]).toBe(
+      "GFTPA-----*****",
+    );
   });
 });

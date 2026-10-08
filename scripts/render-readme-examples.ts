@@ -23,6 +23,26 @@ const EXAMPLES = [
   "SFGPUCI---AF---", // headquarters battalion
   "SHGPUCA---EE---", // task force company
 ];
+// How the symbol.army 2525C list prints each symbol: its dash typography, always friend/present,
+// "*****" tail. Checked below: with the input's modifier fields as options it converts like the
+// input does once affiliation and status are friend/present.
+const LIST_FORMS: Record<string, string> = {
+  "SFGPUCIC---E---": "SFGPUCIC\u2013*****",
+  "SHAPMFB--------": "SFAPMFB\u2014*****",
+  "SNSPCLFF-------": "SFSPCLFF\u2013*****",
+  "SFGPIXH---H----": "SFGPIXH\u2014H****",
+  "SHGPEVAT-------": "SFGPEVAT\u2013*****",
+  "SPGPUCI--------": "SFGPUCI\u2014*****",
+  "SFGAUCI----F---": "SFGPUCI\u2014*****",
+  "SFGPUCI---AF---": "SFGPUCI\u2014*****",
+  "SHGPUCA---EE---": "SFGPUCA\u2014*****",
+};
+const tailOf = (s: string): ConversionOptions => ({
+  symbolModifier: s.slice(10, 12),
+  countryCode: s.slice(12, 14),
+  orderOfBattle: s[14]!,
+});
+const asFriendPresent = (s: string) => `${s[0]}F${s[2]}P${s.slice(4)}`;
 const TARGETS: [SidcStandard, Std][] = [
   ["MIL-STD-2525D", "2525"],
   ["APP-6D", "APP6"],
@@ -54,13 +74,21 @@ const run = (s: string, t: SidcStandard, o: ConversionOptions = {}) =>
 // ---- Table 1: standards side by side
 const t1: string[] = [];
 t1.push(
-  `| MIL-STD-2525C | Symbol | ${TARGETS.map(([t]) => `${t} | Symbol`).join(" | ")} |`,
+  `| MIL-STD-2525C | symbol.army list | Symbol | ${TARGETS.map(([t]) => `${t} | Symbol`).join(" | ")} |`,
 );
-t1.push(`| --- | --- | ${TARGETS.map(() => "--- | ---").join(" | ")} |`);
+t1.push(`| --- | --- | --- | ${TARGETS.map(() => "--- | ---").join(" | ")} |`);
 EXAMPLES.forEach((s, i) => {
   const first = run(s, "MIL-STD-2525D");
+  const listed = LIST_FORMS[s];
+  if (
+    !listed ||
+    run(listed, "MIL-STD-2525D", tailOf(s)).output !==
+      run(asFriendPresent(s), "MIL-STD-2525D").output
+  )
+    throw new Error(`symbol.army form of ${s} does not convert like it`);
   const cells = [
     `\`${s}\`${sub(first.metadata?.legacyDescription)}`,
+    `\`${listed}\`${sub(asFriendPresent(s) === s ? "" : "friend, present")}`,
     svg(s, "2525", `example${i + 1}-2525C`),
   ];
   for (const [t, std] of TARGETS) {
