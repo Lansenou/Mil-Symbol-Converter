@@ -298,10 +298,10 @@ were not produced by the converter.
 
 ## Publishing
 
-Pushing a `v*` tag that matches `version` in `package.json` (e.g. `git tag v0.1.0 && git push origin
-v0.1.0`) runs `.github/workflows/package.yml`: it tests, packs and attaches the tarball to a GitHub
-release of that name. That needs no npm account. (A release created by the workflow does not trigger
-the npm workflow below.)
+`.github/workflows/package.yml` tests, packs and attaches the tarball to a GitHub release named
+`v<version>` (from `package.json`). Run it from Actions → Package → _Run workflow_ (it creates the tag),
+or push a matching `v*` tag. That needs no npm account. (A release created by the workflow does not
+trigger the npm workflow below.)
 
 `.github/workflows/release.yml` publishes to npm when a GitHub release is published. It uses
 [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers): GitHub Actions proves its

@@ -1,14 +1,16 @@
-# Attaches a prebuilt npm tarball to a GitHub release when a v* tag is pushed.
-# Installing the tarball needs no build and no dev dependencies:
+# Attaches a prebuilt npm tarball to a GitHub release named v<package.json version>.
+# Runs when a v* tag is pushed, or manually (Actions > Package > Run workflow), which creates the
+# tag on the chosen commit. Installing the tarball needs no build and no dev dependencies:
 #   npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/<tag>/mil-symbol-converter-<version>.tgz
 name: Package
 
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
-  contents: write # create the release and upload the tarball
+  contents: write # create the release (and its tag) and upload the tarball
 
 jobs:
   package:
@@ -20,13 +22,16 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm run check
-      - name: Check tag matches package.json version
-        run: test "v$(node -p 'require("./package.json").version')" = "$GITHUB_REF_NAME"
+      - name: Release tag from package.json
+        run: echo "TAG=v$(node -p 'require("./package.json").version')" >> "$GITHUB_ENV"
+      - name: Check a pushed tag matches the version
+        if: github.ref_type == 'tag'
+        run: test "$TAG" = "$GITHUB_REF_NAME"
       - run: npm pack
       - name: Create or update the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
-            || gh release create "$GITHUB_REF_NAME" --generate-notes
-          gh release upload "$GITHUB_REF_NAME" mil-symbol-converter-*.tgz --clobber
+          gh release view "$TAG" >/dev/null 2>&1 \
+            || gh release create "$TAG" --target "$GITHUB_SHA" --generate-notes
+          gh release upload "$TAG" mil-symbol-converter-*.tgz --clobber
