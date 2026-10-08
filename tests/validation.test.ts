@@ -82,18 +82,30 @@ describe("input validation", () => {
   });
 
   it.each([
-    ["SXGPUCI--------", 2, "standard identity not in Table A-I"],
-    ["S-GPUCI--------", 2, "'-' is not a standard identity"],
-    ["SFQPUCI--------", 3, "Q is not a battle dimension"],
-    ["SFGQUCI--------", 4, "Q is not a status"],
-    ["SFGPUCI---ZZ---", 11, "ZZ is not in Table A-II"],
-    ["SFGPUCI-----U1-", 13, "country code must be letters"],
-    ["SFGPUCI-------Q", 15, "Q is not an order of battle"],
-    ["SFGPU-I--------", 5, "function ID not filled left to right"],
-  ])("rejects invalid field value in %s (position %i: %s)", (s, pos) => {
-    const r = validateSidc(s);
-    expect(r.valid).toBe(false);
-    expect(r.diagnostics.some((d) => d.positions?.includes(pos))).toBe(true);
+    ["SXGPUCI--------", [2], "standard identity not in Table A-I"],
+    ["S-GPUCI--------", [2], "'-' is not a standard identity"],
+    ["SFQPUCI--------", [3], "Q is not a battle dimension"],
+    ["SFGQUCI--------", [4], "Q is not a status"],
+    ["SFGPUCI---ZZ---", [11, 12], "ZZ is not in Table A-II"],
+    ["SFGPUCI----Z---", [12], "-Z: only the Z is wrong"],
+    ["SFGPUCI-----U1-", [14], "country code must be letters"],
+    ["SFGPUCI-------Q", [15], "Q is not an order of battle"],
+    ["SFGPU-I-X------", [7, 9], "function ID not filled left to right"],
+  ])(
+    "rejects invalid field value in %s at exactly the wrong position(s) %j (%s)",
+    (s, positions) => {
+      const r = validateSidc(s);
+      expect(r.valid).toBe(false);
+      const errors = r.diagnostics.filter((d) => d.severity === "error");
+      expect(errors.map((d) => d.positions)).toContainEqual(positions);
+    },
+  );
+
+  it("points at the wrong characters of an unlisted function ID", () => {
+    const at = (s: string) =>
+      validateSidc(s).diagnostics.find((d) => d.code === "NOT_IN_2525C_TABLES")
+        ?.positions;
+    expect(at("SHGPUCX--------")).toEqual([7]); // UC exists, X does not continue it
   });
 
   describe("valid values in invalid combinations", () => {

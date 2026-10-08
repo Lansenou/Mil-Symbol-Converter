@@ -181,6 +181,63 @@ function checkField(
   }
 }
 
+/**
+ * 1-based positions of every wrong character in `value`: the characters that differ from the
+ * closest allowed value (fewest differences, then longest correct start). When several values
+ * remain, the positions wrong for all of them; if they share none, those wrong for any of them.
+ */
+function wrongPositions(
+  value: string,
+  allowed: Iterable<string>,
+  start: number,
+): number[] {
+  let best = Infinity;
+  let sets: number[][] = [];
+  for (const option of allowed) {
+    if (option.length !== value.length) continue;
+    const diff = [...value].flatMap((c, i) =>
+      c === "*" || option[i] === "*" || option[i] === c ? [] : [start + i],
+    );
+    if (diff.length < best) {
+      best = diff.length;
+      sets = [diff];
+    } else if (diff.length === best) sets.push(diff);
+  }
+  if (sets.length === 0) return [...value].map((_, i) => start + i);
+  // Among equally close values prefer those keeping the longest correct start ("UC" in "UCX").
+  const firstDiff = (d: number[]) => d[0] ?? Infinity;
+  const latest = Math.max(...sets.map(firstDiff));
+  sets = sets.filter((d) => firstDiff(d) === latest);
+  const all = sets
+    .slice(1)
+    .reduce((acc, d) => acc.filter((p) => d.includes(p)), sets[0]!);
+  return all.length > 0 ? all : [...new Set(sets.flat())].sort((x, y) => x - y);
+}
+
+const listPositions = (ps: number[]) =>
+  ps.length === 1 ? `position ${ps[0]}` : `positions ${ps.join(", ")}`;
+
+/** Wrong country-code characters: the non-letters ("U1" -> 14), or both for a mix like "-*". */
+function badCountryPositions(cc: string): number[] {
+  const bad = [0, 1].filter((i) => !/[A-Z]/.test(cc[i] ?? ""));
+  return bad.map((i) => 13 + i);
+}
+
+/** Function IDs listed in the 2525C tables per scheme + dimension (e.g. "SG"). */
+let functionIds: Map<string, string[]> | undefined;
+function functionIdsFor(scheme: string, dimension: string): string[] {
+  if (!functionIds) {
+    functionIds = new Map();
+    for (const c of catalog) {
+      const k = c.template[0]! + c.template[2]!;
+      const list = functionIds.get(k) ?? [];
+      list.push(c.template.slice(4, 10));
+      functionIds.set(k, list);
+    }
+  }
+  return functionIds.get(scheme + dimension) ?? [];
+}
+
 /** Finds the 2525C table row that the (possibly templated) SIDC instantiates. */
 export function findCatalogEntry(sidc: string): CatalogEntry | undefined {
   const rows = catalogByKey.get(legacyKey(sidc));
@@ -282,25 +339,29 @@ export function validateSidc(
         d.error(
           "INVALID_FIELD_VALUE",
           `Positions 11-12 (symbol modifier) "${mod}" cannot be completed to a valid table value.`,
-          [11, 12],
+          wrongPositions(mod, Object.keys(SYMBOL_MODIFIERS[scheme]), 11),
         );
       }
     } else {
-      checkField(
-        d,
-        mod,
-        SYMBOL_MODIFIERS[scheme],
-        11,
-        "symbol modifier (positions 11-12)",
-        false,
-      );
+      if (!(mod in SYMBOL_MODIFIERS[scheme])) {
+        const ps = wrongPositions(
+          mod,
+          Object.keys(SYMBOL_MODIFIERS[scheme]),
+          11,
+        );
+        d.error(
+          "INVALID_FIELD_VALUE",
+          `Symbol modifier "${mod}" (positions 11-12) is not a table value; wrong at ${listPositions(ps)}. Examples: ${Object.keys(SYMBOL_MODIFIERS[scheme]).slice(0, 8).join(", ")}, ...`,
+          ps,
+        );
+      }
     }
     const cc = fields.countryCode;
     if (!(cc === "--" || cc === "**" || /^[A-Z]{2}$/.test(cc))) {
       d.error(
         "INVALID_FIELD_VALUE",
         `Positions 13-14 (country code) "${cc}" must be an ISO 3166-1 alpha-2 code, "--" or "**".`,
-        [13, 14],
+        badCountryPositions(cc),
       );
     }
     const ob = fields.orderOfBattle;
@@ -334,10 +395,15 @@ export function validateSidc(
       );
     }
   } else {
+    const badFn = wrongPositions(
+      fields.functionId,
+      functionIdsFor(scheme, fields.battleDimension),
+      5,
+    );
     d.warn(
       "NOT_IN_2525C_TABLES",
-      `No row of the MIL-STD-2525C SIDC tables has function ID "${fields.functionId}" for coding scheme ${scheme}, dimension/category "${fields.battleDimension}".`,
-      [5, 6, 7, 8, 9, 10],
+      `No row of the MIL-STD-2525C SIDC tables has function ID "${fields.functionId}" for coding scheme ${scheme}, dimension/category "${fields.battleDimension}"${badFn.length > 0 ? `; the closest listed function IDs differ at ${listPositions(badFn)}` : " together with the other fields given"}.`,
+      badFn,
     );
   }
 
@@ -395,10 +461,13 @@ function validateFunctionId(fn: string, d: DiagnosticList): void {
   // "The values in each field are filled from left to right" (2525C A.5.2.1).
   const firstDash = fn.indexOf("-");
   if (firstDash >= 0 && /[A-Z0-9]/.test(fn.slice(firstDash))) {
+    const after = [...fn]
+      .map((c, i) => (i > firstDash && c !== "-" ? i + 5 : 0))
+      .filter((p) => p > 0);
     d.error(
       "INVALID_FIELD_VALUE",
-      `Function ID "${fn}" is not filled from left to right.`,
-      [5, 6, 7, 8, 9, 10],
+      `Function ID "${fn}" is not filled from left to right: ${listPositions(after)} ${after.length === 1 ? "follows" : "follow"} the empty position ${firstDash + 5}.`,
+      after,
     );
   }
 }
@@ -419,21 +488,21 @@ function validateMetoc(sidc: string, d: DiagnosticList): void {
     d.error(
       "INVALID_FIELD_VALUE",
       `METOC positions 3-4 (static/dynamic) "${sd}" must be "S-" or "-D".`,
-      [3, 4],
+      wrongPositions(sd, Object.keys(METOC.staticDynamic), 3),
     );
   }
   if (!(gt in METOC.graphicTypes)) {
     d.error(
       "INVALID_FIELD_VALUE",
       `METOC positions 11-13 (graphic type) "${gt}" must be "P--", "-L-" or "--A".`,
-      [11, 12, 13],
+      wrongPositions(gt, Object.keys(METOC.graphicTypes), 11),
     );
   }
   if (sidc.slice(13, 15) !== "--") {
     d.error(
       "INVALID_FIELD_VALUE",
       'METOC positions 14-15 are not used and must be "--".',
-      [14, 15],
+      [14, 15].filter((p) => sidc[p - 1] !== "-"),
     );
   }
 }
@@ -464,7 +533,7 @@ function checkCombinations(
     d.error(
       "INVALID_FIELD_VALUE",
       "Positions 11-12 are not used for signals intelligence.",
-      [11, 12],
+      [11, 12].filter((p) => sidc[p - 1] !== "-"),
     );
   }
 }
