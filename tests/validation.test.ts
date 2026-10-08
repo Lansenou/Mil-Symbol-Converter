@@ -155,3 +155,12 @@ describe("input validation", () => {
     });
   });
 });
+
+describe("hostile input objects", () => {
+  it("do not make conversions throw", async () => {
+    const { convertSidc } = await import("../src");
+    const r = convertSidc({ toString: 0 } as unknown as string);
+    expect(r.success).toBe(false);
+    expect(r.diagnostics[0]?.code).toBe("INVALID_TYPE");
+  });
+});

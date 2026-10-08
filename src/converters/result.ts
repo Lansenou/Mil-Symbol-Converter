@@ -14,8 +14,14 @@ export function worst(a: MatchQuality, b: MatchQuality): MatchQuality {
   return ORDER.indexOf(a) >= ORDER.indexOf(b) ? a : b;
 }
 
+/** Echo of the caller's input for results; never throws, even for hostile objects. */
 export function inputAsString(input: unknown): string {
-  return typeof input === "string" ? input : String(input);
+  if (typeof input === "string") return input;
+  try {
+    return String(input);
+  } catch {
+    return Object.prototype.toString.call(input);
+  }
 }
 
 export function failure(

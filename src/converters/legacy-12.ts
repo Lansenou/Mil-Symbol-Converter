@@ -11,7 +11,7 @@
 import type { ConversionOptions, ConversionResult } from "../types";
 import { DiagnosticList } from "../diagnostics";
 import { prepareInput } from "./prepare";
-import { failure, finalize } from "./result";
+import { failure, finalize, inputAsString } from "./result";
 
 export interface Legacy12Profile {
   name: string;
@@ -97,7 +97,7 @@ export function convertSidc15To12(
   }
   return finalize(
     {
-      input: typeof input === "string" ? input : String(input),
+      input: inputAsString(input),
       normalizedInput: sidc,
       output: lossyBlocked ? null : output,
       sourceStandard: "MIL-STD-2525C",

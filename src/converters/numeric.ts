@@ -36,7 +36,7 @@ import type {
 import { DiagnosticList } from "../diagnostics";
 import { mapFields } from "./field-mapping";
 import { prepareInput } from "./prepare";
-import { failure, finalize, worst } from "./result";
+import { failure, finalize, worst, inputAsString } from "./result";
 
 export interface NumericTarget {
   standard: Extract<
@@ -562,7 +562,7 @@ export function convertToNumeric(
   }
   return finalize(
     {
-      input: typeof input === "string" ? input : String(input),
+      input: inputAsString(input),
       normalizedInput: sidc,
       output: lossyBlocked ? null : output,
       sourceStandard: "MIL-STD-2525C",

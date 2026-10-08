@@ -10,7 +10,7 @@ import { DiagnosticList } from "../diagnostics";
 import { convertSidc15To12 } from "./legacy-12";
 import { convertToNumeric, NUMERIC_TARGETS } from "./numeric";
 import { prepareInput } from "./prepare";
-import { failure, finalize } from "./result";
+import { failure, finalize, inputAsString } from "./result";
 
 /** 15-character MIL-STD-2525C -> 20-digit MIL-STD-2525D (version 10, or 11 with mil2525dVersion). */
 export function convertSidc15To2525D(
@@ -98,7 +98,7 @@ export function convertSidc(
         });
       return finalize(
         {
-          input: typeof input === "string" ? input : String(input),
+          input: inputAsString(input),
           normalizedInput: p.sidc,
           output: p.sidc,
           sourceStandard: "MIL-STD-2525C",
