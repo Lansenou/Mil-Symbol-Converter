@@ -76,7 +76,7 @@ The package is not published to the npm registry yet. Install the prebuilt tarba
 pulls in no other packages:
 
 ```bash
-npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.4.3/mil-symbol-converter-0.4.3.tgz
+npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.5.0/mil-symbol-converter-0.5.0.tgz
 ```
 
 `npm install github:Lansenou/Mil-Symbol-Converter` also works, but npm then builds the package on
@@ -300,6 +300,32 @@ analyzeSidc("S*GPUCI---*****").wildcards; // which option resolves each "*" and 
 | `preferredSource`                                                         | —               | `"JMSML"` or `"mil-sym-ts"` when sources disagree                                                              |
 | `legacy12Profile`                                                         | `prefix-12`     | only profile defined                                                                                           |
 | `strictInput`                                                             | `false`         | reject lowercase, surrounding whitespace, typographic dashes and `*` in fixed positions instead of normalizing |
+
+### Compile-time checks for SIDC literals
+
+SIDC string literals are checked against the 2525C tables by the TypeScript compiler, in every
+function that takes a SIDC and in `useSidcConverter`:
+
+```ts
+convertSidc("SHGPUCX--------");
+// error: Argument of type '"SHGPUCX--------"' is not assignable to parameter of type
+//   '"✗ SIDC position 7: \"UCX---\" is not a 2525C function ID for scheme S, dimension G"'.
+
+const s = sidc("SHGPUCI--------"); // checked constant, no runtime cost
+```
+
+Only literals are checked: a `string` from data or a form passes and is validated at runtime as
+before. Literals must be in canonical form (uppercase, ASCII hyphens); the runtime still accepts
+the looser forms. To opt out for one call, pass a `string` (`convertSidc(code as string)`); to
+opt out everywhere, add once anywhere in your project:
+
+```ts
+declare module "mil-symbol-converter" {
+  interface TypeOptions {
+    checkSidcLiterals: false;
+  }
+}
+```
 
 ### Codes copied from web lists
 

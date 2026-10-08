@@ -1,14 +1,15 @@
 import { useMemo } from "react";
 import { convertSidc } from "../converters/converter";
 import type { ConversionOptions, ConversionResult } from "../types";
+import type { CheckedSidc } from "../sidc-literal";
 
 /**
  * Memoized conversion for React. The result object only changes when the input or one of the
  * option values changes, so it is safe to use in dependency arrays. Invalid input never throws;
  * it yields a result with `success: false` and structured `diagnostics`.
  */
-export function useSidcConverter(
-  input: string,
+export function useSidcConverter<const S extends string>(
+  input: CheckedSidc<S>,
   options: ConversionOptions = {},
 ): ConversionResult {
   const {

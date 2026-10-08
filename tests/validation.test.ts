@@ -205,8 +205,10 @@ describe("codes copied from web lists", () => {
       ["TYPOGRAPHIC_DASHES_REPAIRED"],
     ]);
     expect(
-      convertSidc("SPG*UCMT\u2014*****", { status: "P", symbolModifier: "--" })
-        .output,
+      convertSidc("SPG*UCMT\u2014*****" as string, {
+        status: "P",
+        symbolModifier: "--",
+      }).output,
     ).toBe(convertSidc("SPGPUCMT-------").output);
   });
 

@@ -141,11 +141,11 @@ describe("wildcards in conversions", () => {
   });
 
   it("METOC codes accept no wildcards; a fixed tail is only filled in", () => {
-    expect(convertSidc("WAS-*L----P----").success).toBe(false);
-    expect(convertSidc("WAS-PL----P---*", { strictInput: true }).success).toBe(
-      false,
-    );
-    expect(convertSidc("WAS-PL----P---*").output).toBe(
+    expect(convertSidc("WAS-*L----P----" as string).success).toBe(false);
+    expect(
+      convertSidc("WAS-PL----P---*" as string, { strictInput: true }).success,
+    ).toBe(false);
+    expect(convertSidc("WAS-PL----P---*" as string).output).toBe(
       convertSidc("WAS-PL----P----").output,
     );
   });

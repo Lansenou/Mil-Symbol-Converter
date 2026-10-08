@@ -27,7 +27,7 @@ describe("useSidcConverter", () => {
   });
 
   it("returns structured errors instead of throwing", () => {
-    const { result } = renderHook(() => useSidcConverter("nonsense"));
+    const { result } = renderHook(() => useSidcConverter("nonsense" as string));
     expect(result.current.success).toBe(false);
     expect(result.current.diagnostics[0]?.code).toBeDefined();
   });
