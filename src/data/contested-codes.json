@@ -1,0 +1,138 @@
+{
+  "description": "Hand-curated: land unit sector 1 modifier codes whose APP-6(D) meaning differs between two maintained open-source renderers. Neither the APP-6(D) text nor an official machine-readable APP-6(D) table was available to settle them, so conversions that need these codes for APP-6D are reported as ambiguous.",
+  "codes": [
+    {
+      "editions": [
+        "APP-6D"
+      ],
+      "symbolSet": "10",
+      "kind": "modifier1",
+      "code": "47",
+      "claims": [
+        {
+          "source": "mil-sym-ts smd.json (version 10 = APP-6D)",
+          "meaning": "Unmanned Aerial Systems (UAS)"
+        },
+        {
+          "source": "milsymbol 3.x numeric renderer, APP-6 branch",
+          "meaning": "Node Centre"
+        }
+      ],
+      "reference": "milsymbol src/numbersidc/sidc/landunit.js@f5134380157f475cbf5a9bdec69b6c33cf66e0e7 line 459 (_STD2525 branch) vs mil-sym-ts smd.json@9f3c5512 (versions 10,11)"
+    },
+    {
+      "editions": [
+        "APP-6D"
+      ],
+      "symbolSet": "10",
+      "kind": "modifier1",
+      "code": "56",
+      "claims": [
+        {
+          "source": "mil-sym-ts smd.json (version 10 = APP-6D)",
+          "meaning": "Weapons"
+        },
+        {
+          "source": "milsymbol 3.x numeric renderer, APP-6 branch",
+          "meaning": "Sensor Control Module"
+        }
+      ],
+      "reference": "milsymbol src/numbersidc/sidc/landunit.js@f5134380157f475cbf5a9bdec69b6c33cf66e0e7 line 474 (_STD2525 branch) vs mil-sym-ts smd.json@9f3c5512 (versions 10,11)"
+    },
+    {
+      "editions": [
+        "APP-6D"
+      ],
+      "symbolSet": "10",
+      "kind": "modifier1",
+      "code": "58",
+      "claims": [
+        {
+          "source": "mil-sym-ts smd.json (version 10 = APP-6D)",
+          "meaning": "Armored"
+        },
+        {
+          "source": "milsymbol 3.x numeric renderer, APP-6 branch",
+          "meaning": "Single Shelter Switch"
+        }
+      ],
+      "reference": "milsymbol src/numbersidc/sidc/landunit.js@f5134380157f475cbf5a9bdec69b6c33cf66e0e7 line 478 (_STD2525 branch) vs mil-sym-ts smd.json@9f3c5512 (versions 10,11)"
+    },
+    {
+      "editions": [
+        "APP-6D"
+      ],
+      "symbolSet": "10",
+      "kind": "modifier1",
+      "code": "71",
+      "claims": [
+        {
+          "source": "mil-sym-ts smd.json (version 10 = APP-6D)",
+          "meaning": "Mobility Assault"
+        },
+        {
+          "source": "milsymbol 3.x numeric renderer, APP-6 branch",
+          "meaning": "Accident"
+        }
+      ],
+      "reference": "milsymbol src/numbersidc/sidc/landunit.js@f5134380157f475cbf5a9bdec69b6c33cf66e0e7 line 493 (_STD2525 branch) vs mil-sym-ts smd.json@9f3c5512 (versions 10,11)"
+    },
+    {
+      "editions": [
+        "APP-6D"
+      ],
+      "symbolSet": "10",
+      "kind": "modifier1",
+      "code": "72",
+      "claims": [
+        {
+          "source": "mil-sym-ts smd.json (version 10 = APP-6D)",
+          "meaning": "Amphibious Warfare Ship"
+        },
+        {
+          "source": "milsymbol 3.x numeric renderer, APP-6 branch",
+          "meaning": "Other"
+        }
+      ],
+      "reference": "milsymbol src/numbersidc/sidc/landunit.js@f5134380157f475cbf5a9bdec69b6c33cf66e0e7 line 496 (_STD2525 branch) vs mil-sym-ts smd.json@9f3c5512 (versions 10,11)"
+    },
+    {
+      "editions": [
+        "APP-6D"
+      ],
+      "symbolSet": "10",
+      "kind": "modifier1",
+      "code": "73",
+      "claims": [
+        {
+          "source": "mil-sym-ts smd.json (version 10 = APP-6D)",
+          "meaning": "Load Handling System"
+        },
+        {
+          "source": "milsymbol 3.x numeric renderer, APP-6 branch",
+          "meaning": "Civilian"
+        }
+      ],
+      "reference": "milsymbol src/numbersidc/sidc/landunit.js@f5134380157f475cbf5a9bdec69b6c33cf66e0e7 line 499 (_STD2525 branch) vs mil-sym-ts smd.json@9f3c5512 (versions 10,11)"
+    },
+    {
+      "editions": [
+        "APP-6D"
+      ],
+      "symbolSet": "10",
+      "kind": "modifier1",
+      "code": "74",
+      "claims": [
+        {
+          "source": "mil-sym-ts smd.json (version 10 = APP-6D)",
+          "meaning": "Palletized Load System"
+        },
+        {
+          "source": "milsymbol 3.x numeric renderer, APP-6 branch",
+          "meaning": "Antisubmarine Warfare"
+        }
+      ],
+      "reference": "milsymbol src/numbersidc/sidc/landunit.js@f5134380157f475cbf5a9bdec69b6c33cf66e0e7 line 502 (_STD2525 branch) vs mil-sym-ts smd.json@9f3c5512 (versions 10,11)"
+    }
+  ]
+}
