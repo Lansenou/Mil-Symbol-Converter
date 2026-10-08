@@ -225,16 +225,32 @@ analyzeSidc("S*GPUCI---*****").wildcards; // which option resolves each "*" and 
 
 ### Options
 
-| Option                                                                    | Default         | Meaning                                                          |
-| ------------------------------------------------------------------------- | --------------- | ---------------------------------------------------------------- |
-| `targetStandard`                                                          | `MIL-STD-2525D` | for `convertSidc`                                                |
-| `affiliation`, `status`, `symbolModifier`, `countryCode`, `orderOfBattle` | —               | values for `*` positions only                                    |
-| `wildcardPolicy`                                                          | `resolve`       | `resolve` / `preserve` / `reject`                                |
-| `allowLossy`                                                              | `false`         | accept lossy results                                             |
-| `mil2525dVersion`                                                         | `"10"`          | `"11"` = 2525D Change 1                                          |
-| `preferredSource`                                                         | —               | `"JMSML"` or `"mil-sym-ts"` when sources disagree                |
-| `legacy12Profile`                                                         | `prefix-12`     | only profile defined                                             |
-| `strictInput`                                                             | `false`         | reject lowercase / surrounding whitespace instead of normalizing |
+| Option                                                                    | Default         | Meaning                                                                                                        |
+| ------------------------------------------------------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------- |
+| `targetStandard`                                                          | `MIL-STD-2525D` | for `convertSidc`                                                                                              |
+| `affiliation`, `status`, `symbolModifier`, `countryCode`, `orderOfBattle` | —               | values for `*` positions only                                                                                  |
+| `wildcardPolicy`                                                          | `resolve`       | `resolve` / `preserve` / `reject`                                                                              |
+| `allowLossy`                                                              | `false`         | accept lossy results                                                                                           |
+| `mil2525dVersion`                                                         | `"10"`          | `"11"` = 2525D Change 1                                                                                        |
+| `preferredSource`                                                         | —               | `"JMSML"` or `"mil-sym-ts"` when sources disagree                                                              |
+| `legacy12Profile`                                                         | `prefix-12`     | only profile defined                                                                                           |
+| `strictInput`                                                             | `false`         | reject lowercase, surrounding whitespace, typographic dashes and `*` in fixed positions instead of normalizing |
+
+### Codes copied from web lists
+
+Some symbol lists print `---` as `—`, `--` as `–`, and end every code in `*****`. Such codes are
+accepted with a warning: the dashes are restored when that gives 15 characters, and `*` is replaced
+where the 2525C table fixes the value (the `X` of tactical graphics, the installation `H`, the METOC
+tail). `*` in user-defined positions stays a wildcard, so pass `symbolModifier` etc. to convert.
+
+```ts
+validateSidc("GFTPA—–*****").normalized; // "GFTPA-----****X" (TYPOGRAPHIC_DASHES_REPAIRED, FIXED_POSITIONS_FILLED)
+convertSidc("SFAPMFF—*****", {
+  symbolModifier: "--",
+  countryCode: "--",
+  orderOfBattle: "-",
+}).output; // "10030100001101040000"
+```
 
 ## React
 

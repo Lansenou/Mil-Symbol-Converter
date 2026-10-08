@@ -195,6 +195,7 @@ describe("codes copied from web lists", () => {
     ["GFTPA-----*****", "GFTPA-----****X"], // Table B-I: X in position 15
     ["SFGPIXH---*****", "SFGPIXH---H****"], // installation indicator
     ["WAS-WSVE--*****", "WAS-WSVE--P----"], // METOC graphic type and unused tail
+    ["WO-DHPBA--*L***", "WO-DHPBA---L---"], // given characters pick the table row
   ])("fills fixed positions of %s", (input, out) => {
     expect(v(input)).toEqual([true, out, ["FIXED_POSITIONS_FILLED"]]);
   });

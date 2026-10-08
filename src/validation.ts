@@ -335,10 +335,16 @@ for (const c of catalog) {
  */
 function fillFixedPositions(sidc: string, d: DiagnosticList): string {
   if (!sidc.slice(10).includes("*")) return sidc;
-  const rows =
+  const rows = (
     sidc[0] === "W"
       ? (metocByPrefix.get(sidc.slice(0, 10)) ?? [])
-      : (catalogByKey.get(legacyKey(sidc)) ?? []);
+      : (catalogByKey.get(legacyKey(sidc)) ?? [])
+  ).filter((r) =>
+    [...sidc.slice(10)].every(
+      (c, i) =>
+        c === "*" || r.template[10 + i] === "*" || r.template[10 + i] === c,
+    ),
+  );
   if (rows.length === 0) return sidc;
   const chars = [...sidc];
   const filled: number[] = [];
