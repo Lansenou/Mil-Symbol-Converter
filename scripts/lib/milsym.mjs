@@ -65,8 +65,10 @@ export function parseModifierCatalog(root, file, key) {
       sector = m.category;
       continue;
     }
-    if (m.code.length > 2) continue; // 2525E common modifiers need SIDC positions 21-22 (30-digit form)
-    const code = m.code.padStart(2, "0");
+    // 2525E common modifiers ("00 Common") have 3-digit codes: the leading 1 is the common-modifier
+    // indicator written to SIDC position 21 (sector 1) or 22 (sector 2) of the 30-digit form.
+    if (m.code.length > 2 && ss !== "00") continue;
+    const code = m.code.length > 2 ? m.code : m.code.padStart(2, "0");
     for (const v of m.versions.split(",")) {
       if (!out.has(v)) out.set(v, new Map());
       out.get(v).set(`${ss}|${sector}|${code}`, m.name.trim());

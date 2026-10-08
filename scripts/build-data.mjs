@@ -132,7 +132,8 @@ function editionCatalog(entities, mods, { sigintModsUnder50 = false } = {}) {
   for (const [key, n] of mods) {
     const [ss, sector, code] = key.split("|");
     if (code === "00") continue; // "unspecified" is implicit in every edition
-    const sets = sigintModsUnder50 && ss === "50" ? ["50", "51", "52", "53", "54"] : [ss];
+    const sets =
+      sigintModsUnder50 && ss === "50" ? ["50", "51", "52", "53", "54"] : [ss];
     for (const s2 of sets) mod[`${s2}|${sector}|${code}`] ??= nameId(n);
   }
   return { entities: ent, modifiers: mod };

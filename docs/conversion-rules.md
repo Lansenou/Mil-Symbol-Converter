@@ -93,7 +93,36 @@ or the fixed `X` of tactical graphics); `lossy` when they hold a country code, a
 | `APP-6E`                                  | `16` (Change 2) | mil-sym-ts APP-6E Ch.2 | equivalent                                                 |
 | `APP-6C`                                  | —               | none                   | unsupported                                                |
 
-## 5. Results
+## 5. Renumbered codes and the extended SIDC
+
+If a candidate's entity or modifier is missing from the target catalog, or means something else
+there, the target entry with the **identical name** is used when it is unique (entities: same name,
+or same most-specific segment under a parent that is not different; modifiers: same name, either
+sector). This is reported as `RENUMBERED` and the result is at most `equivalent`.
+
+2525E moved many modifiers into a shared list of _common modifiers_ that need the 30-digit SIDC:
+position 21 (sector 1) or 22 (sector 2) holds the indicator `1`, position 23 the frame shape (`0`,
+default for the symbol set), 24-30 are `0` (encoding of mil-sym-ts `SymbolID`). This is only emitted
+with `extendedSidc: true`.
+
+## 6. Fuzzy mode (`fuzzy: true`, `src/converters/fuzzy.ts`)
+
+Runs only when the strict conversion failed for lack of a mapping (`NO_MAPPING`, `NO_VALID_MAPPING`)
+or because sources disagree (`SOURCES_DISAGREE`, `SOURCES_DISAGREE_ON_MEANING`). Never for invalid
+input, unresolved wildcards, contested codes or blocked lossy results. In order:
+
+1. **source-choice**: of the disagreeing candidates, the one whose target name best matches the 2525C
+   description → `approximate`.
+2. **name-match**: best entity in the plausible symbol sets of the target catalog for the 2525C
+   description (word overlap, Dice coefficient) → `approximate`; modifiers are not guessed.
+3. **ancestor**: nearest 2525C parent (shorter function ID) with a strict mapping → `lossy`
+   (a documented but broader symbol), certainty 1; needs `allowLossy`.
+
+Steps 1-2 need a calibrated `certainty` ≥ `minCertainty` (default 0.7); see docs/limitations.md for
+the calibration. Fuzzy results carry `fuzzy: { method, certainty, basis }` and
+`mappingSource: "fuzzy:<method>"`.
+
+## 7. Results
 
 `success` is true only when there is no error and an output; `ambiguous` and `unsupported` never have
 an output. Every message also appears as a structured `diagnostics` entry with a stable `code` and the
