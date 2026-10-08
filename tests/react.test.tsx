@@ -49,3 +49,12 @@ describe("<SidcConverter />", () => {
     expect(screen.getByText(/needs concrete values/)).toBeTruthy();
   });
 });
+
+describe("react entry", () => {
+  it("re-exports the main entry", async () => {
+    const react = await import("../src/react");
+    const main = await import("../src");
+    expect(react.Affiliation).toBe(main.Affiliation);
+    expect(react.convertSidc).toBe(main.convertSidc);
+  });
+});
