@@ -7,15 +7,31 @@ Converts **MIL-STD-2525C** letter symbol identification codes (15 characters) to
   can be checked in a catalog of that edition,
 - the 12-character letter form read by renderers such as milsymbol (`prefix-12` profile).
 
-Each result says how faithful it is (`exact`, `equivalent`, `lossy`, `ambiguous`, `unsupported`),
-which datasets support it, and why it failed if it did. The converter does not guess. It never
-picks a "closest" symbol, never replaces `*` with a default, and never treats APP-6D as identical
-to 2525D.
+Each result says how faithful it is (`exact`, `equivalent`, `lossy`, `approximate`, `ambiguous`,
+`unsupported`), which datasets support it, and why it failed if it did. By default the converter
+does not guess: it never picks a "closest" symbol, never replaces `*` with a default, and never
+treats APP-6D as identical to 2525D. Approximate matching is available only on request
+(`fuzzy: true`), with a measured certainty.
 
 - [Standards research](docs/standards-research.md): field layouts, the 12-character question,
   APP-6D vs 2525D, existing converters
 - [Conversion rules](docs/conversion-rules.md)
 - [Limitations and coverage](docs/limitations.md)
+
+## Examples
+
+Five 2525C codes and their conversions. The symbols are drawn by
+[milsymbol](https://github.com/spatialillusions/milsymbol) from each code
+(`npx tsx scripts/render-readme-examples.ts` regenerates them). The drawings are a visual sanity
+check; the mappings themselves are verified against the standards' tables and the source datasets.
+
+| MIL-STD-2525C     | Symbol                                                                       | MIL-STD-2525D                   | Symbol                                                                            | APP-6D                               | Symbol                                                                             | MIL-STD-2525E                        | Symbol                                                                            |
+| ----------------- | ---------------------------------------------------------------------------- | ------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------- |
+| `SFGPUCIC---E---` | <img src="docs/images/example1-2525c.svg" alt="SFGPUCIC---E---" height="40"> | `10031000151211000002`<br>exact | <img src="docs/images/example1-2525d.svg" alt="10031000151211000002" height="40"> | `10031000151211000002`<br>equivalent | <img src="docs/images/example1-app-6d.svg" alt="10031000151211000002" height="40"> | `15031000151211000002`<br>equivalent | <img src="docs/images/example1-2525e.svg" alt="15031000151211000002" height="40"> |
+| `SHAPMFB--------` | <img src="docs/images/example2-2525c.svg" alt="SHAPMFB--------" height="40"> | `10060100001101030000`<br>exact | <img src="docs/images/example2-2525d.svg" alt="10060100001101030000" height="40"> | `10060100001101030000`<br>equivalent | <img src="docs/images/example2-app-6d.svg" alt="10060100001101030000" height="40"> | `15060100001101030000`<br>equivalent | <img src="docs/images/example2-2525e.svg" alt="15060100001101030000" height="40"> |
+| `SNSPCLFF-------` | <img src="docs/images/example3-2525c.svg" alt="SNSPCLFF-------" height="40"> | `10043000001202040000`<br>exact | <img src="docs/images/example3-2525d.svg" alt="10043000001202040000" height="40"> | `10043000001202040000`<br>equivalent | <img src="docs/images/example3-app-6d.svg" alt="10043000001202040000" height="40"> | `15043000001202040000`<br>equivalent | <img src="docs/images/example3-2525e.svg" alt="15043000001202040000" height="40"> |
+| `SFGPIXH---H----` | <img src="docs/images/example4-2525c.svg" alt="SFGPIXH---H----" height="40"> | `10032000001207020000`<br>exact | <img src="docs/images/example4-2525d.svg" alt="10032000001207020000" height="40"> | `10032000001207020000`<br>equivalent | <img src="docs/images/example4-app-6d.svg" alt="10032000001207020000" height="40"> | `15032000001207020000`<br>equivalent | <img src="docs/images/example4-2525e.svg" alt="15032000001207020000" height="40"> |
+| `SHGPEVAT-------` | <img src="docs/images/example5-2525c.svg" alt="SHGPEVAT-------" height="40"> | `10061500001202000000`<br>exact | <img src="docs/images/example5-2525d.svg" alt="10061500001202000000" height="40"> | `10061500001202000000`<br>equivalent | <img src="docs/images/example5-app-6d.svg" alt="10061500001202000000" height="40"> | `15061500001202000000`<br>equivalent | <img src="docs/images/example5-2525e.svg" alt="15061500001202000000" height="40"> |
 
 ## Install
 
