@@ -189,3 +189,17 @@ numeric target, regression cases, React, property-based tests (fast-check) and d
 Expected values in `tests/fixtures/verified-sidcs.json` were written by hand from the 2525C and
 2525D tables. `scripts/review-fixture.mjs` prints the cited table lines for review. The fixtures
 were not produced by the converter.
+
+## Publishing
+
+`.github/workflows/release.yml` publishes to npm when a GitHub release is published. It uses
+[npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers): GitHub Actions proves its
+identity to npm via OIDC, so no npm token is stored anywhere. npm requires the package to exist
+before a trusted publisher can be attached, so the first release takes two manual steps:
+
+1. Publish once from a machine logged in to npm: `npm login && npm publish --access public`.
+2. On npmjs.com → package settings → _Trusted Publisher_, add GitHub Actions with repository
+   `Lansenou/Mil-Symbol-Converter` and workflow `release.yml`.
+
+After that, bump `version` in `package.json` and publish a GitHub release; CI tests, builds and
+publishes with provenance.

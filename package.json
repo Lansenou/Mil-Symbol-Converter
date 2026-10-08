@@ -69,5 +69,27 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.71.1",
     "vitest": "^5.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lansenou/Mil-Symbol-Converter.git"
+  },
+  "homepage": "https://github.com/Lansenou/Mil-Symbol-Converter#readme",
+  "bugs": {
+    "url": "https://github.com/Lansenou/Mil-Symbol-Converter/issues"
+  },
+  "keywords": [
+    "mil-std-2525",
+    "app-6",
+    "sidc",
+    "military-symbology",
+    "milsymbol",
+    "2525c",
+    "2525d",
+    "2525e"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }
