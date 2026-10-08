@@ -139,6 +139,17 @@ export type OrderOfBattleLetter = (typeof OrderOfBattleLetter)[OrderOfBattle];
 
 // ---- name/letter lookups
 
+/** Drops surrounding whitespace and zero-width characters (common in pasted or exported data). */
+const clean = (v: string) =>
+  v.replace(/[\u200B-\u200D\u2060\uFEFF]/g, "").trim();
+
+/** JSON-quotes a value with invisible and non-ASCII characters escaped, so error messages show them. */
+export const visible = (v: unknown) =>
+  JSON.stringify(v)?.replace(
+    /[^\x20-\x7e]/g,
+    (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`,
+  ) ?? String(v);
+
 function lookup(table: Record<string, string>) {
   const byName = new Map(
     Object.entries(table).map(([n, l]) => [n.toLowerCase(), l]),
@@ -146,8 +157,10 @@ function lookup(table: Record<string, string>) {
   const letters = new Set(Object.values(table));
   return (v: unknown): string | undefined => {
     if (typeof v !== "string") return undefined;
-    if (letters.has(v.toUpperCase())) return v.toUpperCase();
-    return byName.get(v.toLowerCase());
+    // Values often come from files or forms: ignore surrounding whitespace.
+    const t = clean(v);
+    if (letters.has(t.toUpperCase())) return t.toUpperCase();
+    return byName.get(t.toLowerCase());
   };
 }
 const affiliationOf = lookup(AffiliationLetter);
@@ -160,8 +173,8 @@ const orderOfBattleOf = lookup(OrderOfBattleLetter);
 function modifierOf(v: unknown): string | undefined {
   const plain = plainModifierOf(v);
   if (plain) return plain;
-  if (typeof v !== "string" || v.length !== 2) return undefined;
-  const [a = "", b = ""] = v.toUpperCase();
+  if (typeof v !== "string" || clean(v).length !== 2) return undefined;
+  const [a = "", b = ""] = clean(v).toUpperCase();
   const ok =
     (a === "-" && echelonOf(b)) ||
     (indicatorOf(a) && (b === "-" || echelonOf(b)));
@@ -234,6 +247,15 @@ export const overrideLetters = {
   affiliation: (v: string) => affiliationOf(v) ?? v,
   status: (v: string) => statusOf(v) ?? v,
   symbolModifier: (v: string) => modifierOf(v) ?? v,
-  countryCode: (v: string) => v,
+  countryCode: (v: string) => clean(v),
   orderOfBattle: (v: string) => orderOfBattleOf(v) ?? v,
 } as const;
+
+/** What an override accepts, for error messages. */
+export const overrideHint: Record<keyof typeof overrideLetters, string> = {
+  affiliation: `a name (${Object.keys(AffiliationLetter).join(", ")}) or letter (${Object.values(AffiliationLetter).join("")})`,
+  status: `a name (${Object.keys(StatusLetter).join(", ")}) or letter (${Object.values(StatusLetter).join("")})`,
+  symbolModifier: `a name (${Object.keys(SymbolModifierLetter).join(", ")}), echelonModifier(...), or two 2525C characters such as "-E"`,
+  countryCode: `an ISO 3166-1 alpha-2 code such as "US", or "--"`,
+  orderOfBattle: `a name (${Object.keys(OrderOfBattleLetter).join(", ")}) or letter (${Object.values(OrderOfBattleLetter).join("")})`,
+};

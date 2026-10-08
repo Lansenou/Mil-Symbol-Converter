@@ -9,7 +9,7 @@
  */
 import type { ConversionOptions, Diagnostic } from "./types";
 import { DiagnosticList } from "./diagnostics";
-import { overrideLetters } from "./codes";
+import { overrideHint, overrideLetters, visible } from "./codes";
 
 export type WildcardFieldName =
   | "standardIdentity"
@@ -122,7 +122,7 @@ export function resolveWildcards(
     if (supplied.length !== f.positions.length || supplied.includes("*")) {
       d.error(
         "INVALID_RESOLUTION_VALUE",
-        `Option ${f.option} must be ${f.positions.length} concrete character(s); received "${raw}".`,
+        `Option ${f.option} must be ${overrideHint[f.option]}; received ${visible(raw)}.`,
         f.positions,
       );
       unresolved.push({
