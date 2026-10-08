@@ -32,7 +32,10 @@ export const LEGACY12_PROFILES: Record<string, Legacy12Profile> = {
   },
 };
 
-export function convertSidc15To12(input: unknown, options: ConversionOptions = {}): ConversionResult {
+export function convertSidc15To12(
+  input: unknown,
+  options: ConversionOptions = {},
+): ConversionResult {
   const d = new DiagnosticList();
   const profileName = options.legacy12Profile ?? "prefix-12";
   const profile = LEGACY12_PROFILES[profileName];
@@ -45,7 +48,9 @@ export function convertSidc15To12(input: unknown, options: ConversionOptions = {
   }
   const prepared = prepareInput(input, options, "LEGACY-12", true, d);
   if (!prepared.ok || prepared.sidc === null) {
-    return failure(input, "LEGACY-12", d, { normalizedInput: prepared.validation.normalized });
+    return failure(input, "LEGACY-12", d, {
+      normalizedInput: prepared.validation.normalized,
+    });
   }
   const sidc = prepared.sidc;
   const scheme = sidc[0];
@@ -60,7 +65,8 @@ export function convertSidc15To12(input: unknown, options: ConversionOptions = {
     const cc = tail.slice(0, 2);
     if (/^[A-Z]{2}$/.test(cc)) dropped.countryCode = cc;
     const ob = tail[2] ?? "-";
-    if (ob !== "-" && ob !== "*" && !(scheme === "G" && ob === "X")) dropped.orderOfBattle = ob;
+    if (ob !== "-" && ob !== "*" && !(scheme === "G" && ob === "X"))
+      dropped.orderOfBattle = ob;
   }
   const output = sidc.slice(0, 12);
 
@@ -76,11 +82,18 @@ export function convertSidc15To12(input: unknown, options: ConversionOptions = {
       [13, 14, 15],
     );
   } else if (tail.includes("*")) {
-    d.warn("WILDCARD_NOT_CARRIED", `Wildcards in positions 13-15 ("${tail}") are omitted with them.`, [13, 14, 15]);
+    d.warn(
+      "WILDCARD_NOT_CARRIED",
+      `Wildcards in positions 13-15 ("${tail}") are omitted with them.`,
+      [13, 14, 15],
+    );
   }
   const lossyBlocked = quality === "lossy" && !options.allowLossy;
   if (lossyBlocked) {
-    d.error("LOSSY_NOT_ALLOWED", "The 12-character form loses information here; pass allowLossy: true to accept it.");
+    d.error(
+      "LOSSY_NOT_ALLOWED",
+      "The 12-character form loses information here; pass allowLossy: true to accept it.",
+    );
   }
   return finalize(
     {
@@ -96,7 +109,16 @@ export function convertSidc15To12(input: unknown, options: ConversionOptions = {
       diagnostics: [],
       mappingSource: `profile:${profile.name}`,
       ...(lossyBlocked
-        ? { candidates: [{ output, matchQuality: "lossy" as const, sources: [profile.name], note: "Rejected because allowLossy is false." }] }
+        ? {
+            candidates: [
+              {
+                output,
+                matchQuality: "lossy" as const,
+                sources: [profile.name],
+                note: "Rejected because allowLossy is false.",
+              },
+            ],
+          }
         : {}),
       metadata: {
         codingScheme: scheme ?? "",

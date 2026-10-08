@@ -1,10 +1,22 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 import catalog from "../src/data/mil-std-2525c-catalog.json";
-import { convertSidc, convertSidc15To12, convertSidcToAll, validateSidc } from "../src";
-import { STANDARD_IDENTITIES, STATUSES, SYMBOL_MODIFIERS, type CodingScheme } from "../src/legacy/fields";
+import {
+  convertSidc,
+  convertSidc15To12,
+  convertSidcToAll,
+  validateSidc,
+} from "../src";
+import {
+  STANDARD_IDENTITIES,
+  STATUSES,
+  SYMBOL_MODIFIERS,
+  type CodingScheme,
+} from "../src/legacy/fields";
 
-const rows = (catalog as string[][]).map((r) => r[0]!).filter((t) => !/^[SGIOE]-/.test(t) && !t.includes("-*"));
+const rows = (catalog as string[][])
+  .map((r) => r[0]!)
+  .filter((t) => !/^[SGIOE]-/.test(t) && !t.includes("-*"));
 
 /** Instantiates a 2525C table template with values drawn from the field tables. */
 const concreteSidc = fc
@@ -37,17 +49,22 @@ const TARGETS = ["MIL-STD-2525D", "APP-6D", "MIL-STD-2525E", "APP-6E"] as const;
 describe("properties of numeric conversions", () => {
   it("success implies a 20-digit string with no placeholder text", () => {
     fc.assert(
-      fc.property(concreteSidc, fc.constantFrom(...TARGETS), fc.boolean(), (sidc, target, allowLossy) => {
-        const r = convertSidc(sidc, { targetStandard: target, allowLossy });
-        if (r.success) {
-          expect(r.output).toMatch(/^\d{20}$/);
-          expect(r.errors).toEqual([]);
-        } else {
-          expect(r.output).toBeNull();
-          expect(r.errors.length).toBeGreaterThan(0);
-        }
-        expect(JSON.stringify(r)).not.toMatch(/undefined|NaN/);
-      }),
+      fc.property(
+        concreteSidc,
+        fc.constantFrom(...TARGETS),
+        fc.boolean(),
+        (sidc, target, allowLossy) => {
+          const r = convertSidc(sidc, { targetStandard: target, allowLossy });
+          if (r.success) {
+            expect(r.output).toMatch(/^\d{20}$/);
+            expect(r.errors).toEqual([]);
+          } else {
+            expect(r.output).toBeNull();
+            expect(r.errors.length).toBeGreaterThan(0);
+          }
+          expect(JSON.stringify(r)).not.toMatch(/undefined|NaN/);
+        },
+      ),
       { numRuns: 400 },
     );
   });
@@ -56,7 +73,8 @@ describe("properties of numeric conversions", () => {
     fc.assert(
       fc.property(concreteSidc, fc.constantFrom(...TARGETS), (sidc, target) => {
         const r = convertSidc(sidc, { targetStandard: target });
-        if (r.success) expect(["exact", "equivalent"]).toContain(r.matchQuality);
+        if (r.success)
+          expect(["exact", "equivalent"]).toContain(r.matchQuality);
       }),
       { numRuns: 400 },
     );
@@ -65,7 +83,9 @@ describe("properties of numeric conversions", () => {
   it("is deterministic", () => {
     fc.assert(
       fc.property(concreteSidc, (sidc) => {
-        expect(convertSidcToAll(sidc, { allowLossy: true })).toEqual(convertSidcToAll(sidc, { allowLossy: true }));
+        expect(convertSidcToAll(sidc, { allowLossy: true })).toEqual(
+          convertSidcToAll(sidc, { allowLossy: true }),
+        );
       }),
       { numRuns: 100 },
     );
@@ -73,20 +93,49 @@ describe("properties of numeric conversions", () => {
 
   it("carries standard identity and status digits from the field tables", () => {
     fc.assert(
-      fc.property(concreteSidc.filter((s) => s[0] === "S"), (sidc) => {
-        const r = convertSidc(sidc, { allowLossy: true });
-        if (!r.output) return;
-        const si: Record<string, string> = { P: "00", U: "01", A: "02", F: "03", N: "04", S: "05", H: "06", G: "10", W: "11", M: "12", D: "13", L: "14", J: "15", K: "16" };
-        const st: Record<string, string> = { P: "0", A: "1", C: "2", D: "3", X: "4", F: "5" };
-        expect(r.output.slice(2, 4)).toBe(si[sidc[1]!]);
-        expect(r.output[6]).toBe(st[sidc[3]!]);
-      }),
+      fc.property(
+        concreteSidc.filter((s) => s[0] === "S"),
+        (sidc) => {
+          const r = convertSidc(sidc, { allowLossy: true });
+          if (!r.output) return;
+          const si: Record<string, string> = {
+            P: "00",
+            U: "01",
+            A: "02",
+            F: "03",
+            N: "04",
+            S: "05",
+            H: "06",
+            G: "10",
+            W: "11",
+            M: "12",
+            D: "13",
+            L: "14",
+            J: "15",
+            K: "16",
+          };
+          const st: Record<string, string> = {
+            P: "0",
+            A: "1",
+            C: "2",
+            D: "3",
+            X: "4",
+            F: "5",
+          };
+          expect(r.output.slice(2, 4)).toBe(si[sidc[1]!]);
+          expect(r.output[6]).toBe(st[sidc[3]!]);
+        },
+      ),
       { numRuns: 300 },
     );
   });
 
   it("does not mutate option objects", () => {
-    const options = Object.freeze({ affiliation: "F", symbolModifier: "--", allowLossy: true });
+    const options = Object.freeze({
+      affiliation: "F",
+      symbolModifier: "--",
+      allowLossy: true,
+    });
     expect(() => convertSidcToAll("S*GPUCI---*****", options)).not.toThrow();
   });
 });
@@ -109,11 +158,18 @@ describe("properties of the 12-character form", () => {
 describe("arbitrary strings", () => {
   it("never throw and never succeed unless they validate", () => {
     fc.assert(
-      fc.property(fc.oneof(fc.string(), fc.string({ minLength: 15, maxLength: 15 }), fc.anything()), (input) => {
-        const v = validateSidc(input);
-        const r = convertSidc(input, { allowLossy: true });
-        if (!v.valid) expect(r.success).toBe(false);
-      }),
+      fc.property(
+        fc.oneof(
+          fc.string(),
+          fc.string({ minLength: 15, maxLength: 15 }),
+          fc.anything(),
+        ),
+        (input) => {
+          const v = validateSidc(input);
+          const r = convertSidc(input, { allowLossy: true });
+          if (!v.valid) expect(r.success).toBe(false);
+        },
+      ),
       { numRuns: 500 },
     );
   });

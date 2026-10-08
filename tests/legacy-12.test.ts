@@ -8,7 +8,11 @@ describe("15 -> 12 character form (profile prefix-12)", () => {
 
   it("keeps positions 1-12 when 13-15 carry no information", () => {
     const r = convertSidc15To12("SFGPUCIC---E---");
-    expect(r).toMatchObject({ output: "SFGPUCIC---E", matchQuality: "exact", success: true });
+    expect(r).toMatchObject({
+      output: "SFGPUCIC---E",
+      matchQuality: "exact",
+      success: true,
+    });
     expect(r.mappingSource).toBe("profile:prefix-12");
   });
 
@@ -24,7 +28,10 @@ describe("15 -> 12 character form (profile prefix-12)", () => {
     expect(strict.candidates?.[0]?.output).toBe("SFGPUCIC---E");
     const ok = convertSidc15To12("SFGPUCIC---EUSG", { allowLossy: true });
     expect(ok.output).toBe("SFGPUCIC---E");
-    expect(ok.metadata?.droppedFields).toEqual({ countryCode: "US", orderOfBattle: "G" });
+    expect(ok.metadata?.droppedFields).toEqual({
+      countryCode: "US",
+      orderOfBattle: "G",
+    });
   });
 
   it("reports METOC graphic-type loss when position 13 is significant", () => {
@@ -39,7 +46,9 @@ describe("15 -> 12 character form (profile prefix-12)", () => {
   });
 
   it("rejects an unknown profile", () => {
-    const r = convertSidc15To12("SFGPUCIC---E---", { legacy12Profile: "fbcb2" });
+    const r = convertSidc15To12("SFGPUCIC---E---", {
+      legacy12Profile: "fbcb2",
+    });
     expect(r.success).toBe(false);
     expect(r.matchQuality).toBe("unsupported");
   });

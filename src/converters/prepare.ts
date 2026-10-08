@@ -1,10 +1,18 @@
 /**
  * Shared input stage of every conversion: validation, wildcard policy and resolution.
  */
-import type { ConversionOptions, SidcStandard, ValidationResult } from "../types";
+import type {
+  ConversionOptions,
+  SidcStandard,
+  ValidationResult,
+} from "../types";
 import { DiagnosticList } from "../diagnostics";
 import { validateSidc } from "../validation";
-import { resolveWildcards, wildcardFields, type WildcardResolution } from "../wildcard";
+import {
+  resolveWildcards,
+  wildcardFields,
+  type WildcardResolution,
+} from "../wildcard";
 
 export interface PreparedInput {
   ok: boolean;
@@ -40,14 +48,20 @@ export function prepareInput(
     validation,
     unresolvedPositions: validation.wildcardPositions,
   });
-  if (!validation.valid || validation.normalized === null || d.hasErrors()) return fail();
+  if (!validation.valid || validation.normalized === null || d.hasErrors())
+    return fail();
 
   const policy = options.wildcardPolicy ?? "resolve";
   if (!validation.isTemplate) {
     // Options meant for wildcards must not silently override concrete input.
     const r = resolveWildcards(validation.normalized, options);
     d.extend(r.diagnostics);
-    return { ok: true, sidc: validation.normalized, validation, unresolvedPositions: [] };
+    return {
+      ok: true,
+      sidc: validation.normalized,
+      validation,
+      unresolvedPositions: [],
+    };
   }
 
   if (policy === "reject") {
@@ -64,14 +78,19 @@ export function prepareInput(
   if (policy === "resolve") {
     resolution = resolveWildcards(sidc, options);
     d.extend(resolution.diagnostics);
-    if (resolution.diagnostics.some((x) => x.severity === "error")) return fail();
+    if (resolution.diagnostics.some((x) => x.severity === "error"))
+      return fail();
     if (resolution.resolved.length > 0) {
       // The substituted values must be valid for this SIDC as well.
       const again = validateSidc(resolution.sidc, { strictInput: true });
       const errs = again.diagnostics.filter((x) => x.severity === "error");
       if (errs.length > 0) {
         for (const e of errs) {
-          d.error("INVALID_RESOLUTION_VALUE", `After substituting the supplied values: ${e.message}`, e.positions);
+          d.error(
+            "INVALID_RESOLUTION_VALUE",
+            `After substituting the supplied values: ${e.message}`,
+            e.positions,
+          );
         }
         return fail();
       }

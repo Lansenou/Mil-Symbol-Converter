@@ -15,7 +15,9 @@ describe("regression: SFGPUCIC---E--- / 10031000151211000002", () => {
   });
 
   it("agrees with @orbat-mapper/convert-symbology for this concrete code", () => {
-    expect(convertLetterSidc2NumberSidc("SFGPUCIC---E---").sidc).toBe("10031000151211000002");
+    expect(convertLetterSidc2NumberSidc("SFGPUCIC---E---").sidc).toBe(
+      "10031000151211000002",
+    );
   });
 });
 
@@ -23,8 +25,16 @@ describe("regression: S*GPUCI---*****", () => {
   it("is a generic template whose user-defined positions are 2 and 11-15", () => {
     const a = analyzeSidc("S*GPUCI---*****");
     expect(a.isTemplate).toBe(true);
-    expect(a.validation.catalogEntry).toMatchObject({ template: "S*G*UCI---*****", description: "INFANTRY" });
-    expect(a.wildcards.map((w) => w.option)).toEqual(["affiliation", "symbolModifier", "countryCode", "orderOfBattle"]);
+    expect(a.validation.catalogEntry).toMatchObject({
+      template: "S*G*UCI---*****",
+      description: "INFANTRY",
+    });
+    expect(a.wildcards.map((w) => w.option)).toEqual([
+      "affiliation",
+      "symbolModifier",
+      "countryCode",
+      "orderOfBattle",
+    ]);
     expect(a.wildcards[0]?.alternatives).toBe(14);
   });
 
@@ -34,14 +44,18 @@ describe("regression: S*GPUCI---*****", () => {
 
   it("differs from convert-symbology, which silently substitutes Friend for *", () => {
     // Documented difference: the other library replaces "*" with "-" and defaults to Friend.
-    expect(convertLetterSidc2NumberSidc("S*GPUCI---*****").sidc).toBe("10031000001211000000");
+    expect(convertLetterSidc2NumberSidc("S*GPUCI---*****").sidc).toBe(
+      "10031000001211000000",
+    );
     expect(convertSidc("S*GPUCI---*****").success).toBe(false);
   });
 });
 
 describe("regression: silent defaults found in other converters are not reproduced", () => {
   it("'-' in the standard identity is invalid, not Friend", () => {
-    expect(convertLetterSidc2NumberSidc("S-GPUCI--------").sidc).toBe("10031000001211000000");
+    expect(convertLetterSidc2NumberSidc("S-GPUCI--------").sidc).toBe(
+      "10031000001211000000",
+    );
     expect(convertSidc("S-GPUCI--------").success).toBe(false);
   });
 

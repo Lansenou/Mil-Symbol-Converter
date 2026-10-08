@@ -14,13 +14,21 @@ describe("convertSidc dispatch", () => {
     expect(convertSidc("SFGPUCIC---E---").targetStandard).toBe("MIL-STD-2525D");
   });
   it("identity target validates and normalizes", () => {
-    const r = convertSidc("sfgpucic---e---", { targetStandard: "MIL-STD-2525C" });
+    const r = convertSidc("sfgpucic---e---", {
+      targetStandard: "MIL-STD-2525C",
+    });
     expect(r.output).toBe("SFGPUCIC---E---");
   });
   it("rejects an unknown target and a non-2525C source", () => {
     // @ts-expect-error runtime check
-    expect(convertSidc("SFGPUCI--------", { targetStandard: "MIL-STD-2525F" }).success).toBe(false);
-    expect(convertSidc("SFGPUCI--------", { sourceStandard: "MIL-STD-2525D" }).success).toBe(false);
+    expect(
+      convertSidc("SFGPUCI--------", { targetStandard: "MIL-STD-2525F" })
+        .success,
+    ).toBe(false);
+    expect(
+      convertSidc("SFGPUCI--------", { sourceStandard: "MIL-STD-2525D" })
+        .success,
+    ).toBe(false);
   });
 });
 
@@ -47,17 +55,22 @@ describe("analyzeSidc", () => {
       ["country code", "ISO 3166-1 US"],
       ["order of battle", "Ground OB"],
     ]);
-    expect(a.evidence.map((e) => e.source).sort()).toEqual(["JMSML", "mil-sym-ts"]);
+    expect(a.evidence.map((e) => e.source).sort()).toEqual([
+      "JMSML",
+      "mil-sym-ts",
+    ]);
   });
   it("describes METOC fields", () => {
-    expect(analyzeSidc("WAS-PL----P----").fields.map((f) => f.meaning)).toEqual([
-      "Meteorological and oceanographic (Appendix C)",
-      "Atmospheric",
-      "Static",
-      "LOW PRESSURE CENTER",
-      "Point",
-      null,
-    ]);
+    expect(analyzeSidc("WAS-PL----P----").fields.map((f) => f.meaning)).toEqual(
+      [
+        "Meteorological and oceanographic (Appendix C)",
+        "Atmospheric",
+        "Static",
+        "LOW PRESSURE CENTER",
+        "Point",
+        null,
+      ],
+    );
   });
   it("does not crash on invalid input", () => {
     expect(analyzeSidc(undefined).fields).toEqual([]);
@@ -87,12 +100,22 @@ describe("mapping adapters are pluggable", () => {
         ],
       },
     ];
-    const r = convertToNumeric("SFGPUCI--------", NUMERIC_TARGETS["2525D"], {}, only);
+    const r = convertToNumeric(
+      "SFGPUCI--------",
+      NUMERIC_TARGETS["2525D"],
+      {},
+      only,
+    );
     expect(r.output).toBe("10031000001211000000");
     expect(r.confidence).toBe("single-source");
   });
   it("no adapters means no mapping", () => {
-    const r = convertToNumeric("SFGPUCI--------", NUMERIC_TARGETS["2525D"], {}, []);
+    const r = convertToNumeric(
+      "SFGPUCI--------",
+      NUMERIC_TARGETS["2525D"],
+      {},
+      [],
+    );
     expect(r.matchQuality).toBe("unsupported");
   });
   it("an adapter cannot inject a code absent from the target catalog", () => {
@@ -115,6 +138,9 @@ describe("mapping adapters are pluggable", () => {
         },
       ],
     };
-    expect(convertToNumeric("SFGPUCI--------", NUMERIC_TARGETS["2525D"], {}, [bogus]).success).toBe(false);
+    expect(
+      convertToNumeric("SFGPUCI--------", NUMERIC_TARGETS["2525D"], {}, [bogus])
+        .success,
+    ).toBe(false);
   });
 });

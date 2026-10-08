@@ -7,7 +7,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 const DATA = "src/main/ts/armyc2/c5isr/data";
-const load = (root, f) => JSON.parse(fs.readFileSync(path.join(root, DATA, f), "utf8"));
+const load = (root, f) =>
+  JSON.parse(fs.readFileSync(path.join(root, DATA, f), "utf8"));
 
 export function parseC2D(root) {
   return load(root, "c2d.json").c2d.symbols.map((s) => ({
@@ -24,11 +25,22 @@ export function parseC2D(root) {
 export function parseEntityCatalog(root, file, key) {
   const symbols = load(root, file)[key].SYMBOL;
   const out = new Map();
-  let ss = "", e = "", et = "", est = "", versions = "";
+  let ss = "",
+    e = "",
+    et = "",
+    est = "",
+    versions = "";
   for (const s of symbols) {
     if (s.ss) ss = s.ss;
-    if (s.e) { e = s.e.trim(); et = ""; est = ""; }
-    if (s.et) { et = s.et.trim(); est = ""; }
+    if (s.e) {
+      e = s.e.trim();
+      et = "";
+      est = "";
+    }
+    if (s.et) {
+      et = s.et.trim();
+      est = "";
+    }
     if (s.est) est = s.est.trim();
     if (s.versions) versions = s.versions;
     const code = s.code && s.code.length === 6 ? s.code : "000000";
@@ -45,7 +57,8 @@ export function parseEntityCatalog(root, file, key) {
 export function parseModifierCatalog(root, file, key) {
   const mods = load(root, file)[key].secmods;
   const out = new Map();
-  let ss = "", sector = "";
+  let ss = "",
+    sector = "";
   for (const m of mods) {
     if (!m.versions) {
       ss = m.name.split(" ")[0];

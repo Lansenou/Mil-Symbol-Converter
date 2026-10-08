@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { validateSidc } from "../src";
 
-const codes = (r: ReturnType<typeof validateSidc>) => r.diagnostics.map((d) => d.code);
+const codes = (r: ReturnType<typeof validateSidc>) =>
+  r.diagnostics.map((d) => d.code);
 
 describe("input validation", () => {
   it("accepts a concrete 2525C SIDC and finds its table row", () => {
@@ -44,12 +45,18 @@ describe("input validation", () => {
     const r = validateSidc("  sfgpucic---e---\n");
     expect(r.valid).toBe(true);
     expect(r.normalized).toBe("SFGPUCIC---E---");
-    expect(codes(r)).toEqual(expect.arrayContaining(["WHITESPACE_TRIMMED", "LOWERCASE_NORMALIZED"]));
+    expect(codes(r)).toEqual(
+      expect.arrayContaining(["WHITESPACE_TRIMMED", "LOWERCASE_NORMALIZED"]),
+    );
   });
 
   it("rejects lowercase and whitespace in strictInput mode", () => {
-    expect(validateSidc("sfgpucic---e---", { strictInput: true }).valid).toBe(false);
-    expect(validateSidc(" SFGPUCIC---E---", { strictInput: true }).valid).toBe(false);
+    expect(validateSidc("sfgpucic---e---", { strictInput: true }).valid).toBe(
+      false,
+    );
+    expect(validateSidc(" SFGPUCIC---E---", { strictInput: true }).valid).toBe(
+      false,
+    );
   });
 
   it("rejects internal whitespace and invalid characters with positions", () => {

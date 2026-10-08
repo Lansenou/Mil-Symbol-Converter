@@ -12,7 +12,12 @@ import {
   WILDCARD_POSITIONS,
   type CodingScheme,
 } from "./legacy/fields";
-import type { ConversionOptions, Diagnostic, LegacySidcFields, ValidationResult } from "./types";
+import type {
+  ConversionOptions,
+  Diagnostic,
+  LegacySidcFields,
+  ValidationResult,
+} from "./types";
 import { DiagnosticList } from "./diagnostics";
 
 export const LEGACY_SIDC_LENGTH = 15;
@@ -53,7 +58,10 @@ export function normalizeInput(
   }
   if (s.trim() !== s) {
     if (options.strictInput) {
-      d.error("SURROUNDING_WHITESPACE", "The SIDC has leading or trailing whitespace.");
+      d.error(
+        "SURROUNDING_WHITESPACE",
+        "The SIDC has leading or trailing whitespace.",
+      );
       return null;
     }
     s = s.trim();
@@ -73,7 +81,9 @@ export function normalizeInput(
     d.error(
       "INVALID_CHARACTERS",
       `Invalid character(s) at position(s) ${bad.join(", ")}. Only A-Z, 0-9, "-" and "*" are allowed` +
-        (typographic ? '; typographic dashes (e.g. "—") must be the ASCII hyphen-minus "-".' : "."),
+        (typographic
+          ? '; typographic dashes (e.g. "—") must be the ASCII hyphen-minus "-".'
+          : "."),
       bad,
     );
     return null;
@@ -84,12 +94,16 @@ export function normalizeInput(
       return null;
     }
     s = s.toUpperCase();
-    d.warn("LOWERCASE_NORMALIZED", "Lowercase letters were converted to uppercase.");
+    d.warn(
+      "LOWERCASE_NORMALIZED",
+      "Lowercase letters were converted to uppercase.",
+    );
   }
   if (s.length !== LEGACY_SIDC_LENGTH) {
     let hint = "";
     if (/^\d+$/.test(s) && (s.length === 20 || s.length === 30)) {
-      hint = " This looks like a numeric (2525D/E, APP-6D/E) SIDC; the input must be a 2525C letter SIDC.";
+      hint =
+        " This looks like a numeric (2525D/E, APP-6D/E) SIDC; the input must be a 2525C letter SIDC.";
     } else if (s.length < LEGACY_SIDC_LENGTH) {
       hint =
         " Shortened forms (such as a 10- or 12-character prefix) are not complete 2525C SIDCs; positions are never guessed.";
@@ -129,8 +143,11 @@ export function findCatalogEntry(sidc: string): CatalogEntry | undefined {
   if (!rows) return undefined;
   // Prefer the row whose fixed characters all agree with the input.
   return (
-    rows.find((r) => [...r.template].every((t, i) => t === "*" || sidc[i] === "*" || t === sidc[i])) ??
-    rows[0]
+    rows.find((r) =>
+      [...r.template].every(
+        (t, i) => t === "*" || sidc[i] === "*" || t === sidc[i],
+      ),
+    ) ?? rows[0]
   );
 }
 
@@ -138,7 +155,10 @@ export function findCatalogEntry(sidc: string): CatalogEntry | undefined {
  * Validates a MIL-STD-2525C SIDC: characters, length, per-scheme field values, wildcard
  * placement and field combinations that the 2525C tables rule out.
  */
-export function validateSidc(input: unknown, options: ConversionOptions = {}): ValidationResult {
+export function validateSidc(
+  input: unknown,
+  options: ConversionOptions = {},
+): ValidationResult {
   const d = new DiagnosticList();
   const normalized = normalizeInput(input, options, d);
   const base: ValidationResult = {
@@ -156,7 +176,9 @@ export function validateSidc(input: unknown, options: ConversionOptions = {}): V
 
   const fields = parseLegacyFields(normalized);
   const scheme = fields.codingScheme as CodingScheme;
-  const wildcardPositions = [...normalized].flatMap((c, i) => (c === "*" ? [i + 1] : []));
+  const wildcardPositions = [...normalized].flatMap((c, i) =>
+    c === "*" ? [i + 1] : [],
+  );
   base.normalized = normalized;
   base.fields = fields;
   base.wildcardPositions = wildcardPositions;
@@ -172,7 +194,9 @@ export function validateSidc(input: unknown, options: ConversionOptions = {}): V
   }
 
   const allowedWildcards = WILDCARD_POSITIONS[scheme];
-  const misplaced = wildcardPositions.filter((p) => !allowedWildcards.includes(p));
+  const misplaced = wildcardPositions.filter(
+    (p) => !allowedWildcards.includes(p),
+  );
   if (misplaced.length > 0) {
     d.error(
       "INVALID_WILDCARD_POSITION",
@@ -186,8 +210,22 @@ export function validateSidc(input: unknown, options: ConversionOptions = {}): V
   if (scheme === "W") {
     validateMetoc(normalized, d);
   } else {
-    checkField(d, fields.standardIdentity, STANDARD_IDENTITIES, 2, "standard identity", true);
-    checkField(d, fields.battleDimension, DIMENSIONS[scheme], 3, "battle dimension/category", false);
+    checkField(
+      d,
+      fields.standardIdentity,
+      STANDARD_IDENTITIES,
+      2,
+      "standard identity",
+      true,
+    );
+    checkField(
+      d,
+      fields.battleDimension,
+      DIMENSIONS[scheme],
+      3,
+      "battle dimension/category",
+      false,
+    );
     checkField(d, fields.status, STATUSES[scheme], 4, "status", true);
     validateFunctionId(fields.functionId, d);
     const mod = fields.symbolModifier;
@@ -203,7 +241,14 @@ export function validateSidc(input: unknown, options: ConversionOptions = {}): V
         );
       }
     } else {
-      checkField(d, mod, SYMBOL_MODIFIERS[scheme], 11, "symbol modifier (positions 11-12)", false);
+      checkField(
+        d,
+        mod,
+        SYMBOL_MODIFIERS[scheme],
+        11,
+        "symbol modifier (positions 11-12)",
+        false,
+      );
     }
     const cc = fields.countryCode;
     if (!(cc === "--" || cc === "**" || /^[A-Z]{2}$/.test(cc))) {
@@ -221,7 +266,14 @@ export function validateSidc(input: unknown, options: ConversionOptions = {}): V
         [15],
       );
     } else if (ob !== "-") {
-      checkField(d, ob, ORDERS_OF_BATTLE[scheme], 15, "order of battle", scheme !== "G");
+      checkField(
+        d,
+        ob,
+        ORDERS_OF_BATTLE[scheme],
+        15,
+        "order of battle",
+        scheme !== "G",
+      );
     }
   }
 
@@ -266,10 +318,18 @@ function validateMetoc(sidc: string, d: DiagnosticList): void {
   const sd = sidc.slice(2, 4);
   const gt = sidc.slice(10, 13);
   if (!(category in METOC.categories)) {
-    d.error("INVALID_FIELD_VALUE", `METOC position 2 (category) "${category}" must be A, O or S.`, [2]);
+    d.error(
+      "INVALID_FIELD_VALUE",
+      `METOC position 2 (category) "${category}" must be A, O or S.`,
+      [2],
+    );
   }
   if (!(sd in METOC.staticDynamic)) {
-    d.error("INVALID_FIELD_VALUE", `METOC positions 3-4 (static/dynamic) "${sd}" must be "S-" or "-D".`, [3, 4]);
+    d.error(
+      "INVALID_FIELD_VALUE",
+      `METOC positions 3-4 (static/dynamic) "${sd}" must be "S-" or "-D".`,
+      [3, 4],
+    );
   }
   if (!(gt in METOC.graphicTypes)) {
     d.error(
@@ -279,11 +339,20 @@ function validateMetoc(sidc: string, d: DiagnosticList): void {
     );
   }
   if (sidc.slice(13, 15) !== "--") {
-    d.error("INVALID_FIELD_VALUE", "METOC positions 14-15 are not used and must be \"--\".", [14, 15]);
+    d.error(
+      "INVALID_FIELD_VALUE",
+      'METOC positions 14-15 are not used and must be "--".',
+      [14, 15],
+    );
   }
 }
 
-function checkCombinations(sidc: string, entry: CatalogEntry, scheme: CodingScheme, d: DiagnosticList): void {
+function checkCombinations(
+  sidc: string,
+  entry: CatalogEntry,
+  scheme: CodingScheme,
+  d: DiagnosticList,
+): void {
   const templateH = entry.template[10] === "H";
   const inputH = sidc[10] === "H";
   if (templateH && sidc[10] !== "H" && sidc[10] !== "*") {
@@ -301,7 +370,11 @@ function checkCombinations(sidc: string, entry: CatalogEntry, scheme: CodingSche
     );
   }
   if (scheme === "I" && sidc.slice(10, 12) !== "--") {
-    d.error("INVALID_FIELD_VALUE", "Positions 11-12 are not used for signals intelligence.", [11, 12]);
+    d.error(
+      "INVALID_FIELD_VALUE",
+      "Positions 11-12 are not used for signals intelligence.",
+      [11, 12],
+    );
   }
 }
 

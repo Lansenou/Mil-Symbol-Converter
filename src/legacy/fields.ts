@@ -37,7 +37,10 @@ export const STANDARD_IDENTITIES: Record<string, string> = {
 };
 
 /** Position 3 per scheme (battle dimension or category). */
-export const DIMENSIONS: Record<Exclude<CodingScheme, "W">, Record<string, string>> = {
+export const DIMENSIONS: Record<
+  Exclude<CodingScheme, "W">,
+  Record<string, string>
+> = {
   // Table A-I (p. 51)
   S: {
     P: "Space",
@@ -59,7 +62,15 @@ export const DIMENSIONS: Record<Exclude<CodingScheme, "W">, Record<string, strin
     O: "Other",
   },
   // Table D-I (p. 964)
-  I: { P: "Space", A: "Air", G: "Ground", S: "Sea surface", U: "Sea subsurface", X: "Other", Z: "Unknown" },
+  I: {
+    P: "Space",
+    A: "Air",
+    G: "Ground",
+    S: "Sea surface",
+    U: "Sea subsurface",
+    X: "Other",
+    Z: "Unknown",
+  },
   // Table E-I (p. 991)
   O: {
     V: "Violent activities",
@@ -71,7 +82,12 @@ export const DIMENSIONS: Record<Exclude<CodingScheme, "W">, Record<string, strin
     R: "Rape",
   },
   // Table G-I (p. 1032)
-  E: { I: "Incident", N: "Natural events", O: "Operations", F: "Infrastructure" },
+  E: {
+    I: "Incident",
+    N: "Natural events",
+    O: "Operations",
+    F: "Infrastructure",
+  },
 };
 
 const OPERATIONAL_STATUS: Record<string, string> = {
@@ -84,7 +100,10 @@ const OPERATIONAL_STATUS: Record<string, string> = {
 };
 
 /** Position 4 per scheme. */
-export const STATUSES: Record<Exclude<CodingScheme, "W">, Record<string, string>> = {
+export const STATUSES: Record<
+  Exclude<CodingScheme, "W">,
+  Record<string, string>
+> = {
   S: OPERATIONAL_STATUS, // Table A-I
   I: OPERATIONAL_STATUS, // Table D-I
   O: OPERATIONAL_STATUS, // Table E-I
@@ -150,13 +169,17 @@ function echelonCodes(prefixes: string[]): Record<string, string> {
   for (const p of prefixes) {
     const head = p === "-" ? "" : `${HQ_TF_FD[p]} `;
     if (p !== "-") out[`${p}-`] = HQ_TF_FD[p] ?? p;
-    for (const [e, name] of Object.entries(ECHELONS)) out[`${p}${e}`] = `${head}${name}`.trim();
+    for (const [e, name] of Object.entries(ECHELONS))
+      out[`${p}${e}`] = `${head}${name}`.trim();
   }
   return out;
 }
 
 /** Allowed values of positions 11-12 per scheme ("--" is always allowed). */
-export const SYMBOL_MODIFIERS: Record<Exclude<CodingScheme, "W">, Record<string, string>> = {
+export const SYMBOL_MODIFIERS: Record<
+  Exclude<CodingScheme, "W">,
+  Record<string, string>
+> = {
   // Table A-II (pp. 52-54)
   S: {
     "--": "Null",
@@ -170,13 +193,20 @@ export const SYMBOL_MODIFIERS: Record<Exclude<CodingScheme, "W">, Record<string,
   // Table D-I (p. 964): positions 11 and 12 are not used
   I: { "--": "Not used" },
   // Table E-II (pp. 992-994)
-  O: { "--": "Null", ...echelonCodes(["-", "A", "B", "C", "D", "E", "F", "G"]), ...INSTALLATIONS },
+  O: {
+    "--": "Null",
+    ...echelonCodes(["-", "A", "B", "C", "D", "E", "F", "G"]),
+    ...INSTALLATIONS,
+  },
   // Table G-II (p. 1032)
   E: { "--": "Null", "H-": "Installation", ...MOBILITY },
 };
 
 /** Position 15 per scheme. */
-export const ORDERS_OF_BATTLE: Record<Exclude<CodingScheme, "W">, Record<string, string>> = {
+export const ORDERS_OF_BATTLE: Record<
+  Exclude<CodingScheme, "W">,
+  Record<string, string>
+> = {
   S: {
     A: "Air OB",
     E: "Electronic OB",
@@ -215,9 +245,15 @@ export const ORDERS_OF_BATTLE: Record<Exclude<CodingScheme, "W">, Record<string,
 
 /** METOC (Table C-I, p. 763). */
 export const METOC = {
-  categories: { A: "Atmospheric", O: "Oceanic", S: "Space" } as Record<string, string>,
+  categories: { A: "Atmospheric", O: "Oceanic", S: "Space" } as Record<
+    string,
+    string
+  >,
   staticDynamic: { "S-": "Static", "-D": "Dynamic" } as Record<string, string>,
-  graphicTypes: { "P--": "Point", "-L-": "Line", "--A": "Area" } as Record<string, string>,
+  graphicTypes: { "P--": "Point", "-L-": "Line", "--A": "Area" } as Record<
+    string,
+    string
+  >,
 };
 
 /**

@@ -10,18 +10,33 @@ const parser = new XMLParser({
   parseTagValue: false,
   isArray: (name) =>
     [
-      "Affiliation", "LegacyStandardIdentityCode", "Status", "LegacyStatusCode", "HQTFDummy",
-      "LegacyHQTFDummyCode", "AmplifierGroup", "Amplifier", "LegacyModifierCode", "Context",
-      "StandardIdentity", "Dimension", "LegacyDimensionCode",
+      "Affiliation",
+      "LegacyStandardIdentityCode",
+      "Status",
+      "LegacyStatusCode",
+      "HQTFDummy",
+      "LegacyHQTFDummyCode",
+      "AmplifierGroup",
+      "Amplifier",
+      "LegacyModifierCode",
+      "Context",
+      "StandardIdentity",
+      "Dimension",
+      "LegacyDimensionCode",
     ].includes(name),
 });
 const text = (n) => (typeof n === "string" ? n : (n?.["#text"] ?? ""));
 
 export function parseBase(file) {
   const root = parser.parse(fs.readFileSync(file, "utf8")).Library;
-  const contexts = Object.fromEntries(root.Contexts.Context.map((c) => [c.ID, String(c.ContextCode)]));
+  const contexts = Object.fromEntries(
+    root.Contexts.Context.map((c) => [c.ID, String(c.ContextCode)]),
+  );
   const identities = Object.fromEntries(
-    root.StandardIdentities.StandardIdentity.map((s) => [s.ID, String(s.StandardIdentityCode)]),
+    root.StandardIdentities.StandardIdentity.map((s) => [
+      s.ID,
+      String(s.StandardIdentityCode),
+    ]),
   );
 
   // Legacy standard identity letter -> 2-digit context+identity, checked for consistency across dimensions.
@@ -47,7 +62,8 @@ export function parseBase(file) {
 
   const status = {};
   for (const s of root.Statuses.Status) {
-    for (const l of s.LegacyStatusCode ?? []) status[text(l)] = String(s.StatusCode);
+    for (const l of s.LegacyStatusCode ?? [])
+      status[text(l)] = String(s.StatusCode);
   }
 
   const hqtfd = {};
@@ -93,5 +109,13 @@ export function parseBase(file) {
       });
     }
   }
-  return { standardIdentity, metocCategory, conflicts, status, hqtfd, amplifiers, dimensions };
+  return {
+    standardIdentity,
+    metocCategory,
+    conflicts,
+    status,
+    hqtfd,
+    amplifiers,
+    dimensions,
+  };
 }

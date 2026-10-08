@@ -27,7 +27,8 @@ const parser = new XMLParser({
 });
 
 const code2 = (node) => `${node.DigitOne}${node.DigitTwo}`;
-const text = (node) => (typeof node === "string" ? node : node?.["#text"] ?? "");
+const text = (node) =>
+  typeof node === "string" ? node : (node?.["#text"] ?? "");
 
 export function parseSymbolSetFile(file) {
   const xml = fs.readFileSync(file, "utf8");
@@ -41,7 +42,10 @@ export function parseSymbolSetFile(file) {
   const catalog = []; // [{code, name}]
   const specialSubtypes = new Map();
   for (const st of root.SpecialEntitySubTypes?.EntitySubType ?? []) {
-    specialSubtypes.set(st.ID, { code: code2(st.EntitySubTypeCode), label: st.Label });
+    specialSubtypes.set(st.ID, {
+      code: code2(st.EntitySubTypeCode),
+      label: st.Label,
+    });
   }
   for (const e of root.Entities?.Entity ?? []) {
     const ec = code2(e.EntityCode);
@@ -64,10 +68,18 @@ export function parseSymbolSetFile(file) {
 
   const modifiers = { 1: new Map(), 2: new Map() };
   for (const m of root.SectorOneModifiers?.Modifier ?? []) {
-    modifiers[1].set(m.ID, { code: code2(m.ModifierCode), name: m.Label, category: m.Category ?? "" });
+    modifiers[1].set(m.ID, {
+      code: code2(m.ModifierCode),
+      name: m.Label,
+      category: m.Category ?? "",
+    });
   }
   for (const m of root.SectorTwoModifiers?.Modifier ?? []) {
-    modifiers[2].set(m.ID, { code: code2(m.ModifierCode), name: m.Label, category: m.Category ?? "" });
+    modifiers[2].set(m.ID, {
+      code: code2(m.ModifierCode),
+      name: m.Label,
+      category: m.Category ?? "",
+    });
   }
 
   const legacy = [];
@@ -79,10 +91,18 @@ export function parseSymbolSetFile(file) {
     if (ls.EntityID) {
       let key = `${ls.EntityID}|${ls.EntityTypeID ?? ""}|${ls.EntitySubTypeID ?? ""}`;
       entity = entities.get(key) ?? null;
-      if (!entity && ls.EntitySubTypeID && specialSubtypes.has(ls.EntitySubTypeID)) {
+      if (
+        !entity &&
+        ls.EntitySubTypeID &&
+        specialSubtypes.has(ls.EntitySubTypeID)
+      ) {
         const base = entities.get(`${ls.EntityID}|${ls.EntityTypeID ?? ""}|`);
         const sp = specialSubtypes.get(ls.EntitySubTypeID);
-        if (base) entity = { code: base.code.slice(0, 4) + sp.code, name: `${base.name} : ${sp.label}` };
+        if (base)
+          entity = {
+            code: base.code.slice(0, 4) + sp.code,
+            name: `${base.name} : ${sp.label}`,
+          };
       }
       if (!entity) unresolved = key;
     }

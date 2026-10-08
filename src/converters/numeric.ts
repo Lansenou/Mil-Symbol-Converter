@@ -8,7 +8,11 @@
  *
  * The SIDC is built as a string and never passes through a number, so leading zeros survive.
  */
-import { defaultAdapters, type MappingAdapter, type MappingEvidence } from "../adapters/symbology-adapter";
+import {
+  defaultAdapters,
+  type MappingAdapter,
+  type MappingEvidence,
+} from "../adapters/symbology-adapter";
 import {
   contested,
   entityName,
@@ -16,7 +20,12 @@ import {
   SYMBOL_SET_NAMES,
   type EditionKey,
 } from "../data/index";
-import { STANDARD_IDENTITIES, STATUSES, SYMBOL_MODIFIERS, type CodingScheme } from "../legacy/fields";
+import {
+  STANDARD_IDENTITIES,
+  STATUSES,
+  SYMBOL_MODIFIERS,
+  type CodingScheme,
+} from "../legacy/fields";
 import type {
   ConversionCandidate,
   ConversionOptions,
@@ -30,7 +39,10 @@ import { prepareInput } from "./prepare";
 import { failure, finalize, worst } from "./result";
 
 export interface NumericTarget {
-  standard: Extract<SidcStandard, "MIL-STD-2525D" | "MIL-STD-2525E" | "APP-6D" | "APP-6E">;
+  standard: Extract<
+    SidcStandard,
+    "MIL-STD-2525D" | "MIL-STD-2525E" | "APP-6D" | "APP-6E"
+  >;
   /** Version digits 1-2. */
   version: string;
   /** Catalog used to check that the code exists with the same meaning. */
@@ -44,21 +56,36 @@ export interface NumericTarget {
  * 16 APP-6E Change 2), which are also the version tags of its catalogs.
  */
 export const NUMERIC_TARGETS = {
-  "2525D": { standard: "MIL-STD-2525D", version: "10", edition: "2525D", label: "MIL-STD-2525D (version 10)" },
+  "2525D": {
+    standard: "MIL-STD-2525D",
+    version: "10",
+    edition: "2525D",
+    label: "MIL-STD-2525D (version 10)",
+  },
   "2525Dch1": {
     standard: "MIL-STD-2525D",
     version: "11",
     edition: "2525Dch1",
     label: "MIL-STD-2525D Change 1 (version 11)",
   },
-  "APP-6D": { standard: "APP-6D", version: "10", edition: "APP-6D", label: "APP-6(D) (version 10)" },
+  "APP-6D": {
+    standard: "APP-6D",
+    version: "10",
+    edition: "APP-6D",
+    label: "APP-6(D) (version 10)",
+  },
   "2525E": {
     standard: "MIL-STD-2525E",
     version: "15",
     edition: "2525Ech1",
     label: "MIL-STD-2525E Change 1 (version 15)",
   },
-  "APP-6E": { standard: "APP-6E", version: "16", edition: "APP-6Ech2", label: "APP-6(E) Change 2 (version 16)" },
+  "APP-6E": {
+    standard: "APP-6E",
+    version: "16",
+    edition: "APP-6Ech2",
+    label: "APP-6(E) Change 2 (version 16)",
+  },
 } as const satisfies Record<string, NumericTarget>;
 
 const NUMERIC_SIDC = /^\d{20}$/;
@@ -88,7 +115,10 @@ interface CheckedCandidate {
 }
 
 /** Checks that a candidate exists in the target edition with the meaning its source gave it. */
-function checkCandidate(e: MappingEvidence, target: NumericTarget): CheckedCandidate {
+function checkCandidate(
+  e: MappingEvidence,
+  target: NumericTarget,
+): CheckedCandidate {
   const code = `${e.symbolSet}${e.entity}${e.m1}${e.m2}`;
   const base: CheckedCandidate = {
     evidence: e,
@@ -99,7 +129,11 @@ function checkCandidate(e: MappingEvidence, target: NumericTarget): CheckedCandi
     reason: "",
     modifierNames: [],
   };
-  if (e.retired) return { ...base, reason: `${e.source} marks this 2525C symbol as retired (no 2525D counterpart)` };
+  if (e.retired)
+    return {
+      ...base,
+      reason: `${e.source} marks this 2525C symbol as retired (no 2525D counterpart)`,
+    };
   if (!/^\d{12}$/.test(code)) {
     return {
       ...base,
@@ -125,10 +159,16 @@ function checkCandidate(e: MappingEvidence, target: NumericTarget): CheckedCandi
   ];
   for (const [what, sourceName, targetName] of parts) {
     if (targetName === undefined) {
-      return { ...base, reason: `${what} of symbol set ${e.symbolSet} is not in the ${target.label} catalog` };
+      return {
+        ...base,
+        reason: `${what} of symbol set ${e.symbolSet} is not in the ${target.label} catalog`,
+      };
     }
     if (sourceName === undefined) {
-      return { ...base, reason: `${what} of symbol set ${e.symbolSet} is not in the ${e.source} source catalog` };
+      return {
+        ...base,
+        reason: `${what} of symbol set ${e.symbolSet} is not in the ${e.source} source catalog`,
+      };
     }
     if (normalizeName(sourceName) !== normalizeName(targetName)) {
       return {
@@ -152,7 +192,9 @@ function checkCandidate(e: MappingEvidence, target: NumericTarget): CheckedCandi
     contested: isContested,
     reason: "",
     entityName: parts[0]?.[2],
-    modifierNames: [parts[1]?.[2], parts[2]?.[2]].filter((n): n is string => !!n && n !== "Unspecified"),
+    modifierNames: [parts[1]?.[2], parts[2]?.[2]].filter(
+      (n): n is string => !!n && n !== "Unspecified",
+    ),
   };
 }
 
@@ -165,12 +207,17 @@ export function convertToNumeric(
   const d = new DiagnosticList();
   const prepared = prepareInput(input, options, target.standard, false, d);
   if (!prepared.ok || prepared.sidc === null) {
-    return failure(input, target.standard, d, { normalizedInput: prepared.validation.normalized });
+    return failure(input, target.standard, d, {
+      normalizedInput: prepared.validation.normalized,
+    });
   }
   const sidc = prepared.sidc;
   const scheme = sidc[0] as CodingScheme;
   const entry = prepared.validation.catalogEntry;
-  const metadata: NonNullable<ConversionResult["metadata"]> = { codingScheme: scheme, version: target.version };
+  const metadata: NonNullable<ConversionResult["metadata"]> = {
+    codingScheme: scheme,
+    version: target.version,
+  };
   if (entry) {
     metadata.legacyDescription = entry.description;
     metadata.legacyHierarchy = entry.hierarchy;
@@ -180,10 +227,16 @@ export function convertToNumeric(
   const missing = requiredPositions(scheme).filter((p) => sidc[p - 1] === "*");
   if (missing.length > 0) {
     const hints: string[] = [];
-    if (missing.includes(2)) hints.push(`affiliation (one of ${Object.keys(STANDARD_IDENTITIES).join("")})`);
-    if (missing.includes(4) && scheme !== "W") hints.push(`status (one of ${Object.keys(STATUSES[scheme]).join("")})`);
+    if (missing.includes(2))
+      hints.push(
+        `affiliation (one of ${Object.keys(STANDARD_IDENTITIES).join("")})`,
+      );
+    if (missing.includes(4) && scheme !== "W")
+      hints.push(`status (one of ${Object.keys(STATUSES[scheme]).join("")})`);
     if (missing.includes(11) || missing.includes(12)) {
-      const n = Object.keys(SYMBOL_MODIFIERS[scheme as Exclude<CodingScheme, "W">] ?? {}).length;
+      const n = Object.keys(
+        SYMBOL_MODIFIERS[scheme as Exclude<CodingScheme, "W">] ?? {},
+      ).length;
       hints.push(`symbolModifier (${n} table values, e.g. "--" for none)`);
     }
     d.error(
@@ -218,11 +271,16 @@ export function convertToNumeric(
       `Neither ${adapters.map((a) => a.name).join(" nor ")} maps ${entry ? `"${entry.description}" (${entry.template})` : sidc} to a numeric symbol.`,
       [5, 6, 7, 8, 9, 10],
     );
-    return failure(input, target.standard, d, { normalizedInput: sidc, metadata });
+    return failure(input, target.standard, d, {
+      normalizedInput: sidc,
+      metadata,
+    });
   }
   const checked = evidence.map((e) => checkCandidate(e, target));
   const valid = checked.filter((c) => c.valid);
-  const retiredBy = checked.filter((c) => c.evidence.retired).map((c) => c.evidence.source);
+  const retiredBy = checked
+    .filter((c) => c.evidence.retired)
+    .map((c) => c.evidence.source);
   for (const c of checked.filter((x) => !x.valid)) {
     d.info("CANDIDATE_REJECTED", `Not used for ${target.label}: ${c.reason}.`);
   }
@@ -262,19 +320,29 @@ export function convertToNumeric(
       "NO_VALID_MAPPING",
       `No source provides a ${target.label} code with the same meaning: ${checked.map((c) => c.reason).join("; ")}.`,
     );
-    return failure(input, target.standard, d, { normalizedInput: sidc, metadata });
+    return failure(input, target.standard, d, {
+      normalizedInput: sidc,
+      metadata,
+    });
   }
 
   let chosen: CheckedCandidate[];
   if (byCode.size > 1) {
     const preferred = options.preferredSource
-      ? [...byCode.values()].find((cs) => cs.some((c) => c.evidence.source === options.preferredSource))
+      ? [...byCode.values()].find((cs) =>
+          cs.some((c) => c.evidence.source === options.preferredSource),
+        )
       : undefined;
     if (!preferred) {
       d.error(
         "SOURCES_DISAGREE",
-        `The mapping sources give different ${target.label} codes (${[...byCode.values()]
-          .map((cs) => `${cs.map((c) => c.evidence.source).join("+")}: ${cs[0]!.code}`)
+        `The mapping sources give different ${target.label} codes (${[
+          ...byCode.values(),
+        ]
+          .map(
+            (cs) =>
+              `${cs.map((c) => c.evidence.source).join("+")}: ${cs[0]!.code}`,
+          )
           .join(" vs ")}). Set preferredSource to choose one explicitly.`,
       );
       return failure(input, target.standard, d, {
@@ -300,10 +368,15 @@ export function convertToNumeric(
   // The same digits proposed by another source with a different meaning: one source is using a
   // code whose meaning changed between editions, so the digits alone cannot be trusted.
   const meaningClash = checked.find(
-    (c) => !c.valid && !c.evidence.retired && c.code === lead.code && c.reason.includes(" means "),
+    (c) =>
+      !c.valid &&
+      !c.evidence.retired &&
+      c.code === lead.code &&
+      c.reason.includes(" means "),
   );
   const preferredChosen =
-    options.preferredSource !== undefined && chosen.some((c) => c.evidence.source === options.preferredSource);
+    options.preferredSource !== undefined &&
+    chosen.some((c) => c.evidence.source === options.preferredSource);
   if (meaningClash && preferredChosen) {
     d.warn(
       "PREFERRED_SOURCE_USED",
@@ -336,7 +409,9 @@ export function convertToNumeric(
   }
 
   // --- Match quality
-  let quality: MatchQuality = chosen.some((c) => c.native) ? "exact" : "equivalent";
+  let quality: MatchQuality = chosen.some((c) => c.native)
+    ? "exact"
+    : "equivalent";
   if (!chosen.some((c) => c.native)) {
     d.info(
       "EQUIVALENT_BY_CATALOG",
@@ -350,7 +425,9 @@ export function convertToNumeric(
       `${retiredBy.join(", ")} marks this 2525C symbol as retired; ${sources.join(", ")} maps it to ${lead.entityName ?? lead.code}, which is the closest documented symbol rather than the same one.`,
     );
   }
-  const merged = chosen.find((c) => c.evidence.fanIn > 1 && !c.evidence.canonical);
+  const merged = chosen.find(
+    (c) => c.evidence.fanIn > 1 && !c.evidence.canonical,
+  );
   if (merged) {
     quality = worst(quality, "lossy");
     d.warn(
@@ -374,7 +451,8 @@ export function convertToNumeric(
     const cc = sidc.slice(12, 14);
     if (/^[A-Z]{2}$/.test(cc)) dropped.countryCode = cc;
     const ob = sidc[14] ?? "-";
-    if (ob !== "-" && ob !== "*" && !(scheme === "G" && ob === "X")) dropped.orderOfBattle = ob;
+    if (ob !== "-" && ob !== "*" && !(scheme === "G" && ob === "X"))
+      dropped.orderOfBattle = ob;
   }
   if (Object.keys(dropped).length > 0) {
     quality = worst(quality, "lossy");
@@ -383,19 +461,32 @@ export function convertToNumeric(
       "FIELDS_DROPPED",
       `The 20-digit SIDC has no field for ${Object.entries(dropped)
         .map(([k, v]) => `${k} "${v}"`)
-        .join(" and ")}; carry it in a text amplifier (e.g. 2525D amplifier AS, country) instead.`,
-      [13, 14, 15].filter((p) => (p < 15 ? dropped.countryCode : dropped.orderOfBattle)),
+        .join(
+          " and ",
+        )}; carry it in a text amplifier (e.g. 2525D amplifier AS, country) instead.`,
+      [13, 14, 15].filter((p) =>
+        p < 15 ? dropped.countryCode : dropped.orderOfBattle,
+      ),
     );
   }
 
   if (!fieldDigits) {
-    return failure(input, target.standard, d, { normalizedInput: sidc, metadata });
+    return failure(input, target.standard, d, {
+      normalizedInput: sidc,
+      metadata,
+    });
   }
   quality = worst(quality, fieldDigits.quality);
   const output = compose(lead);
   if (output === null || !NUMERIC_SIDC.test(output)) {
-    d.error("INTERNAL_INVALID_OUTPUT", `Internal error: composed SIDC "${output}" is not 20 digits.`);
-    return failure(input, target.standard, d, { normalizedInput: sidc, metadata });
+    d.error(
+      "INTERNAL_INVALID_OUTPUT",
+      `Internal error: composed SIDC "${output}" is not 20 digits.`,
+    );
+    return failure(input, target.standard, d, {
+      normalizedInput: sidc,
+      metadata,
+    });
   }
 
   metadata.symbolSet = lead.code.slice(0, 2);
@@ -435,7 +526,12 @@ export function convertToNumeric(
       ...(lossyBlocked
         ? {
             candidates: [
-              { output, matchQuality: "lossy" as const, sources, note: "Rejected because allowLossy is false." },
+              {
+                output,
+                matchQuality: "lossy" as const,
+                sources,
+                note: "Rejected because allowLossy is false.",
+              },
             ],
           }
         : {}),

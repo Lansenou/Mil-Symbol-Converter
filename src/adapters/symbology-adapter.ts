@@ -46,12 +46,18 @@ export interface MappingAdapter {
   lookup(sidc: string): MappingEvidence[];
 }
 
-const codeOf = (r: { symbolSet: string; entity: string; m1: string; m2: string }) =>
-  `${r.symbolSet}${r.entity}${r.m1}${r.m2}`;
+const codeOf = (r: {
+  symbolSet: string;
+  entity: string;
+  m1: string;
+  m2: string;
+}) => `${r.symbolSet}${r.entity}${r.m1}${r.m2}`;
 
 /** Significant part of a key's function ID ("UCA---" -> "UCA"), prefixed by scheme+dimension. */
 const stem = (key: string) =>
-  key[0] === "W" ? key.slice(0, 4) + key.slice(4, 10).replace(/-+$/, "") : key[0]! + key[2]! + key.slice(4).replace(/-+$/, "");
+  key[0] === "W"
+    ? key.slice(0, 4) + key.slice(4, 10).replace(/-+$/, "")
+    : key[0]! + key[2]! + key.slice(4).replace(/-+$/, "");
 const describe = (key: string) => catalogByKey.get(key)?.[0]?.description;
 
 /**
@@ -63,7 +69,9 @@ const describe = (key: string) => catalogByKey.get(key)?.[0]?.description;
 function canonicalMembers(keys: Set<string>): Set<string> {
   if (keys.size <= 1) return new Set(keys);
   const list = [...keys];
-  const general = list.find((k) => list.every((o) => stem(o).startsWith(stem(k))));
+  const general = list.find((k) =>
+    list.every((o) => stem(o).startsWith(stem(k))),
+  );
   const out = new Set<string>();
   if (general) out.add(general);
   const reference = general ? describe(general) : undefined;
@@ -87,7 +95,9 @@ for (const [key, rows] of jmsmlByKey) {
     jmsmlFanIn.set(code, (jmsmlFanIn.get(code) ?? new Set<string>()).add(key));
   }
 }
-const jmsmlCanonical = new Map([...jmsmlFanIn].map(([code, keys]) => [code, canonicalMembers(keys)]));
+const jmsmlCanonical = new Map(
+  [...jmsmlFanIn].map(([code, keys]) => [code, canonicalMembers(keys)]),
+);
 
 /**
  * In JMSML, positions 2 and 4 of a label are only meaningful when rows of the same function ID
@@ -96,11 +106,17 @@ const jmsmlCanonical = new Map([...jmsmlFanIn].map(([code, keys]) => [code, cano
  */
 const jmsmlConstrained = new Map<string, boolean>();
 for (const [key, rows] of jmsmlByKey) {
-  const variants = new Set(rows.map((r) => `${r.template[1] ?? ""}${r.template[3] ?? ""}`));
+  const variants = new Set(
+    rows.map((r) => `${r.template[1] ?? ""}${r.template[3] ?? ""}`),
+  );
   jmsmlConstrained.set(key, variants.size > 1);
 }
 
-function jmsmlSpecificity(row: JmsmlRow, sidc: string, constrained: boolean): number {
+function jmsmlSpecificity(
+  row: JmsmlRow,
+  sidc: string,
+  constrained: boolean,
+): number {
   if (row.template[0] === "W") return row.template === sidc ? 1 : -1;
   let score = 0;
   if (constrained) {
@@ -128,7 +144,8 @@ export const jmsmlAdapter: MappingAdapter = {
     const best = Math.max(-1, ...scored.map((x) => x.s));
     let matches = scored.filter((x) => x.s === best).map((x) => x.r);
     // A retired duplicate row does not outweigh a live mapping of the same template.
-    if (matches.some((r) => !r.retired)) matches = matches.filter((r) => !r.retired);
+    if (matches.some((r) => !r.retired))
+      matches = matches.filter((r) => !r.retired);
     const seen = new Set<string>();
     const out: MappingEvidence[] = [];
     for (const r of matches) {
@@ -166,7 +183,9 @@ for (const [key, rows] of milsymByKey) {
     milsymFanIn.set(code, s);
   }
 }
-const milsymCanonical = new Map([...milsymFanIn].map(([code, keys]) => [code, canonicalMembers(keys)]));
+const milsymCanonical = new Map(
+  [...milsymFanIn].map(([code, keys]) => [code, canonicalMembers(keys)]),
+);
 
 const MILSYM_EDITIONS: Record<string, EditionKey> = {
   "10": "APP-6D",
@@ -208,4 +227,7 @@ export const milsymAdapter: MappingAdapter = {
   },
 };
 
-export const defaultAdapters: readonly MappingAdapter[] = [jmsmlAdapter, milsymAdapter];
+export const defaultAdapters: readonly MappingAdapter[] = [
+  jmsmlAdapter,
+  milsymAdapter,
+];

@@ -22,23 +22,52 @@ export interface WildcardField {
   /** 1-based positions covered by the field. */
   positions: number[];
   /** Option that supplies the value. */
-  option: "affiliation" | "status" | "symbolModifier" | "countryCode" | "orderOfBattle";
+  option:
+    | "affiliation"
+    | "status"
+    | "symbolModifier"
+    | "countryCode"
+    | "orderOfBattle";
   label: string;
 }
 
 export const WILDCARD_FIELDS: readonly WildcardField[] = [
-  { field: "standardIdentity", positions: [2], option: "affiliation", label: "standard identity" },
+  {
+    field: "standardIdentity",
+    positions: [2],
+    option: "affiliation",
+    label: "standard identity",
+  },
   { field: "status", positions: [4], option: "status", label: "status" },
-  { field: "symbolModifier", positions: [11, 12], option: "symbolModifier", label: "symbol modifier" },
-  { field: "countryCode", positions: [13, 14], option: "countryCode", label: "country code" },
-  { field: "orderOfBattle", positions: [15], option: "orderOfBattle", label: "order of battle" },
+  {
+    field: "symbolModifier",
+    positions: [11, 12],
+    option: "symbolModifier",
+    label: "symbol modifier",
+  },
+  {
+    field: "countryCode",
+    positions: [13, 14],
+    option: "countryCode",
+    label: "country code",
+  },
+  {
+    field: "orderOfBattle",
+    positions: [15],
+    option: "orderOfBattle",
+    label: "order of battle",
+  },
 ];
 
 export interface WildcardResolution {
   /** The SIDC after substituting the supplied values (may still contain "*"). */
   sidc: string;
   resolved: { field: WildcardFieldName; positions: number[]; value: string }[];
-  unresolved: { field: WildcardFieldName; positions: number[]; option: WildcardField["option"] }[];
+  unresolved: {
+    field: WildcardFieldName;
+    positions: number[];
+    option: WildcardField["option"];
+  }[];
   diagnostics: Diagnostic[];
 }
 
@@ -78,7 +107,11 @@ export function resolveWildcards(
       continue;
     }
     if (supplied === undefined) {
-      unresolved.push({ field: f.field, positions: f.positions, option: f.option });
+      unresolved.push({
+        field: f.field,
+        positions: f.positions,
+        option: f.option,
+      });
       continue;
     }
     if (supplied.length !== f.positions.length || supplied.includes("*")) {
@@ -87,18 +120,28 @@ export function resolveWildcards(
         `Option ${f.option} must be ${f.positions.length} concrete character(s); received "${raw}".`,
         f.positions,
       );
-      unresolved.push({ field: f.field, positions: f.positions, option: f.option });
+      unresolved.push({
+        field: f.field,
+        positions: f.positions,
+        option: f.option,
+      });
       continue;
     }
     // A partially specified field (e.g. "-*") must agree with the supplied value.
-    const conflict = [...current].some((c, i) => c !== "*" && c !== supplied[i]);
+    const conflict = [...current].some(
+      (c, i) => c !== "*" && c !== supplied[i],
+    );
     if (conflict) {
       d.error(
         "INVALID_RESOLUTION_VALUE",
         `Option ${f.option}="${raw}" conflicts with the concrete part of "${current}".`,
         f.positions,
       );
-      unresolved.push({ field: f.field, positions: f.positions, option: f.option });
+      unresolved.push({
+        field: f.field,
+        positions: f.positions,
+        option: f.option,
+      });
       continue;
     }
     f.positions.forEach((p, i) => {

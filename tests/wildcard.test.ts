@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { convertSidc, convertSidc15To12, resolveWildcards, wildcardFields } from "../src";
+import {
+  convertSidc,
+  convertSidc15To12,
+  resolveWildcards,
+  wildcardFields,
+} from "../src";
 
 const TEMPLATE = "S*GPUCI---*****";
-const codes = (r: { diagnostics: { code: string }[] }) => r.diagnostics.map((d) => d.code);
+const codes = (r: { diagnostics: { code: string }[] }) =>
+  r.diagnostics.map((d) => d.code);
 
 describe("resolveWildcards", () => {
   it("lists the wildcard fields of a template", () => {
@@ -17,8 +23,14 @@ describe("resolveWildcards", () => {
   it("substitutes only explicitly supplied values", () => {
     const r = resolveWildcards(TEMPLATE, { affiliation: "H" });
     expect(r.sidc).toBe("SHGPUCI---*****");
-    expect(r.resolved).toEqual([{ field: "standardIdentity", positions: [2], value: "H" }]);
-    expect(r.unresolved.map((u) => u.field)).toEqual(["symbolModifier", "countryCode", "orderOfBattle"]);
+    expect(r.resolved).toEqual([
+      { field: "standardIdentity", positions: [2], value: "H" },
+    ]);
+    expect(r.unresolved.map((u) => u.field)).toEqual([
+      "symbolModifier",
+      "countryCode",
+      "orderOfBattle",
+    ]);
   });
 
   it("never replaces * by - or 0 on its own", () => {
@@ -33,8 +45,12 @@ describe("resolveWildcards", () => {
   });
 
   it("rejects values of the wrong length or containing *", () => {
-    expect(codes(resolveWildcards(TEMPLATE, { symbolModifier: "-" }))).toContain("INVALID_RESOLUTION_VALUE");
-    expect(codes(resolveWildcards(TEMPLATE, { affiliation: "*" }))).toContain("INVALID_RESOLUTION_VALUE");
+    expect(
+      codes(resolveWildcards(TEMPLATE, { symbolModifier: "-" })),
+    ).toContain("INVALID_RESOLUTION_VALUE");
+    expect(codes(resolveWildcards(TEMPLATE, { affiliation: "*" }))).toContain(
+      "INVALID_RESOLUTION_VALUE",
+    );
   });
 
   it("rejects a value that conflicts with a partially specified field", () => {
@@ -61,7 +77,11 @@ describe("wildcards in conversions", () => {
   });
 
   it("resolves multiple wildcards including echelon and status", () => {
-    const r = convertSidc("S*G*UCI---*****", { affiliation: "H", status: "A", symbolModifier: "-E" });
+    const r = convertSidc("S*G*UCI---*****", {
+      affiliation: "H",
+      status: "A",
+      symbolModifier: "-E",
+    });
     expect(r.output).toBe("10061010151211000000");
   });
 
@@ -85,12 +105,20 @@ describe("wildcards in conversions", () => {
   });
 
   it("wildcardPolicy reject refuses templates", () => {
-    const r = convertSidc(TEMPLATE, { wildcardPolicy: "reject", affiliation: "F", symbolModifier: "--" });
+    const r = convertSidc(TEMPLATE, {
+      wildcardPolicy: "reject",
+      affiliation: "F",
+      symbolModifier: "--",
+    });
     expect(codes(r)).toContain("WILDCARD_REJECTED");
   });
 
   it("wildcardPolicy preserve keeps * and therefore cannot produce a numeric code", () => {
-    const r = convertSidc(TEMPLATE, { wildcardPolicy: "preserve", affiliation: "F", symbolModifier: "--" });
+    const r = convertSidc(TEMPLATE, {
+      wildcardPolicy: "preserve",
+      affiliation: "F",
+      symbolModifier: "--",
+    });
     expect(r.success).toBe(false);
     expect(codes(r)).toContain("UNRESOLVED_WILDCARD");
   });

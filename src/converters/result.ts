@@ -1,11 +1,13 @@
-import type {
-  ConversionResult,
-  MatchQuality,
-  SidcStandard,
-} from "../types";
+import type { ConversionResult, MatchQuality, SidcStandard } from "../types";
 import { DiagnosticList } from "../diagnostics";
 
-const ORDER: MatchQuality[] = ["exact", "equivalent", "lossy", "ambiguous", "unsupported"];
+const ORDER: MatchQuality[] = [
+  "exact",
+  "equivalent",
+  "lossy",
+  "ambiguous",
+  "unsupported",
+];
 
 /** The weaker of two match qualities. */
 export function worst(a: MatchQuality, b: MatchQuality): MatchQuality {
@@ -22,23 +24,29 @@ export function failure(
   d: DiagnosticList,
   extra: Partial<ConversionResult> = {},
 ): ConversionResult {
-  return finalize({
-    input: inputAsString(input),
-    normalizedInput: null,
-    output: null,
-    sourceStandard: "MIL-STD-2525C",
-    targetStandard,
-    matchQuality: "unsupported",
-    success: false,
-    warnings: [],
-    errors: [],
-    diagnostics: [],
-    ...extra,
-  }, d);
+  return finalize(
+    {
+      input: inputAsString(input),
+      normalizedInput: null,
+      output: null,
+      sourceStandard: "MIL-STD-2525C",
+      targetStandard,
+      matchQuality: "unsupported",
+      success: false,
+      warnings: [],
+      errors: [],
+      diagnostics: [],
+      ...extra,
+    },
+    d,
+  );
 }
 
 /** Copies diagnostics into the result and enforces the success invariants. */
-export function finalize(r: ConversionResult, d: DiagnosticList): ConversionResult {
+export function finalize(
+  r: ConversionResult,
+  d: DiagnosticList,
+): ConversionResult {
   r.diagnostics = [...d.items];
   r.errors = d.messages("error");
   r.warnings = d.messages("warning");

@@ -4,8 +4,17 @@ import type { Diagnostic, DiagnosticSeverity } from "./types";
 export class DiagnosticList {
   readonly items: Diagnostic[] = [];
 
-  add(severity: DiagnosticSeverity, code: string, message: string, positions?: number[]): void {
-    this.items.push(positions ? { severity, code, message, positions } : { severity, code, message });
+  add(
+    severity: DiagnosticSeverity,
+    code: string,
+    message: string,
+    positions?: number[],
+  ): void {
+    this.items.push(
+      positions
+        ? { severity, code, message, positions }
+        : { severity, code, message },
+    );
   }
   error(code: string, message: string, positions?: number[]): void {
     this.add("error", code, message, positions);
@@ -23,6 +32,8 @@ export class DiagnosticList {
     return this.items.some((i) => i.severity === "error");
   }
   messages(severity: DiagnosticSeverity): string[] {
-    return this.items.filter((i) => i.severity === severity).map((i) => i.message);
+    return this.items
+      .filter((i) => i.severity === severity)
+      .map((i) => i.message);
   }
 }

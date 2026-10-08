@@ -39,7 +39,8 @@ export interface MilsymRow {
 }
 
 /** Catalog keys of the editions whose names we can check codes against. */
-export type EditionKey = "2525D" | "2525Dch1" | "APP-6D" | "2525Ech1" | "APP-6Ech2";
+export type EditionKey =
+  "2525D" | "2525Dch1" | "APP-6D" | "2525Ech1" | "APP-6Ech2";
 
 /**
  * Lookup key shared by all tables: coding scheme + dimension + function ID, with standard
@@ -62,12 +63,23 @@ function group<T>(items: T[], key: (t: T) => string): Map<string, T[]> {
 }
 
 export const catalog: CatalogEntry[] = (catalogRows as string[][]).map(
-  ([template = "", description = "", hierarchy = ""]) => ({ template, description, hierarchy }),
+  ([template = "", description = "", hierarchy = ""]) => ({
+    template,
+    description,
+    hierarchy,
+  }),
 );
 export const catalogByKey = group(catalog, (c) => legacyKey(c.template));
 
 export const jmsmlRows: JmsmlRow[] = (legacyMappings.jmsml as string[][]).map(
-  ([template = "", symbolSet = "", entity = "", m1 = "", m2 = "", flags = ""]) => ({
+  ([
+    template = "",
+    symbolSet = "",
+    entity = "",
+    m1 = "",
+    m2 = "",
+    flags = "",
+  ]) => ({
     template,
     symbolSet,
     entity,
@@ -79,8 +91,17 @@ export const jmsmlRows: JmsmlRow[] = (legacyMappings.jmsml as string[][]).map(
 );
 export const jmsmlByKey = group(jmsmlRows, (r) => legacyKey(r.template));
 
-export const milsymRows: MilsymRow[] = (legacyMappings.milsym as string[][]).map(
-  ([basic = "", version = "", symbolSet = "", entity = "", m1 = "", m2 = ""]) => ({
+export const milsymRows: MilsymRow[] = (
+  legacyMappings.milsym as string[][]
+).map(
+  ([
+    basic = "",
+    version = "",
+    symbolSet = "",
+    entity = "",
+    m1 = "",
+    m2 = "",
+  ]) => ({
     basic,
     version,
     symbolSet,
@@ -98,7 +119,11 @@ const catalogs = editionCatalogs.catalogs as Record<
 >;
 
 /** Name of an entity code ("10|121100") in an edition, or undefined if absent. */
-export function entityName(edition: EditionKey, symbolSet: string, entity: string): string | undefined {
+export function entityName(
+  edition: EditionKey,
+  symbolSet: string,
+  entity: string,
+): string | undefined {
   const i = catalogs[edition].entities[`${symbolSet}|${entity}`];
   return i === undefined ? undefined : names[i];
 }
@@ -133,7 +158,8 @@ export interface ContestedCode {
 }
 
 /** Codes whose meaning in a given edition is disputed between implementations. */
-export const contested: ContestedCode[] = contestedJson.codes as ContestedCode[];
+export const contested: ContestedCode[] =
+  contestedJson.codes as ContestedCode[];
 
 export const SYMBOL_SET_NAMES: Record<string, string> = {
   "00": "Unknown",

@@ -22,9 +22,16 @@ export interface FieldDigits {
 }
 
 /** Scheme whose JMSML table row defines the value for a given 2525C scheme. */
-const HQTFD_SCHEME: Partial<Record<CodingScheme, "S" | "O">> = { S: "S", O: "O" };
+const HQTFD_SCHEME: Partial<Record<CodingScheme, "S" | "O">> = {
+  S: "S",
+  O: "O",
+};
 // Echelons: JMSML lists S and O. Table B-II (G) uses the same echelon letters as Table A-II.
-const ECHELON_SCHEME: Partial<Record<CodingScheme, "S" | "O">> = { S: "S", O: "O", G: "S" };
+const ECHELON_SCHEME: Partial<Record<CodingScheme, "S" | "O">> = {
+  S: "S",
+  O: "O",
+  G: "S",
+};
 // Mobility: JMSML lists S. Table G-II (E) uses the same mobility codes as Table A-II.
 const MOBILITY_SCHEME: Partial<Record<CodingScheme, "S">> = { S: "S", E: "S" };
 
@@ -42,7 +49,11 @@ export function mapFields(sidc: string, d: DiagnosticList): FieldDigits | null {
     standardIdentity = fields.standardIdentity[sidc[1] ?? ""];
   }
   if (standardIdentity === undefined) {
-    d.error("UNMAPPED_STANDARD_IDENTITY", `No numeric standard identity for "${sidc[1]}".`, [2]);
+    d.error(
+      "UNMAPPED_STANDARD_IDENTITY",
+      `No numeric standard identity for "${sidc[1]}".`,
+      [2],
+    );
   }
 
   // --- Status (digit 7)
@@ -75,7 +86,8 @@ export function mapFields(sidc: string, d: DiagnosticList): FieldDigits | null {
     );
   } else {
     status = fields.status[s];
-    if (status === undefined) d.error("UNMAPPED_STATUS", `No numeric status for "${s}".`, [4]);
+    if (status === undefined)
+      d.error("UNMAPPED_STATUS", `No numeric status for "${s}".`, [4]);
   }
 
   // --- HQ/TF/dummy (digit 8) and amplifier (digits 9-10)
@@ -93,26 +105,45 @@ export function mapFields(sidc: string, d: DiagnosticList): FieldDigits | null {
     // (Not in JMSML Base.xml; the 2525D table is the source.)
     hqtfd = "1";
   } else if (c11 === "M" || c11 === "N") {
-    const tableScheme = c11 === "M" ? MOBILITY_SCHEME[scheme] : scheme === "S" ? "S" : undefined;
-    const amp = tableScheme ? fields.amplifiers[`${tableScheme}:${mod}`] : undefined;
-    if (amp === undefined) d.error("UNMAPPED_MODIFIER", `No numeric amplifier for "${mod}".`, [11, 12]);
+    const tableScheme =
+      c11 === "M" ? MOBILITY_SCHEME[scheme] : scheme === "S" ? "S" : undefined;
+    const amp = tableScheme
+      ? fields.amplifiers[`${tableScheme}:${mod}`]
+      : undefined;
+    if (amp === undefined)
+      d.error(
+        "UNMAPPED_MODIFIER",
+        `No numeric amplifier for "${mod}".`,
+        [11, 12],
+      );
     else amplifier = amp;
   } else {
     if (c11 !== "-") {
       const hs = HQTFD_SCHEME[scheme];
       const h = hs ? fields.hqtfd[`${hs}:${c11}`] : undefined;
-      if (h === undefined) d.error("UNMAPPED_MODIFIER", `No numeric HQ/TF/dummy code for "${c11}".`, [11]);
+      if (h === undefined)
+        d.error(
+          "UNMAPPED_MODIFIER",
+          `No numeric HQ/TF/dummy code for "${c11}".`,
+          [11],
+        );
       else hqtfd = h;
     }
     if (c12 !== "-") {
       const es = ECHELON_SCHEME[scheme];
       const amp = es ? fields.amplifiers[`${es}:-${c12}`] : undefined;
-      if (amp === undefined) d.error("UNMAPPED_MODIFIER", `No numeric echelon code for "${c12}".`, [12]);
+      if (amp === undefined)
+        d.error(
+          "UNMAPPED_MODIFIER",
+          `No numeric echelon code for "${c12}".`,
+          [12],
+        );
       else amplifier = amp;
     }
   }
 
   const failed = d.items.slice(before).some((i) => i.severity === "error");
-  if (failed || standardIdentity === undefined || status === undefined) return null;
+  if (failed || standardIdentity === undefined || status === undefined)
+    return null;
   return { standardIdentity, status, hqtfd, amplifier, quality };
 }

@@ -13,7 +13,12 @@ export function parse2525cCatalog(txtFile) {
     if (!m) return;
     const template = m.slice(2, 12).join("");
     if (!/^[A-Z0-9*-]{15}$/.test(template)) return;
-    rows.push({ template, hierarchy: m[1], description: m[12].trim(), line: i + 1 });
+    rows.push({
+      template,
+      hierarchy: m[1],
+      description: m[12].trim(),
+      line: i + 1,
+    });
   });
   return rows;
 }

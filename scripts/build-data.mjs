@@ -6,7 +6,11 @@
 import fs from "node:fs";
 import { parseJmsml } from "./lib/jmsml.mjs";
 import { parseBase } from "./lib/jmsml-base.mjs";
-import { parseC2D, parseEntityCatalog, parseModifierCatalog } from "./lib/milsym.mjs";
+import {
+  parseC2D,
+  parseEntityCatalog,
+  parseModifierCatalog,
+} from "./lib/milsym.mjs";
 import { parse2525cCatalog } from "./lib/standard-2525c.mjs";
 
 const SRC = ".sources";
@@ -16,7 +20,9 @@ const MILSYM_SHA = "9f3c5512ecc8b9458da32328991b899910dafe7b";
 
 const write = (name, data) => {
   fs.writeFileSync(`${OUT}/${name}`, JSON.stringify(data) + "\n");
-  console.log(`wrote ${OUT}/${name} (${fs.statSync(`${OUT}/${name}`).size} bytes)`);
+  console.log(
+    `wrote ${OUT}/${name} (${fs.statSync(`${OUT}/${name}`).size} bytes)`,
+  );
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -37,7 +43,8 @@ for (const s of sets) {
       continue;
     }
     for (const t of l.templates) {
-      const flags = (l.retired || !l.entity ? "R" : "") + (t === l.label ? "L" : "");
+      const flags =
+        (l.retired || !l.entity ? "R" : "") + (t === l.label ? "L" : "");
       jmsmlRows.push([
         t,
         s.symbolSet,
@@ -58,7 +65,9 @@ const milsymIssues = [];
 const milsymRows = [];
 for (const r of c2d) {
   if (r.basic.length !== 15) {
-    milsymIssues.push(`c2d basic "${r.basic}" is ${r.basic.length} characters; skipped`);
+    milsymIssues.push(
+      `c2d basic "${r.basic}" is ${r.basic.length} characters; skipped`,
+    );
     continue;
   }
   milsymRows.push([r.basic, r.version, r.symbolSet, r.entity, r.m1, r.m2]);
@@ -101,7 +110,8 @@ const jmsmlEntities = new Map();
 const jmsmlMods = new Map();
 const jmsmlSpecial = new Map();
 for (const s of sets) {
-  for (const c of s.catalog) jmsmlEntities.set(`${s.symbolSet}|${c.code}`, c.name);
+  for (const c of s.catalog)
+    jmsmlEntities.set(`${s.symbolSet}|${c.code}`, c.name);
   for (const sector of [1, 2]) {
     for (const m of s.modifiers[sector].values()) {
       jmsmlMods.set(`${s.symbolSet}|${sector}|${m.code}`, m.name);
@@ -141,10 +151,18 @@ for (const key of referencedEntities) {
 
 const catalogs = {
   "2525D": editionCatalog(jmsmlEntitiesExpanded, jmsmlMods),
-  "APP-6D": editionCatalog(msd.get("10"), smd.get("10"), { modifierSetKey: sigintBase }),
-  "2525Dch1": editionCatalog(msd.get("11"), smd.get("11"), { modifierSetKey: sigintBase }),
-  "2525Ech1": editionCatalog(mse.get("15"), sme.get("15"), { modifierSetKey: sigintBase }),
-  "APP-6Ech2": editionCatalog(mse.get("16"), sme.get("16"), { modifierSetKey: sigintBase }),
+  "APP-6D": editionCatalog(msd.get("10"), smd.get("10"), {
+    modifierSetKey: sigintBase,
+  }),
+  "2525Dch1": editionCatalog(msd.get("11"), smd.get("11"), {
+    modifierSetKey: sigintBase,
+  }),
+  "2525Ech1": editionCatalog(mse.get("15"), sme.get("15"), {
+    modifierSetKey: sigintBase,
+  }),
+  "APP-6Ech2": editionCatalog(mse.get("16"), sme.get("16"), {
+    modifierSetKey: sigintBase,
+  }),
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -169,18 +187,22 @@ const provenance = {
   sources: {
     "MIL-STD-2525C": {
       title: "MIL-STD-2525C Common Warfighting Symbology, 17 November 2008",
-      license: "US Government work, Distribution A: approved for public release",
+      license:
+        "US Government work, Distribution A: approved for public release",
       url: "http://www.mapsymbs.com/ms2525c.pdf",
-      sha256: "701a34c9476a7a1e9957329f8a01bb7ec1cc83f3a994509a9dbc266960f0c612",
+      sha256:
+        "701a34c9476a7a1e9957329f8a01bb7ec1cc83f3a994509a9dbc266960f0c612",
     },
     JMSML: {
-      title: "Esri Joint Military Symbology XML (2525D / APP-6(C) + legacy 2525C links)",
+      title:
+        "Esri Joint Military Symbology XML (2525D / APP-6(C) + legacy 2525C links)",
       license: "Apache-2.0",
       url: "https://github.com/Esri/joint-military-symbology-xml",
       commit: JMSML_SHA,
     },
     "mil-sym-ts": {
-      title: "US Army C5ISR Center mil-sym-ts renderer data (c2d, msd, mse, smd, sme)",
+      title:
+        "US Army C5ISR Center mil-sym-ts renderer data (c2d, msd, mse, smd, sme)",
       license: "Apache-2.0",
       url: "https://github.com/missioncommand/mil-sym-ts",
       commit: MILSYM_SHA,

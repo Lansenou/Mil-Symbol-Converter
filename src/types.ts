@@ -26,7 +26,8 @@ export type SidcStandard =
  * - `ambiguous`: more than one output is supported by the evidence; no output is chosen.
  * - `unsupported`: no output can be produced without inventing data.
  */
-export type MatchQuality = "exact" | "equivalent" | "lossy" | "ambiguous" | "unsupported";
+export type MatchQuality =
+  "exact" | "equivalent" | "lossy" | "ambiguous" | "unsupported";
 
 export type WildcardPolicy = "preserve" | "resolve" | "reject";
 
