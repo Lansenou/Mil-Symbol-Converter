@@ -20,7 +20,7 @@ treats APP-6D as identical to 2525D. Approximate matching is available only on r
 
 ## Examples
 
-Five 2525C codes and their conversions. The symbols are drawn by
+Six 2525C codes and their conversions (the last one is pending: yellow, dashed frame). The symbols are drawn by
 [milsymbol](https://github.com/spatialillusions/milsymbol) from each code
 (`npx tsx scripts/render-readme-examples.ts` regenerates them). The drawings are a visual sanity
 check; the mappings themselves are verified against the standards' tables and the source datasets.
@@ -32,6 +32,7 @@ check; the mappings themselves are verified against the standards' tables and th
 | `SNSPCLFF-------` | <img src="docs/images/example3-2525c.svg" alt="SNSPCLFF-------" height="40"> | `10043000001202040000`<br>exact | <img src="docs/images/example3-2525d.svg" alt="10043000001202040000" height="40"> | `10043000001202040000`<br>equivalent | <img src="docs/images/example3-app-6d.svg" alt="10043000001202040000" height="40"> | `15043000001202040000`<br>equivalent | <img src="docs/images/example3-2525e.svg" alt="15043000001202040000" height="40"> |
 | `SFGPIXH---H----` | <img src="docs/images/example4-2525c.svg" alt="SFGPIXH---H----" height="40"> | `10032000001207020000`<br>exact | <img src="docs/images/example4-2525d.svg" alt="10032000001207020000" height="40"> | `10032000001207020000`<br>equivalent | <img src="docs/images/example4-app-6d.svg" alt="10032000001207020000" height="40"> | `15032000001207020000`<br>equivalent | <img src="docs/images/example4-2525e.svg" alt="15032000001207020000" height="40"> |
 | `SHGPEVAT-------` | <img src="docs/images/example5-2525c.svg" alt="SHGPEVAT-------" height="40"> | `10061500001202000000`<br>exact | <img src="docs/images/example5-2525d.svg" alt="10061500001202000000" height="40"> | `10061500001202000000`<br>equivalent | <img src="docs/images/example5-app-6d.svg" alt="10061500001202000000" height="40"> | `15061500001202000000`<br>equivalent | <img src="docs/images/example5-2525e.svg" alt="15061500001202000000" height="40"> |
+| `SPGPUCI--------` | <img src="docs/images/example6-2525c.svg" alt="SPGPUCI--------" height="40"> | `10001000001211000000`<br>exact | <img src="docs/images/example6-2525d.svg" alt="10001000001211000000" height="40"> | `10001000001211000000`<br>equivalent | <img src="docs/images/example6-app-6d.svg" alt="10001000001211000000" height="40"> | `15001000001211000000`<br>equivalent | <img src="docs/images/example6-2525e.svg" alt="15001000001211000000" height="40"> |
 
 ## Install
 
