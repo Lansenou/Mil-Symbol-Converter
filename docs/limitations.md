@@ -49,6 +49,15 @@ The default `minCertainty` of 0.7 therefore admits tiers 0 and 1 only. The calib
 of symbols that _do_ have mappings; the symbols fuzzy mode is used for are harder, so the real
 precision on them is probably lower. Treat `approximate` output as a suggestion to review.
 
+## Render check
+
+`tests/render.test.ts` draws every converted code with milsymbol (all four numeric targets, with
+`fuzzy`, `extendedSidc` and `allowLossy` on) and fails if milsymbol can draw the 2525C input but not
+the output. This is a sanity check, not proof of equivalence: it catches codes with no icon, not
+codes with the wrong icon. milsymbol only draws point symbols, so line/area tactical graphics are not
+checked, and two known renderer gaps are excluded with their reason: numeric atmospheric/oceanographic
+icons (symbol sets 45/46) and the Dummy Minefield / Bridge or Gap control measures.
+
 ## Known limitations
 
 - **Input is MIL-STD-2525C only.** 2525B Change 2 codes that 2525C dropped, and APP-6(A)/(B) codes
