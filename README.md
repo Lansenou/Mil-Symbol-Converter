@@ -76,7 +76,7 @@ The package is not published to the npm registry yet. Install the prebuilt tarba
 pulls in no other packages:
 
 ```bash
-npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.2.0/mil-symbol-converter-0.2.0.tgz
+npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.3.0/mil-symbol-converter-0.3.0.tgz
 ```
 
 `npm install github:Lansenou/Mil-Symbol-Converter` also works, but npm then builds the package on
@@ -93,6 +93,24 @@ Requires Node.js 22 or newer. The core has no runtime dependencies; React is an 
 dependency used only by `mil-symbol-converter/react`.
 
 Development: `npm install && npm run check` (format, lint, typecheck, tests, build, export check).
+
+## Command line
+
+```bash
+npx mil-symbol-converter SFGPUCIC---E--- 10031000151211000002
+# SFGPUCIC---E---       2525D  10031000151211000002  exact
+# 10031000151211000002  2525C  SFGPUCIC---E---       exact
+# 2/2 converted (exact 2)                               <- summary on stderr
+
+npx mil-symbol-converter --to all SFGPUCI--------             # every target
+npx mil-symbol-converter 'S*GPUCI---*****' --affiliation H --modifier -E
+npx mil-symbol-converter -f codes.txt --to app-6d --lossy     # one code per line
+cat units.csv | npx mil-symbol-converter --csv sidc > out.csv # appends 2525D, 2525D_quality, 2525D_note
+```
+
+Output is tab-separated (input, target, output, quality, note), or one JSON result per line with
+`--json`. Numeric codes convert back to 2525C. The exit status is 1 if any code did not convert, so
+it can gate a script. `--help` lists all options (`--fuzzy`, `--extended`, `--source`, ...).
 
 ## Usage
 
