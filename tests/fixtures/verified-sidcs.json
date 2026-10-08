@@ -1,0 +1,591 @@
+{
+  "description": "Reference conversions. 'standard' fixtures were checked by reading the 2525C and 2525D tables (scripts/review-fixture.mjs prints the cited lines); 'dataset' fixtures rest on the named source data because the target standard's text was not available. Expected values were written by hand, not produced by the converter.",
+  "fixtures": [
+    {
+      "source": "SFGPUCIC---E---",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031000151211000002",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3614; MIL-STD-2525D (10 Jun 2014) text line 3921; MIL-STD-2525D (10 Jun 2014) text line 4295; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "INFANTRY ARCTIC (UC IC) -> Land unit 10, Infantry 121100, sector 2 modifier Arctic 02; friend 03, present 0, company echelon 15. Regression pair from @orbat-mapper/convert-symbology README, independently confirmed."
+    },
+    {
+      "source": "SHGPUCI--------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10061000001211000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3605; MIL-STD-2525D (10 Jun 2014) text line 3921; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "INFANTRY, hostile (06), no echelon."
+    },
+    {
+      "source": "SNGPUCA--------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10041000001205000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3490; MIL-STD-2525D (10 Jun 2014) text line 3890; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "ARMOR (UC A-) -> Armor/Armored/Mechanized/Self-propelled/Tracked 120500; neutral 04."
+    },
+    {
+      "source": "SFGAUCI----F---",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031010161211000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3605; MIL-STD-2525D (10 Jun 2014) text line 3921; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "Planned/anticipated (A -> 1), battalion echelon (-F -> 16)."
+    },
+    {
+      "source": "SFGPUCI---AF---",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031002161211000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3605; MIL-STD-2525D (10 Jun 2014) text line 3921; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "HQ battalion (AF): HQ/TF/dummy 2, echelon 16."
+    },
+    {
+      "source": "SFGPUCI---EE---",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031004151211000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3605; MIL-STD-2525D (10 Jun 2014) text line 3921; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "Task force company (EE): HQ/TF/dummy 4, echelon 15."
+    },
+    {
+      "source": "SFGPUCI---FD---",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031001141211000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3605; MIL-STD-2525D (10 Jun 2014) text line 3921; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "Feint/dummy platoon (FD): HQ/TF/dummy 1, echelon 14."
+    },
+    {
+      "source": "SFGPUCIZ-------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031000001211020000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3611; MIL-STD-2525D (10 Jun 2014) text line 3923; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "INFANTRY MECHANIZED -> Infantry : Armored/Mechanized/Tracked 121102."
+    },
+    {
+      "source": "SFGXUCI--------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031040001211000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3605; MIL-STD-2525D (10 Jun 2014) text line 3921; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "Status X present/destroyed -> 4."
+    },
+    {
+      "source": "SFGPUCRVA------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031000001205010000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3769; MIL-STD-2525D (10 Jun 2014) text line 3892; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "RECONNAISSANCE CAVALRY ARMORED -> Armor : Reconnaissance/Cavalry/Scout 120501."
+    },
+    {
+      "source": "SFFPA----------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031000001206006300",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 5045; MIL-STD-2525D (10 Jun 2014) text line 3894; MIL-STD-2525D (10 Jun 2014) text line 4268; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "SOF UNIT AVIATION -> Army Aviation/Aviation Rotary Wing 120600 + sector 1 modifier SOF 63 (2525D has no SOF dimension)."
+    },
+    {
+      "source": "SFGPUCAA-------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031000001204000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3508; MIL-STD-2525D (10 Jun 2014) text line 3887; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "ANTIARMOR -> Antitank/Antiarmor 120400."
+    },
+    {
+      "source": "SFGPUCAAD------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031000001204000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "lossy",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3539; MIL-STD-2525D (10 Jun 2014) text line 3887; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "ANTIARMOR DISMOUNTED has no own 2525D code; it shares 120400 with ANTIARMOR, so 'dismounted' is lost.",
+      "options": {
+        "allowLossy": true
+      }
+    },
+    {
+      "source": "SHAPMFB--------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10060100001101030000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3223; MIL-STD-2525D (10 Jun 2014) text line 3452; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "BOMBER -> Air 01, Military : Fixed Wing : Bomber 110103."
+    },
+    {
+      "source": "SFAPMFF--------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10030100001101040000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3224; MIL-STD-2525D (10 Jun 2014) text line 3453; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "FIGHTER -> Military : Fixed Wing : Fighter 110104."
+    },
+    {
+      "source": "SFAPMHA--------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10030100001102000100",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3337; MIL-STD-2525D (10 Jun 2014) text line 3505; MIL-STD-2525D (10 Jun 2014) text line 3538; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "ROTARY WING ATTACK -> Rotary Wing 110200 + sector 1 modifier Attack/Strike 01."
+    },
+    {
+      "source": "SFAPWMS--------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10030200001100000205",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3392; MIL-STD-2525D (10 Jun 2014) text line 3637; MIL-STD-2525D (10 Jun 2014) text line 3646; MIL-STD-2525D (10 Jun 2014) text line 3665; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "SURFACE LAUNCHED MISSILE -> Air missile 02, Missile 110000, modifiers Surface 02 / Launched 05."
+    },
+    {
+      "source": "SFPPS----------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10030500001107000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3216; MIL-STD-2525D (10 Jun 2014) text line 3709; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "SATELLITE -> Space 05, Satellite 110700."
+    },
+    {
+      "source": "SHGPEVAT-------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10061500001202000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 4435; MIL-STD-2525D (10 Jun 2014) text line 4625; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "TANK -> Land equipment 15, Tank 120200."
+    },
+    {
+      "source": "SFGDEVAT-------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031530001202000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 4435; MIL-STD-2525D (10 Jun 2014) text line 4625; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "Status D present/damaged -> 3."
+    },
+    {
+      "source": "SFGPIXH---H----",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10032000001207020000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 4716; MIL-STD-2525D (10 Jun 2014) text line 5042; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "HOSPITAL (installation, H) -> Land installation 20, Medical Treatment Facility (Hospital) 120702."
+    },
+    {
+      "source": "EFFPMB----H----",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10032000001214020000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 56544; MIL-STD-2525D (10 Jun 2014) text line 5078; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "Emergency management DAM -> Land installation, Dam 121402."
+    },
+    {
+      "source": "SNSPCLFF-------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10043000001202040000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 4754; MIL-STD-2525D (10 Jun 2014) text line 6235; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "FRIGATE/CORVETTE -> Sea surface 30, Frigate 120204."
+    },
+    {
+      "source": "SFSPCLFF--NS---",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10033000611202040000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 4754; MIL-STD-2525D (10 Jun 2014) text line 6235; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "Towed array (short) NS -> amplifier 61."
+    },
+    {
+      "source": "SFSPCALA-------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10033000001203020000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 4760; MIL-STD-2525D (10 Jun 2014) text line 6240; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "ASSAULT VESSEL -> Amphibious Assault, Non-specified 120302."
+    },
+    {
+      "source": "SUUPSB---------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10013500001101030000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 4880; MIL-STD-2525D (10 Jun 2014) text line 6476; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "Subsurface BOTTOMED -> Sea subsurface 35, Submarine, Bottomed 110103; unknown 01."
+    },
+    {
+      "source": "SFUPWMM--------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10033600001102000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 4978; MIL-STD-2525D (10 Jun 2014) text line 6589; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "SEA MINE (MOORED) -> Mine warfare 36, Sea Mine, Moored 110200."
+    },
+    {
+      "source": "GFTPA---------X",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10032500003412000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 19253; MIL-STD-2525D (10 Jun 2014) text line 6177; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "Tactical graphic FOLLOW AND ASSUME -> Control measure 25, 341200."
+    },
+    {
+      "source": "GFGPGLB----K--X",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10032500231101000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 19526; MIL-STD-2525D (10 Jun 2014) text line 5173; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "BOUNDARIES with army echelon (-K, Table B-II) -> Boundary 110100, amplifier 23."
+    },
+    {
+      "source": "GHMPOAR-------X",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10062500002902030000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 19783; MIL-STD-2525D (10 Jun 2014) text line 6027; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "ANTITANK DITCH REINFORCED WITH ANTITANK MINES -> 290203."
+    },
+    {
+      "source": "WAS-PL----P----",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10004500001101000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 39839; MIL-STD-2525D (10 Jun 2014) text line 7037; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "METOC LOW PRESSURE CENTER -> Atmospheric 45, 110100. Standard identity 00 per JMSML (REALITY_METOC_ATMOS); status 0 because 2525C METOC codes have no status."
+    },
+    {
+      "source": "IHAPSRE--------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10065100001103001600",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 52376; MIL-STD-2525D (10 Jun 2014) text line 7744; MIL-STD-2525D (10 Jun 2014) text line 7767; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "SIGINT air EARLY WARNING -> SIGINT Air 51, Radar 110300 + sector 1 modifier Early Warning 16."
+    },
+    {
+      "source": "OHVPA----------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10064000001101020000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 54198; MIL-STD-2525D (10 Jun 2014) text line 6756; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "Stability operations ARSON/FIRE -> Activities 40, Arson 110102."
+    },
+    {
+      "source": "OFGPA----------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031100001104000900",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 54310; MIL-STD-2525D (10 Jun 2014) text line 4399; MIL-STD-2525D (10 Jun 2014) text line 4421; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "DISPLACED PERSONS, REFUGEES, AND EVACUEES -> Land civilian 11, Organization or Group 110400 + modifier 09."
+    },
+    {
+      "source": "ONOPF----------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10044000001303000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 54254; MIL-STD-2525D (10 Jun 2014) text line 6822; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "FORAGING/SEARCHING -> Activities 130300."
+    },
+    {
+      "source": "ENIPBA---------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10044000001102010000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 56066; MIL-STD-2525D (10 Jun 2014) text line 6797; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "BOMB THREAT -> Activities 110201."
+    },
+    {
+      "source": "SDGPUCI--------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10131000001211000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3605; MIL-STD-2525D (10 Jun 2014) text line 3921; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "Exercise friend (D) -> context 1, identity 3."
+    },
+    {
+      "source": "SJGPUCI--------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10151000001211000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3605; MIL-STD-2525D (10 Jun 2014) text line 3921; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "Joker (J) -> exercise context 1, suspect/joker 5."
+    },
+    {
+      "source": "SPGPUCI--------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10001000001211000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3605; MIL-STD-2525D (10 Jun 2014) text line 3921; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "Pending (P) -> 00."
+    },
+    {
+      "source": "SFGPUCIC---EUS-",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031000151211000002",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "lossy",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3614; MIL-STD-2525D (10 Jun 2014) text line 3921; MIL-STD-2525D (10 Jun 2014) text line 4295; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "Country code US (positions 13-14) has no field in the 20-digit SIDC.",
+      "options": {
+        "allowLossy": true
+      }
+    },
+    {
+      "source": "SFGPUCVRW------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031000001206007400",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3559; MIL-STD-2525D (10 Jun 2014) text line 3894; MIL-STD-2525D (10 Jun 2014) text line 4279; Field digits: 2525D Tables A-I (version 10), A-II (standard identity), A-III (symbol set), A-IV (status), A-V (HQ/TF/dummy), A-VI (amplifier)",
+      "notes": "ANTISUBMARINE WARFARE ROTARY WING -> 120600 + sector 1 modifier 74 'Antisubmarine Warfare' in 2525D (2014). mil-sym-ts gives 74 the 2525D Change 1 meaning 'Palletized Load System', so the converter needs preferredSource to decide.",
+      "options": {
+        "preferredSource": "JMSML"
+      }
+    },
+    {
+      "source": "SFGPUCIC---E---",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031000151211000002",
+      "targetStandard": "APP-6D",
+      "matchQuality": "equivalent",
+      "verification": "dataset",
+      "reference": "mil-sym-ts msd.json (versions 10) 10|121100 Infantry; smd.json 10 sector 2 code 02 Arctic",
+      "notes": "Same digits as 2525D; equivalence established by catalog names, not by an APP-6(D) mapping table."
+    },
+    {
+      "source": "SFGPUCIC---E---",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "15031000151211000002",
+      "targetStandard": "MIL-STD-2525E",
+      "matchQuality": "equivalent",
+      "verification": "dataset",
+      "reference": "mil-sym-ts mse.json (version 15) 10|121100; sme.json; SymbolID.Version_2525Ech1 = 15",
+      "notes": "Version digits 15 = 2525E Change 1."
+    },
+    {
+      "source": "SFGPUCIC---E---",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "16031000151211000002",
+      "targetStandard": "APP-6E",
+      "matchQuality": "equivalent",
+      "verification": "dataset",
+      "reference": "mil-sym-ts mse.json (version 16); SymbolID.Version_APP6Ech2 = 16",
+      "notes": "Version digits 16 = APP-6(E) Change 2."
+    },
+    {
+      "source": "SFGPUCIC---E---",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "SFGPUCIC---E",
+      "targetStandard": "LEGACY-12",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 2961 (positions 13-15 are country code and order of battle)",
+      "notes": "prefix-12 profile; omitted positions carry no information here."
+    },
+    {
+      "source": "SFGPUCIC---EUS-",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "SFGPUCIC---E",
+      "targetStandard": "LEGACY-12",
+      "matchQuality": "lossy",
+      "options": {
+        "allowLossy": true
+      },
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 2965",
+      "notes": "Country code US dropped by the 12-character form."
+    },
+    {
+      "source": "S*GPUCI---*****",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "S*GPUCI---**",
+      "targetStandard": "LEGACY-12",
+      "matchQuality": "exact",
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 2936",
+      "notes": "Template preserved; output is a template too."
+    },
+    {
+      "source": "S*GPUCI---*****",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": "10031000001211000000",
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "exact",
+      "options": {
+        "affiliation": "F",
+        "symbolModifier": "--"
+      },
+      "verification": "standard",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3605; MIL-STD-2525D (10 Jun 2014) text line 3921",
+      "notes": "Wildcards resolved from explicit options only."
+    }
+  ],
+  "failures": [
+    {
+      "source": "SFGPUCVRW------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": null,
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "ambiguous",
+      "expectedErrorCode": "SOURCES_DISAGREE_ON_MEANING",
+      "verification": "standard",
+      "reference": "MIL-STD-2525D (10 Jun 2014) text line 4279; mil-sym-ts smd.json (land unit sector 1 modifier 74)",
+      "notes": "Same digits, different meaning between 2525D (2014) and 2525D Change 1 (mil-sym-ts)."
+    },
+    {
+      "source": "SFGPUCVRW------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": null,
+      "targetStandard": "APP-6D",
+      "matchQuality": "ambiguous",
+      "expectedErrorCode": "SOURCES_DISAGREE_ON_MEANING",
+      "verification": "dataset",
+      "reference": "milsymbol landunit.js line 502 vs mil-sym-ts smd.json",
+      "notes": "JMSML's code 74 means 'Antisubmarine Warfare' (2525D 2014) while mil-sym-ts tags 74 'Palletized Load System' for APP-6D; with preferredSource the contested-code list still blocks it."
+    },
+    {
+      "source": "SFGPUCIC---EUS-",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": null,
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "lossy",
+      "expectedErrorCode": "LOSSY_NOT_ALLOWED",
+      "verification": "dataset",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 2965",
+      "notes": "Strict mode rejects dropping the country code."
+    },
+    {
+      "source": "SFGPUCAAD------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": null,
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "lossy",
+      "expectedErrorCode": "LOSSY_NOT_ALLOWED",
+      "verification": "dataset",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 3539",
+      "notes": "Strict mode rejects merging into ANTIARMOR."
+    },
+    {
+      "source": "SHGPUUSW-------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": null,
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "unsupported",
+      "expectedErrorCode": "NO_VALID_MAPPING",
+      "verification": "dataset",
+      "reference": "JMSML Land_Unit.xml COMMAND_AND_CONTROL_TELEPHONE_SWITCH_SYM Remarks=Retired",
+      "notes": "TELEPHONE SWITCH is retired in JMSML and absent from mil-sym-ts c2d."
+    },
+    {
+      "source": "S*GPUCI---*****",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": null,
+      "targetStandard": "MIL-STD-2525D",
+      "matchQuality": "ambiguous",
+      "expectedErrorCode": "UNRESOLVED_WILDCARD",
+      "verification": "dataset",
+      "reference": "MIL-STD-2525C (17 Nov 2008) text line 2936",
+      "notes": "Template: standard identity and symbol modifier are user-defined (2525C A.5.2.1)."
+    },
+    {
+      "source": "IHAPSRE--------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": null,
+      "targetStandard": "APP-6D",
+      "matchQuality": "unsupported",
+      "expectedErrorCode": "NO_VALID_MAPPING",
+      "verification": "dataset",
+      "reference": "mil-sym-ts msd.json",
+      "notes": "mil-sym-ts has no SIGINT symbol sets for version 10 (APP-6D)."
+    },
+    {
+      "source": "IHAPSRE--------",
+      "sourceStandard": "MIL-STD-2525C",
+      "target": null,
+      "targetStandard": "MIL-STD-2525E",
+      "matchQuality": "unsupported",
+      "expectedErrorCode": "NO_VALID_MAPPING",
+      "verification": "dataset",
+      "reference": "mil-sym-ts mse.json; SymbolID.ts comment on SymbolSet_SignalsIntelligence",
+      "notes": "2525E only has symbol set 50 for SIGINT and needs the frame shape digit (30-digit SIDC)."
+    }
+  ]
+}

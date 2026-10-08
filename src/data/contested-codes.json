@@ -1,0 +1,166 @@
+{
+  "description": "Hand-curated: land unit sector 1 modifier codes whose meaning changed between MIL-STD-2525D (2014, which matches the APP-6 branch of milsymbol) and 2525D Change 1 (mil-sym-ts smd.json, which also tags these meanings with version 10 = APP-6D). Without the APP-6(D) text the APP-6(D) meaning cannot be settled, so conversions that need these codes for APP-6D are reported as ambiguous.",
+  "codes": [
+    {
+      "editions": [
+        "APP-6D"
+      ],
+      "symbolSet": "10",
+      "kind": "modifier1",
+      "code": "47",
+      "claims": [
+        {
+          "source": "mil-sym-ts smd.json (version 10 = APP-6D)",
+          "meaning": "Unmanned Aerial Systems (UAS)"
+        },
+        {
+          "source": "milsymbol 3.x numeric renderer, APP-6 branch",
+          "meaning": "Node Centre"
+        },
+        {
+          "source": "MIL-STD-2525D (10 June 2014) Table A-XX, land unit sector 1 modifiers",
+          "meaning": "Node Center"
+        }
+      ],
+      "reference": "milsymbol src/numbersidc/sidc/landunit.js@f5134380157f475cbf5a9bdec69b6c33cf66e0e7 line 459 (_STD2525 branch) vs mil-sym-ts smd.json@9f3c5512 (versions 10,11)"
+    },
+    {
+      "editions": [
+        "APP-6D"
+      ],
+      "symbolSet": "10",
+      "kind": "modifier1",
+      "code": "56",
+      "claims": [
+        {
+          "source": "mil-sym-ts smd.json (version 10 = APP-6D)",
+          "meaning": "Weapons"
+        },
+        {
+          "source": "milsymbol 3.x numeric renderer, APP-6 branch",
+          "meaning": "Sensor Control Module"
+        },
+        {
+          "source": "MIL-STD-2525D (10 June 2014) Table A-XX, land unit sector 1 modifiers",
+          "meaning": "Sensor Control Module (SCM)"
+        }
+      ],
+      "reference": "milsymbol src/numbersidc/sidc/landunit.js@f5134380157f475cbf5a9bdec69b6c33cf66e0e7 line 474 (_STD2525 branch) vs mil-sym-ts smd.json@9f3c5512 (versions 10,11)"
+    },
+    {
+      "editions": [
+        "APP-6D"
+      ],
+      "symbolSet": "10",
+      "kind": "modifier1",
+      "code": "58",
+      "claims": [
+        {
+          "source": "mil-sym-ts smd.json (version 10 = APP-6D)",
+          "meaning": "Armored"
+        },
+        {
+          "source": "milsymbol 3.x numeric renderer, APP-6 branch",
+          "meaning": "Single Shelter Switch"
+        },
+        {
+          "source": "MIL-STD-2525D (10 June 2014) Table A-XX, land unit sector 1 modifiers",
+          "meaning": "Single Shelter Switch"
+        }
+      ],
+      "reference": "milsymbol src/numbersidc/sidc/landunit.js@f5134380157f475cbf5a9bdec69b6c33cf66e0e7 line 478 (_STD2525 branch) vs mil-sym-ts smd.json@9f3c5512 (versions 10,11)"
+    },
+    {
+      "editions": [
+        "APP-6D"
+      ],
+      "symbolSet": "10",
+      "kind": "modifier1",
+      "code": "71",
+      "claims": [
+        {
+          "source": "mil-sym-ts smd.json (version 10 = APP-6D)",
+          "meaning": "Mobility Assault"
+        },
+        {
+          "source": "milsymbol 3.x numeric renderer, APP-6 branch",
+          "meaning": "Accident"
+        },
+        {
+          "source": "MIL-STD-2525D (10 June 2014) Table A-XX, land unit sector 1 modifiers",
+          "meaning": "Accident"
+        }
+      ],
+      "reference": "milsymbol src/numbersidc/sidc/landunit.js@f5134380157f475cbf5a9bdec69b6c33cf66e0e7 line 493 (_STD2525 branch) vs mil-sym-ts smd.json@9f3c5512 (versions 10,11)"
+    },
+    {
+      "editions": [
+        "APP-6D"
+      ],
+      "symbolSet": "10",
+      "kind": "modifier1",
+      "code": "72",
+      "claims": [
+        {
+          "source": "mil-sym-ts smd.json (version 10 = APP-6D)",
+          "meaning": "Amphibious Warfare Ship"
+        },
+        {
+          "source": "milsymbol 3.x numeric renderer, APP-6 branch",
+          "meaning": "Other"
+        },
+        {
+          "source": "MIL-STD-2525D (10 June 2014) Table A-XX, land unit sector 1 modifiers",
+          "meaning": "Other"
+        }
+      ],
+      "reference": "milsymbol src/numbersidc/sidc/landunit.js@f5134380157f475cbf5a9bdec69b6c33cf66e0e7 line 496 (_STD2525 branch) vs mil-sym-ts smd.json@9f3c5512 (versions 10,11)"
+    },
+    {
+      "editions": [
+        "APP-6D"
+      ],
+      "symbolSet": "10",
+      "kind": "modifier1",
+      "code": "73",
+      "claims": [
+        {
+          "source": "mil-sym-ts smd.json (version 10 = APP-6D)",
+          "meaning": "Load Handling System"
+        },
+        {
+          "source": "milsymbol 3.x numeric renderer, APP-6 branch",
+          "meaning": "Civilian"
+        },
+        {
+          "source": "MIL-STD-2525D (10 June 2014) Table A-XX, land unit sector 1 modifiers",
+          "meaning": "Civilian"
+        }
+      ],
+      "reference": "milsymbol src/numbersidc/sidc/landunit.js@f5134380157f475cbf5a9bdec69b6c33cf66e0e7 line 499 (_STD2525 branch) vs mil-sym-ts smd.json@9f3c5512 (versions 10,11)"
+    },
+    {
+      "editions": [
+        "APP-6D"
+      ],
+      "symbolSet": "10",
+      "kind": "modifier1",
+      "code": "74",
+      "claims": [
+        {
+          "source": "mil-sym-ts smd.json (version 10 = APP-6D)",
+          "meaning": "Palletized Load System"
+        },
+        {
+          "source": "milsymbol 3.x numeric renderer, APP-6 branch",
+          "meaning": "Antisubmarine Warfare"
+        },
+        {
+          "source": "MIL-STD-2525D (10 June 2014) Table A-XX, land unit sector 1 modifiers",
+          "meaning": "Antisubmarine Warfare"
+        }
+      ],
+      "reference": "milsymbol src/numbersidc/sidc/landunit.js@f5134380157f475cbf5a9bdec69b6c33cf66e0e7 line 502 (_STD2525 branch) vs mil-sym-ts smd.json@9f3c5512 (versions 10,11)"
+    }
+  ]
+}
