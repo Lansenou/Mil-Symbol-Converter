@@ -10,6 +10,7 @@ const EXAMPLES = [
   "SNSPCLFF-------",
   "SFGPIXH---H----",
   "SHGPEVAT-------",
+  "SPGPUCI--------",
 ];
 const TARGETS: [SidcStandard, "2525" | "APP6"][] = [
   ["MIL-STD-2525D", "2525"],
