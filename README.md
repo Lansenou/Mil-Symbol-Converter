@@ -207,7 +207,8 @@ See [NOTICE](NOTICE). The code is MIT licensed.
 ## Testing
 
 `npm test` runs the Vitest suite. It covers validation, wildcards, the 12-character form, every
-numeric target, regression cases, React, property-based tests (fast-check) and data integrity.
+numeric target, regression cases, React, property-based tests (fast-check), data integrity, and a render check that every converted
+code is drawable by milsymbol whenever the 2525C input is.
 Expected values in `tests/fixtures/verified-sidcs.json` were written by hand from the 2525C and
 2525D tables. `scripts/review-fixture.mjs` prints the cited table lines for review. The fixtures
 were not produced by the converter.
