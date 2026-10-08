@@ -42,3 +42,18 @@ export {
   type MappingAdapter,
   type MappingEvidence,
 } from "./adapters/symbology-adapter";
+export {
+  Affiliation,
+  Status,
+  Echelon,
+  UnitIndicator,
+  SymbolModifier,
+  OrderOfBattle,
+  echelonModifier,
+  isAffiliation,
+  isStatus,
+  isSymbolModifier,
+  isCountryCode,
+  isOrderOfBattle,
+} from "./codes";
+export type { CountryCode } from "./codes";

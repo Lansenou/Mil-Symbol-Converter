@@ -1,5 +1,11 @@
 import { useId, useState, type CSSProperties } from "react";
-import type { MatchQuality, SidcStandard, WildcardPolicy } from "../types";
+import type {
+  ConversionOptions,
+  MatchQuality,
+  SidcStandard,
+  WildcardPolicy,
+} from "../types";
+import type { Affiliation, Status, SymbolModifier } from "../codes";
 import { STANDARD_IDENTITIES, STATUSES } from "../legacy/fields";
 import { useSidcConverter } from "./useSidcConverter";
 
@@ -35,8 +41,8 @@ export function SidcConverter({
   const id = useId();
   const [sidc, setSidc] = useState(initialSidc);
   const [target, setTarget] = useState<SidcStandard>(initialTarget);
-  const [affiliation, setAffiliation] = useState("");
-  const [status, setStatus] = useState("");
+  const [affiliation, setAffiliation] = useState<Affiliation | "">("");
+  const [status, setStatus] = useState<Status | "">("");
   const [symbolModifier, setSymbolModifier] = useState("");
   const [wildcardPolicy, setWildcardPolicy] =
     useState<WildcardPolicy>("resolve");
@@ -44,11 +50,17 @@ export function SidcConverter({
   const [fuzzy, setFuzzy] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // The selects only offer table values; the free-text modifier is checked by the converter.
+  const picked: ConversionOptions = {
+    ...(affiliation && { affiliation }),
+    ...(status && { status }),
+    ...(symbolModifier && {
+      symbolModifier: symbolModifier as SymbolModifier,
+    }),
+  };
   const result = useSidcConverter(sidc, {
     targetStandard: target,
-    affiliation,
-    status,
-    symbolModifier,
+    ...picked,
     wildcardPolicy,
     allowLossy,
     fuzzy,
@@ -56,9 +68,7 @@ export function SidcConverter({
   });
   const twelve = useSidcConverter(sidc, {
     targetStandard: "LEGACY-12",
-    affiliation,
-    status,
-    symbolModifier,
+    ...picked,
     wildcardPolicy,
     allowLossy,
     fuzzy,
@@ -118,7 +128,7 @@ export function SidcConverter({
           Affiliation{" "}
           <select
             value={affiliation}
-            onChange={(e) => setAffiliation(e.target.value)}
+            onChange={(e) => setAffiliation(e.target.value as Affiliation | "")}
           >
             <option value="">(from SIDC)</option>
             {Object.entries(STANDARD_IDENTITIES).map(([k, v]) => (
@@ -130,7 +140,10 @@ export function SidcConverter({
         </label>
         <label>
           Status{" "}
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as Status | "")}
+          >
             <option value="">(from SIDC)</option>
             {Object.entries(STATUSES.S).map(([k, v]) => (
               <option key={k} value={k}>

@@ -73,7 +73,7 @@ The package is not published to the npm registry yet. Install the prebuilt tarba
 pulls in no other packages:
 
 ```bash
-npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.1.0/mil-symbol-converter-0.1.0.tgz
+npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.2.0/mil-symbol-converter-0.2.0.tgz
 ```
 
 `npm install github:Lansenou/Mil-Symbol-Converter` also works, but npm then builds the package on
@@ -151,6 +151,28 @@ convertSidc15To2525D("S*GPUCI---*****", {
 
 convertSidc15To12("S*GPUCI---*****", { wildcardPolicy: "preserve" }).output; // "S*GPUCI---**"
 ```
+
+The option values are typed (`Affiliation`, `Status`, `SymbolModifier`, `CountryCode`,
+`OrderOfBattle`), and each has named constants, so the call above can also read:
+
+```ts
+import {
+  Affiliation,
+  Echelon,
+  UnitIndicator,
+  echelonModifier,
+} from "mil-symbol-converter";
+
+convertSidc15To2525D("S*GPUCI---*****", {
+  affiliation: Affiliation.Hostile, // "H"
+  symbolModifier: echelonModifier(Echelon.Company), // "-E"
+});
+echelonModifier(Echelon.Battalion, UnitIndicator.Headquarters); // "AF"
+```
+
+For values read at runtime (forms, files), `isAffiliation`, `isStatus`, `isSymbolModifier`,
+`isCountryCode` and `isOrderOfBattle` narrow a `string` to these types. Whether a value fits the
+coding scheme of the SIDC (e.g. status `K` only for tactical graphics) is still checked at runtime.
 
 ### Lossy conversion (strict by default)
 
