@@ -34,7 +34,7 @@ const { convertSidc15To2525D } = require("mil-symbol-converter"); // CommonJS
 import { useSidcConverter } from "mil-symbol-converter/react"; // React hook and component
 ```
 
-Requires Node.js 20 or newer. The core has no runtime dependencies; React is an optional peer
+Requires Node.js 22 or newer. The core has no runtime dependencies; React is an optional peer
 dependency used only by `mil-symbol-converter/react`.
 
 Development: `npm install && npm run check` (format, lint, typecheck, tests, build, export check).
