@@ -20,6 +20,9 @@ treats APP-6D as identical to 2525D. Approximate matching is available only on r
 - [Conversion rules](docs/conversion-rules.md)
 - [Limitations and coverage](docs/limitations.md)
 
+**Try it online:** <https://lansenou.github.io/Mil-Symbol-Converter/> (source in `site/`,
+`npm run site` to run it locally).
+
 ## Examples
 
 The symbols are drawn by [milsymbol](https://github.com/spatialillusions/milsymbol) from each code;
