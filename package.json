@@ -38,7 +38,8 @@
     "test:watch": "vitest",
     "verify-exports": "node scripts/verify-exports.mjs",
     "build-data": "node scripts/build-data.mjs",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run verify-exports"
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run verify-exports",
+    "prepare": "tsup"
   },
   "peerDependencies": {
     "react": ">=18"

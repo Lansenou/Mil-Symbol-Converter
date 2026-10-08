@@ -362,7 +362,7 @@ export function convertToNumeric(
   if (byCode.size === 0) {
     d.error(
       "NO_VALID_MAPPING",
-      `No source provides a ${target.label} code with the same meaning: ${checked.map((c) => c.reason).join("; ")}.`,
+      `No source provides a code with the same meaning for ${target.label}: ${[...new Set(checked.map((c) => c.reason))].join("; ")}.`,
     );
     return failure(input, target.standard, d, {
       normalizedInput: sidc,
