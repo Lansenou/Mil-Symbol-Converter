@@ -139,9 +139,25 @@ export type OrderOfBattleLetter = (typeof OrderOfBattleLetter)[OrderOfBattle];
 
 // ---- name/letter lookups
 
-/** Drops surrounding whitespace and zero-width characters (common in pasted or exported data). */
+/**
+ * Drops what pasted, exported or double-encoded data wraps around a value: surrounding
+ * whitespace, zero-width characters, and one pair of quotes (`"Pending"` from a value that was
+ * JSON-encoded twice, or curly quotes from a word processor).
+ */
 const clean = (v: string) =>
-  v.replace(/[\u200B-\u200D\u2060\uFEFF]/g, "").trim();
+  v
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
+    .trim()
+    .replace(
+      /^(["'\u201C\u2018])(.*)(["'\u201D\u2019])$/s,
+      (m, open, body, close) => (QUOTE_PAIRS[open] === close ? body.trim() : m),
+    );
+const QUOTE_PAIRS: Record<string, string> = {
+  '"': '"',
+  "'": "'",
+  "\u201C": "\u201D",
+  "\u2018": "\u2019",
+};
 
 /** JSON-quotes a value with invisible and non-ASCII characters escaped, so error messages show them. */
 export const visible = (v: unknown) =>

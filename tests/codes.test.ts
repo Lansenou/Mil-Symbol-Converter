@@ -135,15 +135,22 @@ describe("full names", () => {
 });
 
 describe("override values from files and forms", () => {
-  it.each(["Pending ", "Pending\r\n", " pending", "​Pending", "﻿P"])(
-    "ignores surrounding whitespace and zero-width characters: %j",
-    (v) => {
-      const r = convertSidc("S*GPUCI--------", {
-        affiliation: v as Affiliation,
-      });
-      expect(r.output).toBe(convertSidc("SPGPUCI--------").output);
-    },
-  );
+  it.each([
+    "Pending ",
+    "Pending\r\n",
+    " pending",
+    "\u200bPending",
+    "\ufeffP",
+    '"Pending"',
+    JSON.stringify("Pending"),
+    "\u201cPending\u201d",
+    "'P'",
+  ])("ignores surrounding whitespace and zero-width characters: %j", (v) => {
+    const r = convertSidc("S*GPUCI--------", {
+      affiliation: v as Affiliation,
+    });
+    expect(r.output).toBe(convertSidc("SPGPUCI--------").output);
+  });
 
   it("says what it accepts and shows invisible characters", () => {
     const r = convertSidc("S*GPUCI--------", {
