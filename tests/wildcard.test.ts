@@ -134,7 +134,13 @@ describe("wildcards in conversions", () => {
     expect(codes(r)).toContain("TEMPLATE_OUTPUT");
   });
 
-  it("METOC codes never accept wildcards", () => {
-    expect(convertSidc("WAS-PL----P---*").success).toBe(false);
+  it("METOC codes accept no wildcards; a fixed tail is only filled in", () => {
+    expect(convertSidc("WAS-*L----P----").success).toBe(false);
+    expect(convertSidc("WAS-PL----P---*", { strictInput: true }).success).toBe(
+      false,
+    );
+    expect(convertSidc("WAS-PL----P---*").output).toBe(
+      convertSidc("WAS-PL----P----").output,
+    );
   });
 });

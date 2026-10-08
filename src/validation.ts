@@ -1,7 +1,12 @@
 /**
  * Input normalization, parsing and field validation of MIL-STD-2525C letter SIDCs.
  */
-import { catalogByKey, legacyKey, type CatalogEntry } from "./data/index";
+import {
+  catalog,
+  catalogByKey,
+  legacyKey,
+  type CatalogEntry,
+} from "./data/index";
 import {
   DIMENSIONS,
   METOC,
@@ -66,6 +71,21 @@ export function normalizeInput(
     }
     s = s.trim();
     d.warn("WHITESPACE_TRIMMED", "Leading/trailing whitespace was removed.");
+  }
+  // Some published lists write "---" as an em dash and "--" as an en dash. Undo that only when it
+  // gives exactly 15 characters, so a stray dash elsewhere is still reported.
+  if (!options.strictInput && /[\u2013\u2014]/.test(s)) {
+    const repaired = s.replace(/\u2014/g, "---").replace(/\u2013/g, "--");
+    if (
+      repaired.length === LEGACY_SIDC_LENGTH &&
+      /^[A-Za-z0-9*-]+$/.test(repaired)
+    ) {
+      d.warn(
+        "TYPOGRAPHIC_DASHES_REPAIRED",
+        'Typographic dashes were read as ASCII hyphens ("\u2014" as "---", "\u2013" as "--").',
+      );
+      s = repaired;
+    }
   }
   // Check characters before any case mapping: toUpperCase() can change the length of non-ASCII text.
   const bad: number[] = [];
@@ -160,7 +180,7 @@ export function validateSidc(
   options: ConversionOptions = {},
 ): ValidationResult {
   const d = new DiagnosticList();
-  const normalized = normalizeInput(input, options, d);
+  let normalized = normalizeInput(input, options, d);
   const base: ValidationResult = {
     input,
     valid: false,
@@ -173,6 +193,7 @@ export function validateSidc(
     diagnostics: [],
   };
   if (normalized === null) return finish(base, d);
+  if (!options.strictInput) normalized = fillFixedPositions(normalized, d);
 
   const fields = parseLegacyFields(normalized);
   const scheme = fields.codingScheme as CodingScheme;
@@ -298,6 +319,46 @@ export function validateSidc(
 
   base.valid = !d.hasErrors();
   return finish(base, d);
+}
+
+const metocByPrefix = new Map<string, CatalogEntry[]>();
+for (const c of catalog) {
+  if (c.template[0] !== "W") continue;
+  const k = c.template.slice(0, 10);
+  metocByPrefix.set(k, [...(metocByPrefix.get(k) ?? []), c]);
+}
+
+/**
+ * Replaces "*" in positions 11-15 where the matching 2525C table row has a fixed value (the "X"
+ * of tactical graphics, the installation "H", the METOC graphic type). Lists that end every code
+ * in "*****" rely on this. Only done when every matching row agrees on the value.
+ */
+function fillFixedPositions(sidc: string, d: DiagnosticList): string {
+  if (!sidc.slice(10).includes("*")) return sidc;
+  const rows =
+    sidc[0] === "W"
+      ? (metocByPrefix.get(sidc.slice(0, 10)) ?? [])
+      : (catalogByKey.get(legacyKey(sidc)) ?? []);
+  if (rows.length === 0) return sidc;
+  const chars = [...sidc];
+  const filled: number[] = [];
+  for (let i = 10; i < 15; i++) {
+    if (chars[i] !== "*") continue;
+    const values = new Set(rows.map((r) => r.template[i]));
+    const [v] = values;
+    if (values.size === 1 && v !== undefined && v !== "*") {
+      chars[i] = v;
+      filled.push(i + 1);
+    }
+  }
+  if (filled.length === 0) return sidc;
+  const out = chars.join("");
+  d.warn(
+    "FIXED_POSITIONS_FILLED",
+    `"*" at position(s) ${filled.join(", ")} replaced with the value the 2525C table fixes there: ${out}.`,
+    filled,
+  );
+  return out;
 }
 
 function validateFunctionId(fn: string, d: DiagnosticList): void {
