@@ -1,0 +1,32 @@
+# Attaches a prebuilt npm tarball to a GitHub release when a v* tag is pushed.
+# Installing the tarball needs no build and no dev dependencies:
+#   npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/<tag>/mil-symbol-converter-<version>.tgz
+name: Package
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # create the release and upload the tarball
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run check
+      - name: Check tag matches package.json version
+        run: test "v$(node -p 'require("./package.json").version')" = "$GITHUB_REF_NAME"
+      - run: npm pack
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --generate-notes
+          gh release upload "$GITHUB_REF_NAME" mil-symbol-converter-*.tgz --clobber

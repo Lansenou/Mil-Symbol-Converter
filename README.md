@@ -68,14 +68,17 @@ documented mapping.
 
 ## Install
 
-The package is not published to the npm registry. Install it from GitHub; npm builds it on install
-(the `prepare` script):
+The package is not published to the npm registry yet. Install the prebuilt tarball from the
+[GitHub releases](https://github.com/Lansenou/Mil-Symbol-Converter/releases); it needs no build and
+pulls in no other packages:
 
 ```bash
-npm install github:Lansenou/Mil-Symbol-Converter#feature/sidc-converter
-# after the pull request is merged:
-npm install github:Lansenou/Mil-Symbol-Converter
+npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.1.0/mil-symbol-converter-0.1.0.tgz
 ```
+
+`npm install github:Lansenou/Mil-Symbol-Converter` also works, but npm then builds the package on
+your machine and installs all development dependencies first (test tools such as jsdom, which need
+Node.js 22.22.2+ or 24.15+).
 
 ```ts
 import { convertSidc15To2525D } from "mil-symbol-converter"; // ESM
@@ -294,6 +297,11 @@ Expected values in `tests/fixtures/verified-sidcs.json` were written by hand fro
 were not produced by the converter.
 
 ## Publishing
+
+Pushing a `v*` tag that matches `version` in `package.json` (e.g. `git tag v0.1.0 && git push origin
+v0.1.0`) runs `.github/workflows/package.yml`: it tests, packs and attaches the tarball to a GitHub
+release of that name. That needs no npm account. (A release created by the workflow does not trigger
+the npm workflow below.)
 
 `.github/workflows/release.yml` publishes to npm when a GitHub release is published. It uses
 [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers): GitHub Actions proves its
