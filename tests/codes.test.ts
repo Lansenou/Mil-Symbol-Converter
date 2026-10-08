@@ -133,3 +133,31 @@ describe("full names", () => {
     expect(isOrderOfBattle("Maritime")).toBe(true);
   });
 });
+
+describe("override values from files and forms", () => {
+  it.each([
+    "Pending ",
+    "Pending\r\n",
+    " pending",
+    "\u200bPending",
+    "\ufeffP",
+    '"Pending"',
+    JSON.stringify("Pending"),
+    "\u201cPending\u201d",
+    "'P'",
+  ])("ignores surrounding whitespace and zero-width characters: %j", (v) => {
+    const r = convertSidc("S*GPUCI--------", {
+      affiliation: v as Affiliation,
+    });
+    expect(r.output).toBe(convertSidc("SPGPUCI--------").output);
+  });
+
+  it("says what it accepts and shows invisible characters", () => {
+    const r = convertSidc("S*GPUCI--------", {
+      affiliation: "Pend­ing" as Affiliation,
+    });
+    expect(r.success).toBe(false);
+    expect(r.errors[0]).toContain("a name (Pending, Unknown");
+    expect(r.errors[0]).toContain('received "Pend\\u00ading"');
+  });
+});
