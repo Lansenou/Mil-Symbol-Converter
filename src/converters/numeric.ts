@@ -38,6 +38,7 @@ import type {
 import { DiagnosticList } from "../diagnostics";
 import { mapFields } from "./field-mapping";
 import {
+  words,
   ancestors,
   bestNameMatch,
   calibratedCertainty,
@@ -311,9 +312,6 @@ function checkCandidate(
   };
 }
 
-const leafOf = (n: string) => normalizeName(n.split(":").pop() ?? "");
-const parentOf = (n: string) => n.split(":").slice(0, -1).join(":");
-
 /**
  * The unique target entity with the same name: identical apart from case/punctuation, or with an
  * identical most-specific segment whose parent segments are not different in meaning.
@@ -323,13 +321,25 @@ function renumberEntity(
   symbolSet: string,
   sourceName: string,
 ): [string, string] | undefined {
-  const hits = entitiesOf(edition, symbolSet).filter(
-    ([, n]) =>
-      compareNames(sourceName, n) === "same" ||
-      (leafOf(sourceName) === leafOf(n) &&
-        (parentOf(sourceName) === "" ||
-          compareNames(parentOf(sourceName), parentOf(n)) !== "different")),
-  );
+  const segs = (n: string) => n.split(":").map((x) => x.trim());
+  const sameWords = (a: string, b: string) => {
+    const x = words(a);
+    const y = words(b);
+    return x.size === y.size && [...x].every((w) => y.has(w));
+  };
+  const src = segs(sourceName);
+  // Identical apart from case/punctuation, or the same last two segments word for word
+  // (plurals and punctuation aside): "Utility Vehicle : Bus" = "Utility Vehicles : Bus", but
+  // "Tank Recovery Vehicle : Heavy" is not "Tank : Heavy".
+  const hits = entitiesOf(edition, symbolSet).filter(([, n]) => {
+    if (compareNames(sourceName, n) === "same") return true;
+    const tgt = segs(n);
+    if (src.length !== tgt.length) return false;
+    const k = Math.min(2, src.length);
+    return src
+      .slice(-k)
+      .every((seg, i) => sameWords(seg, tgt[tgt.length - k + i] ?? ""));
+  });
   return hits.length === 1 ? hits[0] : undefined;
 }
 

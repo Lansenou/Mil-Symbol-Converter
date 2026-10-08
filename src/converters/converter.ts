@@ -10,6 +10,7 @@ import { DiagnosticList } from "../diagnostics";
 import { convertSidc15To12 } from "./legacy-12";
 import { convertToNumeric, NUMERIC_TARGETS } from "./numeric";
 import { prepareInput } from "./prepare";
+import { convertNumericTo2525C, type ReverseOptions } from "./reverse";
 import { failure, finalize, inputAsString } from "./result";
 
 /** 15-character MIL-STD-2525C -> 20-digit MIL-STD-2525D (version 10, or 11 with mil2525dVersion). */
@@ -77,6 +78,30 @@ export function convertSidc(
   options: ConversionOptions = {},
 ): ConversionResult {
   const target = options.targetStandard ?? "MIL-STD-2525D";
+  // Numeric input written in 2525D/E or APP-6D/E: convert back to 2525C.
+  const numericSource = options.sourceStandard;
+  if (
+    numericSource === "MIL-STD-2525D" ||
+    numericSource === "MIL-STD-2525E" ||
+    numericSource === "APP-6D" ||
+    numericSource === "APP-6E"
+  ) {
+    if (target !== "MIL-STD-2525C") {
+      return unsupportedTarget(
+        input,
+        target,
+        `Numeric input can only be converted to MIL-STD-2525C (set targetStandard: "MIL-STD-2525C"); converting between numeric editions goes through 2525C and is not offered directly.`,
+      );
+    }
+    const ro: ReverseOptions = { sourceStandard: numericSource };
+    if (options.countryCode !== undefined) ro.countryCode = options.countryCode;
+    if (options.orderOfBattle !== undefined)
+      ro.orderOfBattle = options.orderOfBattle;
+    if (options.preferredSource !== undefined)
+      ro.preferredSource = options.preferredSource;
+    if (options.strictInput !== undefined) ro.strictInput = options.strictInput;
+    return convertNumericTo2525C(input, ro);
+  }
   switch (target) {
     case "MIL-STD-2525D":
       return convertSidc15To2525D(input, options);

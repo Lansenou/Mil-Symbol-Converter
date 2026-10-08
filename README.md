@@ -5,7 +5,9 @@ Converts **MIL-STD-2525C** letter symbol identification codes (15 characters) to
 - the 20-digit numeric SIDC of **MIL-STD-2525D** (version 10, or 11 = Change 1),
 - **APP-6(D)**, **MIL-STD-2525E** (Change 1) and **APP-6(E)** (Change 2), where the code and its meaning
   can be checked in a catalog of that edition,
-- the 12-character letter form read by renderers such as milsymbol (`prefix-12` profile).
+- the 12-character letter form read by renderers such as milsymbol (`prefix-12` profile),
+
+and converts numeric codes back to 2525C.
 
 Each result says how faithful it is (`exact`, `equivalent`, `lossy`, `approximate`, `ambiguous`,
 `unsupported`), which datasets support it, and why it failed if it did. By default the converter
@@ -193,6 +195,21 @@ convertSidc15To2525D("SFAPMFFI-------", { fuzzy: true, allowLossy: true })
 ([calibration](docs/limitations.md#fuzzy-certainty)), not a made-up score. With fuzzy mode and
 `extendedSidc`, 95.7% of the 2525C symbols convert to 2525D, compared with 89.6% from documented
 mappings alone.
+
+### Numeric back to 2525C
+
+```ts
+import { convertNumericTo2525C } from "mil-symbol-converter";
+
+convertNumericTo2525C("10031000151211000002").output; // "SFGPUCIC---E---" (exact)
+convertNumericTo2525C("15031000151211000002").output; // "SFGPUCIC---E---" (2525E, equivalent)
+convertNumericTo2525C("10031000001211000000", { sourceStandard: "APP-6D" }); // version 10 is shared
+convertNumericTo2525C("10031000151211000002", { countryCode: "US" }).output; // "SFGPUCIC---EUS-"
+```
+
+Every candidate is converted forward again and accepted only if it reproduces the input, so both
+directions follow the same rules. A code that several _different_ 2525C symbols convert to is
+`ambiguous` rather than guessed.
 
 ### All targets at once, validation, analysis
 
