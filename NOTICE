@@ -1,0 +1,20 @@
+Mil-Symbol-Converter
+Copyright (c) 2026 Mil-Symbol-Converter contributors (MIT, see LICENSE)
+
+The generated tables in src/data/ are derived from the following works:
+
+1. Joint Military Symbology XML (JMSML), Esri, https://github.com/Esri/joint-military-symbology-xml
+   (commit 094e7647f0bdd001e42fd2a73ba802c995af20aa). Licensed under the Apache License 2.0.
+   Used: instance/*.xml (2525D catalog, legacy 2525C links, field code tables).
+
+2. mil-sym-ts, US Army Combat Capabilities Development Command C5ISR Center,
+   https://github.com/missioncommand/mil-sym-ts (commit 9f3c5512ecc8b9458da32328991b899910dafe7b).
+   Licensed under the Apache License 2.0.
+   Used: c2d.json, msd.json, mse.json, smd.json, sme.json.
+
+3. MIL-STD-2525C, Common Warfighting Symbology, 17 November 2008. US Department of Defense,
+   Distribution A: approved for public release, distribution is unlimited.
+   Used: SIDC catalog rows (Tables A-III, B-III, C-II, D-II, E-III, G-III).
+
+The derived tables were transformed (re-keyed and reduced) by scripts/build-data.mjs.
+A copy of the Apache License 2.0 is available at https://www.apache.org/licenses/LICENSE-2.0.
