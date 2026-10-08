@@ -7,7 +7,7 @@
  * direction knows (source disagreements, contested codes, renumbered and common modifiers) is
  * therefore honoured in reverse as well, and the two directions cannot drift apart.
  */
-import { catalog, legacyKey } from "../data/index";
+import { catalog, catalogByKey, legacyKey } from "../data/index";
 import {
   SYMBOL_MODIFIERS,
   STATUSES,
@@ -27,6 +27,7 @@ import {
   type NumericTarget,
 } from "./numeric";
 import { failure, finalize, inputAsString } from "./result";
+import { mapFields } from "./field-mapping";
 import { validateSidc } from "../validation";
 
 export type NumericSourceStandard =
@@ -166,6 +167,19 @@ const STANDARD_IDENTITY_LETTERS: Record<string, string> = {
 };
 const STATUS_LETTERS = ["P", "A", "C", "D", "X", "F"];
 
+const digitsCache = new Map<string, string | null>();
+/** Numeric digits 8-10 (HQ/TF/dummy, amplifier) that 2525C positions 11-12 map to. */
+function modifierDigits(scheme: CodingScheme, mod: string): string | null {
+  const key = scheme + mod;
+  let v = digitsCache.get(key);
+  if (v === undefined) {
+    const f = mapFields(`${scheme}F-P------${mod}---`, new DiagnosticList());
+    v = f ? f.hqtfd + f.amplifier : null;
+    digitsCache.set(key, v);
+  }
+  return v;
+}
+
 /** Letter SIDCs to try for one table entry, before forward verification. */
 function instantiate(template: string, numeric: string): string[] {
   if (template[0] === "W") return [template];
@@ -177,7 +191,10 @@ function instantiate(template: string, numeric: string): string[] {
   const country = "--";
   const ob = scheme === "G" ? "X" : "-";
   const out: string[] = [];
+  const digits = numeric.slice(7, 10);
   for (const mod of Object.keys(SYMBOL_MODIFIERS[scheme])) {
+    // Skip modifiers whose HQ/TF/dummy and amplifier digits differ: they cannot convert back.
+    if (modifierDigits(scheme, mod) !== digits) continue;
     // Positions 11-12 must fit the table entry (installations carry a fixed H).
     if (template[10] === "H" ? mod[0] !== "H" : mod[0] === "H") continue;
     if (template[11] !== "*" && template[11] !== "-" && template[11] !== mod[1])
@@ -402,6 +419,5 @@ function catalogOrder(sidc: string): number {
 }
 
 function catalogDescription(sidc: string): string {
-  const rows = catalog.filter((c) => legacyKey(c.template) === legacyKey(sidc));
-  return rows[0]?.description ?? "";
+  return catalogByKey.get(legacyKey(sidc))?.[0]?.description ?? "";
 }

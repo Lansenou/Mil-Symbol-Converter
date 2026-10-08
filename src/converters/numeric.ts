@@ -107,26 +107,42 @@ function requiredPositions(scheme: CodingScheme): number[] {
   return [2, 4, 11, 12];
 }
 
-const normalizeName = (n: string) =>
+/** Caches a pure string function; catalog names are a fixed, finite set. */
+function memo<T>(f: (s: string) => T): (s: string) => T {
+  const cache = new Map<string, T>();
+  return (s) => {
+    let v = cache.get(s);
+    if (v === undefined) {
+      v = f(s);
+      cache.set(s, v);
+    }
+    return v;
+  };
+}
+
+const normalizeName = memo((n: string) =>
   n
     .toLowerCase()
     .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, "");
+    .replace(/[^a-z0-9]+/g, ""),
+);
 
 const STOPWORDS = new Set(["and", "or", "of", "the", "a", "an", "with", "for"]);
 /** Words of the most specific name segment, singularized ("Vehicles" -> "vehicle"). */
-const leafWords = (n: string) =>
-  new Set(
-    (n.split(":").pop() ?? "")
-      .toLowerCase()
-      .split(/[^a-z0-9]+/)
-      .filter((w) => w && !STOPWORDS.has(w))
-      .map((w) =>
-        w.length > 3 && w.endsWith("s") && !w.endsWith("ss")
-          ? w.slice(0, -1)
-          : w,
-      ),
-  );
+const leafWords = memo(
+  (n: string): ReadonlySet<string> =>
+    new Set(
+      (n.split(":").pop() ?? "")
+        .toLowerCase()
+        .split(/[^a-z0-9]+/)
+        .filter((w) => w && !STOPWORDS.has(w))
+        .map((w) =>
+          w.length > 3 && w.endsWith("s") && !w.endsWith("ss")
+            ? w.slice(0, -1)
+            : w,
+        ),
+    ),
+);
 
 /**
  * Compares the names two catalogs give the same code.
@@ -316,7 +332,22 @@ function checkCandidate(
  * The unique target entity with the same name: identical apart from case/punctuation, or with an
  * identical most-specific segment whose parent segments are not different in meaning.
  */
+const renumberCache = new Map<string, [string, string] | null>();
 function renumberEntity(
+  edition: EditionKey,
+  symbolSet: string,
+  sourceName: string,
+): [string, string] | undefined {
+  const key = `${edition}|${symbolSet}|${sourceName}`;
+  let hit = renumberCache.get(key);
+  if (hit === undefined) {
+    hit = findRenumbered(edition, symbolSet, sourceName) ?? null;
+    renumberCache.set(key, hit);
+  }
+  return hit ?? undefined;
+}
+
+function findRenumbered(
   edition: EditionKey,
   symbolSet: string,
   sourceName: string,

@@ -187,15 +187,38 @@ export const SYMBOL_SET_NAMES: Record<string, string> = {
   "60": "Cyberspace",
 };
 
+/** Groups a catalog's "symbolSet|..." keys by symbol set, once per catalog. */
+function bySymbolSet<T>(
+  table: Record<string, number>,
+  make: (rest: string, name: string) => T,
+): Map<string, T[]> {
+  const m = new Map<string, T[]>();
+  for (const [k, i] of Object.entries(table)) {
+    const bar = k.indexOf("|");
+    const ss = k.slice(0, bar);
+    const list = m.get(ss) ?? [];
+    list.push(make(k.slice(bar + 1), names[i] ?? ""));
+    m.set(ss, list);
+  }
+  return m;
+}
+const entityIndex = new Map<EditionKey, Map<string, [string, string][]>>();
+const modifierIndex = new Map<
+  EditionKey,
+  Map<string, [1 | 2, string, string][]>
+>();
+
 /** All entities of a symbol set in an edition, as [entity code, name]. */
 export function entitiesOf(
   edition: EditionKey,
   symbolSet: string,
 ): [string, string][] {
-  const prefix = `${symbolSet}|`;
-  return Object.entries(catalogs[edition].entities)
-    .filter(([k]) => k.startsWith(prefix))
-    .map(([k, i]) => [k.slice(prefix.length), names[i] ?? ""]);
+  let m = entityIndex.get(edition);
+  if (!m) {
+    m = bySymbolSet(catalogs[edition].entities, (code, name) => [code, name]);
+    entityIndex.set(edition, m);
+  }
+  return m.get(symbolSet) ?? [];
 }
 
 /** All sector modifiers of a symbol set in an edition, as [sector, code, name]. */
@@ -203,11 +226,13 @@ export function modifiersOf(
   edition: EditionKey,
   symbolSet: string,
 ): [1 | 2, string, string][] {
-  const prefix = `${symbolSet}|`;
-  return Object.entries(catalogs[edition].modifiers)
-    .filter(([k]) => k.startsWith(prefix))
-    .map(([k, i]) => {
-      const [, sector, code] = k.split("|");
-      return [sector === "2" ? 2 : 1, code ?? "", names[i] ?? ""];
+  let m = modifierIndex.get(edition);
+  if (!m) {
+    m = bySymbolSet(catalogs[edition].modifiers, (rest, name) => {
+      const [sector, code] = rest.split("|");
+      return [sector === "2" ? 2 : 1, code ?? "", name];
     });
+    modifierIndex.set(edition, m);
+  }
+  return m.get(symbolSet) ?? [];
 }
