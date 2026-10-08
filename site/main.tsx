@@ -2,8 +2,8 @@ import { StrictMode, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import ms from "milsymbol";
 import {
-  Affiliation,
-  Status,
+  AffiliationLetter,
+  StatusLetter,
   convertNumericTo2525C,
   convertSidc,
   isSymbolModifier,
@@ -162,8 +162,10 @@ function App() {
     allowLossy,
     fuzzy,
     extendedSidc,
-    ...(affiliation && { affiliation: affiliation as Affiliation }),
-    ...(status && { status: status as Status }),
+    ...(affiliation && {
+      affiliation: affiliation as AffiliationLetter,
+    }),
+    ...(status && { status: status as StatusLetter }),
     ...(isSymbolModifier(mod) && { symbolModifier: mod }),
   };
   const trimmed = input.trim();
@@ -228,7 +230,7 @@ function App() {
                 onChange={(e) => setAffiliation(e.target.value)}
               >
                 <option value="">from SIDC</option>
-                {NAMES(Affiliation).map((a) => (
+                {NAMES(AffiliationLetter).map((a) => (
                   <option key={a.code} value={a.code}>
                     {a.code} {a.name}
                   </option>
@@ -244,7 +246,7 @@ function App() {
                 onChange={(e) => setStatus(e.target.value)}
               >
                 <option value="">from SIDC</option>
-                {NAMES(Status).map((a) => (
+                {NAMES(StatusLetter).map((a) => (
                   <option key={a.code} value={a.code}>
                     {a.code} {a.name}
                   </option>
@@ -340,7 +342,7 @@ function App() {
         milsymbol. Install:{" "}
         <code>
           npm install
-          https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.3.1/mil-symbol-converter-0.3.1.tgz
+          https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.4.0/mil-symbol-converter-0.4.0.tgz
         </code>
       </footer>
     </main>

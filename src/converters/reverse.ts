@@ -28,10 +28,11 @@ import {
 } from "./numeric";
 import { failure, finalize, inputAsString } from "./result";
 import { mapFields } from "./field-mapping";
+import { overrideLetters } from "../codes";
 import { validateSidc } from "../validation";
 
-export type NumericSourceStandard =
-  "MIL-STD-2525D" | "APP-6D" | "MIL-STD-2525E" | "APP-6E";
+import type { NumericSourceStandard } from "../constants";
+export type { NumericSourceStandard };
 
 export interface ReverseOptions {
   /**
@@ -377,7 +378,11 @@ export function convertNumericTo2525C(
     (options.countryCode !== undefined || options.orderOfBattle !== undefined)
   ) {
     const cc = (options.countryCode ?? "--").toUpperCase();
-    const ob = (options.orderOfBattle ?? output[14] ?? "-").toUpperCase();
+    const ob = (
+      options.orderOfBattle !== undefined
+        ? overrideLetters.orderOfBattle(options.orderOfBattle)
+        : (output[14] ?? "-")
+    ).toUpperCase();
     const withTail = output.slice(0, 12) + cc + ob;
     const v = validateSidc(withTail, { strictInput: true });
     if (!v.valid) {

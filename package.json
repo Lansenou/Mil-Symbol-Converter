@@ -1,6 +1,6 @@
 {
   "name": "mil-symbol-converter",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Convert MIL-STD-2525C letter SIDCs to MIL-STD-2525D/E and APP-6D/E numeric SIDCs with explicit, data-backed match quality.",
   "type": "module",
   "license": "MIT",
@@ -15,14 +15,32 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./react": {
-      "types": "./dist/react/index.d.ts",
-      "import": "./dist/react/index.js",
-      "require": "./dist/react/index.cjs"
+      "import": {
+        "types": "./dist/react/index.d.ts",
+        "default": "./dist/react/index.js"
+      },
+      "require": {
+        "types": "./dist/react/index.d.cts",
+        "default": "./dist/react/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "react": [
+        "./dist/react/index.d.ts"
+      ]
     }
   },
   "bin": {

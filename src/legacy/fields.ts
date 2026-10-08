@@ -7,7 +7,8 @@
  * (emergency management, E). Page numbers refer to that document.
  */
 
-export type CodingScheme = "S" | "G" | "W" | "I" | "O" | "E";
+/** Internal: the scheme letter. The public `CodingScheme` (full names) is in constants.ts. */
+export type CodingScheme = import("../constants").CodingSchemeLetter;
 
 export const CODING_SCHEMES: Record<CodingScheme, string> = {
   S: "Warfighting (Appendix A)",

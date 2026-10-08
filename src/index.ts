@@ -12,7 +12,6 @@ export {
 export {
   convertNumericTo2525C,
   type ReverseOptions,
-  type NumericSourceStandard,
 } from "./converters/reverse";
 export {
   LEGACY12_PROFILES,
@@ -44,11 +43,17 @@ export {
 } from "./adapters/symbology-adapter";
 export {
   Affiliation,
+  AffiliationLetter,
   Status,
+  StatusLetter,
   Echelon,
+  EchelonLetter,
   UnitIndicator,
+  UnitIndicatorLetter,
   SymbolModifier,
+  SymbolModifierLetter,
   OrderOfBattle,
+  OrderOfBattleLetter,
   echelonModifier,
   isAffiliation,
   isStatus,
@@ -57,3 +62,30 @@ export {
   isOrderOfBattle,
 } from "./codes";
 export type { CountryCode } from "./codes";
+export {
+  SidcStandard,
+  NumericSourceStandard,
+  MatchQuality,
+  WildcardPolicy,
+  MappingSource,
+  Mil2525dVersion,
+  DiagnosticSeverity,
+  DiagnosticCode,
+  FuzzyMethod,
+  Confidence,
+  CodingScheme,
+  CodingSchemeLetter,
+} from "./constants";
+export {
+  CODING_SCHEMES,
+  STANDARD_IDENTITIES,
+  DIMENSIONS,
+  STATUSES,
+  ECHELONS,
+  SYMBOL_MODIFIERS,
+  ORDERS_OF_BATTLE,
+  WILDCARD_POSITIONS,
+} from "./legacy/fields";
+export { SYMBOL_SET_NAMES } from "./data/index";
+export type { WildcardFieldName, WildcardField } from "./wildcard";
+export type { LegacySidcFields } from "./types";
