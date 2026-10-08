@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { convertSidc15To2525D } from "../src";
+import { convertSidc15To2525D, type Mil2525dVersion } from "../src";
 import { failures, fixtures } from "./fixtures";
 
 const d = fixtures.filter((f) => f.targetStandard === "MIL-STD-2525D");
@@ -110,10 +110,10 @@ describe("MIL-STD-2525D specifics", () => {
   });
 
   it("rejects an unknown version", () => {
-    // @ts-expect-error testing runtime validation
     expect(
-      convertSidc15To2525D("SFGPUCI--------", { mil2525dVersion: "12" })
-        .success,
+      convertSidc15To2525D("SFGPUCI--------", {
+        mil2525dVersion: "12" as Mil2525dVersion,
+      }).success,
     ).toBe(false);
   });
 

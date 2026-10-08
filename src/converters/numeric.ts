@@ -103,6 +103,43 @@ const normalizeName = (n: string) =>
     .replace(/&/g, " and ")
     .replace(/[^a-z0-9]+/g, "");
 
+const STOPWORDS = new Set(["and", "or", "of", "the", "a", "an", "with", "for"]);
+/** Words of the most specific name segment, singularized ("Vehicles" -> "vehicle"). */
+const leafWords = (n: string) =>
+  new Set(
+    (n.split(":").pop() ?? "")
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((w) => w && !STOPWORDS.has(w))
+      .map((w) =>
+        w.length > 3 && w.endsWith("s") && !w.endsWith("ss")
+          ? w.slice(0, -1)
+          : w,
+      ),
+  );
+
+/**
+ * Compares the names two catalogs give the same code.
+ * - "same": identical apart from case and punctuation.
+ * - "renamed": the most specific segment shares its wording (one word set contains the other,
+ *   or they overlap by at least half), e.g. "VSTOL" vs "Vertical or Short Take-off and
+ *   Landing (VSTOL)", "Utility Vehicle" vs "Utility Vehicles". Parent segments are ignored
+ *   because catalogs regroup entities ("Military/Civilian" vs "Installation").
+ * - "different": anything else, e.g. "Antisubmarine Warfare" vs "Palletized Load System".
+ */
+export function compareNames(
+  a: string,
+  b: string,
+): "same" | "renamed" | "different" {
+  if (normalizeName(a) === normalizeName(b)) return "same";
+  const x = leafWords(a);
+  const y = leafWords(b);
+  if (x.size === 0 || y.size === 0) return "different";
+  const common = [...x].filter((w) => y.has(w)).length;
+  if (common === x.size || common === y.size) return "renamed";
+  return common / new Set([...x, ...y]).size >= 0.5 ? "renamed" : "different";
+}
+
 interface CheckedCandidate {
   evidence: MappingEvidence;
   code: string; // symbol set + entity + m1 + m2 (12 digits)
@@ -112,6 +149,8 @@ interface CheckedCandidate {
   reason: string;
   entityName?: string | undefined;
   modifierNames: string[];
+  /** Name differences judged to be wording changes rather than different meanings. */
+  renamed?: string[];
 }
 
 /** Checks that a candidate exists in the target edition with the meaning its source gave it. */
@@ -157,6 +196,7 @@ function checkCandidate(
       modifierName(target.edition, e.symbolSet, 2, e.m2),
     ],
   ];
+  const renamed: string[] = [];
   for (const [what, sourceName, targetName] of parts) {
     if (targetName === undefined) {
       return {
@@ -170,7 +210,10 @@ function checkCandidate(
         reason: `${what} of symbol set ${e.symbolSet} is not in the ${e.source} source catalog`,
       };
     }
-    if (normalizeName(sourceName) !== normalizeName(targetName)) {
+    const cmp = compareNames(sourceName, targetName);
+    if (cmp === "renamed")
+      renamed.push(`${what}: "${sourceName}" / "${targetName}"`);
+    if (cmp === "different") {
       return {
         ...base,
         reason: `${what} means "${sourceName}" for ${e.source} but "${targetName}" in ${target.label}`,
@@ -191,6 +234,7 @@ function checkCandidate(
     native: e.nativeEdition === target.edition,
     contested: isContested,
     reason: "",
+    renamed,
     entityName: parts[0]?.[2],
     modifierNames: [parts[1]?.[2], parts[2]?.[2]].filter(
       (n): n is string => !!n && n !== "Unspecified",
@@ -406,6 +450,13 @@ export function convertToNumeric(
       candidates: candidateList("ambiguous"),
       metadata,
     });
+  }
+
+  for (const r of new Set(chosen.flatMap((c) => c.renamed ?? []))) {
+    d.info(
+      "NAME_WORDING_DIFFERS",
+      `Catalog wording differs but describes the same item: ${r}.`,
+    );
   }
 
   // --- Match quality

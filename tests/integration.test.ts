@@ -7,6 +7,7 @@ import {
   convertToNumeric,
   NUMERIC_TARGETS,
   type MappingAdapter,
+  type SidcStandard,
 } from "../src";
 
 describe("convertSidc dispatch", () => {
@@ -20,10 +21,10 @@ describe("convertSidc dispatch", () => {
     expect(r.output).toBe("SFGPUCIC---E---");
   });
   it("rejects an unknown target and a non-2525C source", () => {
-    // @ts-expect-error runtime check
     expect(
-      convertSidc("SFGPUCI--------", { targetStandard: "MIL-STD-2525F" })
-        .success,
+      convertSidc("SFGPUCI--------", {
+        targetStandard: "MIL-STD-2525F" as SidcStandard,
+      }).success,
     ).toBe(false);
     expect(
       convertSidc("SFGPUCI--------", { sourceStandard: "MIL-STD-2525D" })
