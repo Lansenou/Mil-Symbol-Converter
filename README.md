@@ -76,7 +76,7 @@ The package is not published to the npm registry yet. Install the prebuilt tarba
 pulls in no other packages:
 
 ```bash
-npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.4.0/mil-symbol-converter-0.4.0.tgz
+npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.4.1/mil-symbol-converter-0.4.1.tgz
 ```
 
 `npm install github:Lansenou/Mil-Symbol-Converter` also works, but npm then builds the package on
@@ -86,7 +86,7 @@ Node.js 22.22.2+ or 24.15+).
 ```ts
 import { convertSidc15To2525D } from "mil-symbol-converter"; // ESM
 const { convertSidc15To2525D } = require("mil-symbol-converter"); // CommonJS
-import { useSidcConverter } from "mil-symbol-converter/react"; // React hook and component
+import { useSidcConverter, Affiliation } from "mil-symbol-converter/react"; // hook, component, and everything above
 ```
 
 Requires Node.js 22 or newer. The core has no runtime dependencies; React is an optional peer
