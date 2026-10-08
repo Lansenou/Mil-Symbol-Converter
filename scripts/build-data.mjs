@@ -82,7 +82,6 @@ const sme = parseModifierCatalog(milsymRoot, "sme.json", "sme");
 // 4. Edition catalogs (names), restricted to codes referenced by any 2525C mapping candidate.
 const referencedEntities = new Set();
 const referencedMods = new Set();
-const sigintBase = (ss) => (Number(ss) > 50 && Number(ss) < 60 ? "50" : ss);
 for (const [, ss, e, m1, m2, flags] of jmsmlRows) {
   if (flags.includes("R")) continue;
   referencedEntities.add(`${ss}|${e}`);
@@ -122,18 +121,19 @@ for (const s of sets) {
   }
 }
 
-function editionCatalog(entities, mods, { modifierSetKey = (ss) => ss } = {}) {
+// Full catalogs: renumbered codes and name-based lookups need every entry, not only the codes
+// referenced by a mapping row.
+function editionCatalog(entities, mods, { sigintModsUnder50 = false } = {}) {
   const ent = {};
   const mod = {};
-  for (const key of referencedEntities) {
-    const n = entities.get(key);
-    if (n !== undefined) ent[key] = nameId(n);
+  for (const [key, n] of entities) {
+    ent[key] = nameId(n);
   }
-  for (const key of referencedMods) {
+  for (const [key, n] of mods) {
     const [ss, sector, code] = key.split("|");
     if (code === "00") continue; // "unspecified" is implicit in every edition
-    const n = mods.get(`${modifierSetKey(ss)}|${sector}|${code}`);
-    if (n !== undefined) mod[key] = nameId(n);
+    const sets = sigintModsUnder50 && ss === "50" ? ["50", "51", "52", "53", "54"] : [ss];
+    for (const s2 of sets) mod[`${s2}|${sector}|${code}`] ??= nameId(n);
   }
   return { entities: ent, modifiers: mod };
 }
@@ -152,16 +152,16 @@ for (const key of referencedEntities) {
 const catalogs = {
   "2525D": editionCatalog(jmsmlEntitiesExpanded, jmsmlMods),
   "APP-6D": editionCatalog(msd.get("10"), smd.get("10"), {
-    modifierSetKey: sigintBase,
+    sigintModsUnder50: true,
   }),
   "2525Dch1": editionCatalog(msd.get("11"), smd.get("11"), {
-    modifierSetKey: sigintBase,
+    sigintModsUnder50: true,
   }),
   "2525Ech1": editionCatalog(mse.get("15"), sme.get("15"), {
-    modifierSetKey: sigintBase,
+    sigintModsUnder50: true,
   }),
   "APP-6Ech2": editionCatalog(mse.get("16"), sme.get("16"), {
-    modifierSetKey: sigintBase,
+    sigintModsUnder50: true,
   }),
 };
 
