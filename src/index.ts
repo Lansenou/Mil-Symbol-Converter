@@ -10,6 +10,11 @@ export {
   ALL_TARGETS,
 } from "./converters/converter";
 export {
+  convertNumericTo2525C,
+  type ReverseOptions,
+  type NumericSourceStandard,
+} from "./converters/reverse";
+export {
   LEGACY12_PROFILES,
   type Legacy12Profile,
 } from "./converters/legacy-12";

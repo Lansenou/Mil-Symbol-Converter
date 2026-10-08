@@ -96,9 +96,10 @@ or the fixed `X` of tactical graphics); `lossy` when they hold a country code, a
 ## 5. Renumbered codes and the extended SIDC
 
 If a candidate's entity or modifier is missing from the target catalog, or means something else
-there, the target entry with the **identical name** is used when it is unique (entities: same name,
-or same most-specific segment under a parent that is not different; modifiers: same name, either
-sector). This is reported as `RENUMBERED` and the result is at most `equivalent`.
+there, the target entry with the **identical name** is used when it is unique (entities: same name, or
+the same last two name segments word for word, plurals and punctuation aside, so "Utility Vehicle :
+Bus" matches "Utility Vehicles : Bus" but "Tank Recovery Vehicle : Heavy" does not match "Tank :
+Heavy"; modifiers: same name, either sector). This is reported as `RENUMBERED` and the result is at most `equivalent`.
 
 2525E moved many modifiers into a shared list of _common modifiers_ that need the 30-digit SIDC:
 position 21 (sector 1) or 22 (sector 2) holds the indicator `1`, position 23 the frame shape (`0`,
@@ -122,7 +123,27 @@ Steps 1-2 need a calibrated `certainty` ≥ `minCertainty` (default 0.7); see do
 the calibration. Fuzzy results carry `fuzzy: { method, certainty, basis }` and
 `mappingSource: "fuzzy:<method>"`.
 
-## 7. Results
+## 7. Numeric → 2525C (`src/converters/reverse.ts`)
+
+`convertNumericTo2525C(code, options)` (or `convertSidc` with a numeric `sourceStandard` and
+`targetStandard: "MIL-STD-2525C"`) has no table of its own. The forward converter decides:
+
+1. Version digits pick the edition (10 → 2525D, or APP-6D with `sourceStandard: "APP-6D"`; 11, 15,
+   16). Versions 12-14, simulation context and 30-digit codes with frame shape or Set C content are
+   unsupported.
+2. An index of what every 2525C table entry converts to (built once per edition) proposes table
+   entries for the symbol part (symbol set, entity, modifiers, common-modifier flags).
+3. Each entry is instantiated with the letters for the standard identity, status and every
+   modifier pair the scheme allows, and **converted forward**. Only candidates that reproduce the
+   input exactly are accepted, so source disagreements, contested codes and renumbering are honoured
+   in both directions.
+4. The best forward quality wins. If only candidates whose forward mapping is lossy remain (more
+   specific 2525C symbols merged into this code), the result is `ambiguous`: choosing one would add
+   detail the numeric code does not carry. Symbols the 2525C tables list twice (same description)
+   resolve to the first listing, with an info diagnostic.
+5. Country code and order of battle are added only when passed as options.
+
+## 8. Results
 
 `success` is true only when there is no error and an output; `ambiguous` and `unsupported` never have
 an output. Every message also appears as a structured `diagnostics` entry with a stable `code` and the

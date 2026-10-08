@@ -86,3 +86,19 @@ describe("README fuzzy examples", () => {
     ).toBe("10030100001101040000");
   });
 });
+
+describe("README reverse examples", () => {
+  it("numeric back to 2525C", async () => {
+    const { convertNumericTo2525C } = await import("../src");
+    expect(convertNumericTo2525C("10031000151211000002").output).toBe(
+      "SFGPUCIC---E---",
+    );
+    expect(convertNumericTo2525C("15031000151211000002").output).toBe(
+      "SFGPUCIC---E---",
+    );
+    expect(
+      convertNumericTo2525C("10031000151211000002", { countryCode: "US" })
+        .output,
+    ).toBe("SFGPUCIC---EUS-");
+  });
+});

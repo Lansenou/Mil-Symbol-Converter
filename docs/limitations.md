@@ -14,12 +14,12 @@ SIDCs are left out) in three modes. "Converted" counts successful results; `allo
 | APP-6D        | strict (allowLossy) | 1588 (75.9%) | 6     | 1531       | 51    | 0           | 37        | 468         |
 | APP-6D        | + extendedSidc      | 1588 (75.9%) | 6     | 1531       | 51    | 0           | 37        | 468         |
 | APP-6D        | + fuzzy             | 1721 (82.2%) | 6     | 1531       | 133   | 51          | 11        | 361         |
-| MIL-STD-2525E | strict (allowLossy) | 1572 (75.1%) | 1     | 1532       | 39    | 0           | 29        | 492         |
-| MIL-STD-2525E | + extendedSidc      | 1644 (78.5%) | 1     | 1593       | 50    | 0           | 32        | 417         |
-| MIL-STD-2525E | + fuzzy             | 1886 (90.1%) | 1     | 1593       | 215   | 77          | 10        | 197         |
-| APP-6E        | strict (allowLossy) | 1131 (54.0%) | 0     | 1093       | 38    | 0           | 24        | 938         |
-| APP-6E        | + extendedSidc      | 1205 (57.6%) | 0     | 1156       | 49    | 0           | 27        | 861         |
-| APP-6E        | + fuzzy             | 1478 (70.6%) | 0     | 1156       | 269   | 53          | 9         | 606         |
+| MIL-STD-2525E | strict (allowLossy) | 1568 (74.9%) | 1     | 1528       | 39    | 0           | 29        | 496         |
+| MIL-STD-2525E | + extendedSidc      | 1640 (78.4%) | 1     | 1589       | 50    | 0           | 32        | 421         |
+| MIL-STD-2525E | + fuzzy             | 1885 (90.1%) | 1     | 1589       | 218   | 77          | 10        | 198         |
+| APP-6E        | strict (allowLossy) | 1127 (53.8%) | 0     | 1089       | 38    | 0           | 24        | 942         |
+| APP-6E        | + extendedSidc      | 1201 (57.4%) | 0     | 1152       | 49    | 0           | 27        | 865         |
+| APP-6E        | + fuzzy             | 1477 (70.6%) | 0     | 1152       | 272   | 53          | 9         | 607         |
 
 - **strict**: documented mappings only (`exact`, `equivalent`, `lossy`).
 - **+ extendedSidc**: also emits 30-digit 2525E/APP-6E codes when a modifier only exists there as a
