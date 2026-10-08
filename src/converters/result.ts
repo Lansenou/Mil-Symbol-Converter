@@ -5,6 +5,7 @@ const ORDER: MatchQuality[] = [
   "exact",
   "equivalent",
   "lossy",
+  "approximate",
   "ambiguous",
   "unsupported",
 ];

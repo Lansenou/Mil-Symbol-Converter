@@ -23,11 +23,18 @@ export type SidcStandard =
  *   edition's catalog rather than by a mapping table written for that edition.
  * - `lossy`: a valid output exists but some information of the input is not represented
  *   (for example a country code, or a 2525C distinction that the target merged).
+ * - `approximate`: only with `fuzzy: true`. A best guess from name similarity, with a calibrated
+ *   `fuzzy.certainty`; not a documented equivalence.
  * - `ambiguous`: more than one output is supported by the evidence; no output is chosen.
  * - `unsupported`: no output can be produced without inventing data.
  */
 export type MatchQuality =
-  "exact" | "equivalent" | "lossy" | "ambiguous" | "unsupported";
+  | "exact"
+  | "equivalent"
+  | "lossy"
+  | "approximate"
+  | "ambiguous"
+  | "unsupported";
 
 export type WildcardPolicy = "preserve" | "resolve" | "reject";
 
@@ -66,6 +73,19 @@ export interface ConversionOptions {
   mil2525dVersion?: Mil2525dVersion;
   /** When the mapping sources disagree, use this one instead of reporting ambiguity. */
   preferredSource?: MappingSourceName;
+  /**
+   * Allow the 30-digit SIDC for MIL-STD-2525E / APP-6(E) when a modifier only exists there as a
+   * common modifier (indicator in position 21 or 22). Defaults to `false` (20 digits only).
+   */
+  extendedSidc?: boolean;
+  /**
+   * When the strict mapping fails, try approximate matching: choose between disagreeing sources by
+   * name, search the target catalog by the 2525C description, or fall back to the nearest mapped
+   * 2525C ancestor (lossy). Defaults to `false`.
+   */
+  fuzzy?: boolean;
+  /** Minimum calibrated certainty (0-1) for `approximate` results. Defaults to 0.7. */
+  minCertainty?: number;
   /** Reject lowercase letters and surrounding whitespace instead of normalizing them. */
   strictInput?: boolean;
 }
@@ -122,6 +142,19 @@ export interface ConversionResult {
   /** 1-based positions whose unresolved value makes the result ambiguous. */
   ambiguousPositions?: number[];
   metadata?: ConversionMetadata;
+  /** Present only for results produced by `fuzzy: true`. */
+  fuzzy?: FuzzyInfo;
+}
+
+export interface FuzzyInfo {
+  method: "source-choice" | "name-match" | "ancestor";
+  /**
+   * For name-based methods: measured precision of the matcher at this score (see
+   * scripts/calibrate-fuzzy.ts). For "ancestor": 1, the output is a documented broader symbol.
+   */
+  certainty: number;
+  /** What the guess is based on. */
+  basis: string;
 }
 
 export interface LegacySidcFields {

@@ -15,6 +15,7 @@ const QUALITY_COLORS: Record<MatchQuality, string> = {
   exact: "#1b5e20",
   equivalent: "#2e7d32",
   lossy: "#e65100",
+  approximate: "#8d6e00",
   ambiguous: "#6a1b9a",
   unsupported: "#b71c1c",
 };
@@ -40,6 +41,7 @@ export function SidcConverter({
   const [wildcardPolicy, setWildcardPolicy] =
     useState<WildcardPolicy>("resolve");
   const [allowLossy, setAllowLossy] = useState(false);
+  const [fuzzy, setFuzzy] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const result = useSidcConverter(sidc, {
@@ -49,6 +51,8 @@ export function SidcConverter({
     symbolModifier,
     wildcardPolicy,
     allowLossy,
+    fuzzy,
+    extendedSidc: fuzzy,
   });
   const twelve = useSidcConverter(sidc, {
     targetStandard: "LEGACY-12",
@@ -57,6 +61,8 @@ export function SidcConverter({
     symbolModifier,
     wildcardPolicy,
     allowLossy,
+    fuzzy,
+    extendedSidc: fuzzy,
   });
 
   const copy = async () => {
@@ -164,6 +170,14 @@ export function SidcConverter({
           />{" "}
           allow lossy
         </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={fuzzy}
+            onChange={(e) => setFuzzy(e.target.checked)}
+          />{" "}
+          fuzzy (approximate, with certainty)
+        </label>
       </div>
 
       <output htmlFor={`${id}-sidc`} style={{ display: "block" }}>
@@ -190,6 +204,12 @@ export function SidcConverter({
             <span style={{ color: QUALITY_COLORS[twelve.matchQuality] }}>
               {twelve.matchQuality}
             </span>
+          </div>
+        )}
+        {result.fuzzy && (
+          <div data-testid="fuzzy">
+            Approximate ({result.fuzzy.method}), certainty{" "}
+            {Math.round(result.fuzzy.certainty * 100)}%: {result.fuzzy.basis}
           </div>
         )}
         {result.metadata?.legacyDescription && (

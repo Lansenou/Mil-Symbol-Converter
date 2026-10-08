@@ -69,3 +69,20 @@ describe("README examples", () => {
     );
   });
 });
+
+describe("README fuzzy examples", () => {
+  it("name match and ancestor fallback", () => {
+    expect(convertSidc15To2525D("SFGPUUL--------").success).toBe(false);
+    const f = convertSidc15To2525D("SFGPUUL--------", { fuzzy: true });
+    expect([
+      f.output,
+      f.matchQuality,
+      f.fuzzy?.method,
+      f.fuzzy?.certainty,
+    ]).toEqual(["10031000002000000000", "approximate", "name-match", 0.938]);
+    expect(
+      convertSidc15To2525D("SFAPMFFI-------", { fuzzy: true, allowLossy: true })
+        .output,
+    ).toBe("10030100001101040000");
+  });
+});

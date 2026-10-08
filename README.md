@@ -129,6 +129,28 @@ convertSidc("SFGPUCVRW------").matchQuality; // "ambiguous"
 convertSidc("SFGPUCVRW------", { preferredSource: "JMSML" }).output; // "10031000001206007400"
 ```
 
+### Fuzzy mode (approximate, with certainty)
+
+Off by default. When there is no documented mapping, `fuzzy: true` makes a labelled best guess:
+
+```ts
+convertSidc15To2525D("SFGPUUL--------"); // LAW ENFORCEMENT UNIT: unsupported (no mapping)
+const f = convertSidc15To2525D("SFGPUUL--------", { fuzzy: true });
+f.output; // "10031000002000000000" (Land unit : Law Enforcement)
+f.matchQuality; // "approximate"
+f.fuzzy; // { method: "name-match", certainty: 0.938, basis: '"LAW ENFORCEMENT UNIT" ~ "Law Enforcement" …' }
+
+// No name match: fall back to the nearest mapped 2525C parent (lossy, needs allowLossy)
+convertSidc15To2525D("SFAPMFFI-------", { fuzzy: true, allowLossy: true })
+  .output;
+// "10030100001101040000": INTERCEPTOR -> its parent FIGHTER
+```
+
+`certainty` is the measured precision of the matcher on symbols with known mappings
+([calibration](docs/limitations.md#fuzzy-certainty)), not a made-up score. With fuzzy mode and
+`extendedSidc`, 95.7% of the 2525C symbols convert to 2525D, compared with 89.6% from documented
+mappings alone.
+
 ### All targets at once, validation, analysis
 
 ```ts

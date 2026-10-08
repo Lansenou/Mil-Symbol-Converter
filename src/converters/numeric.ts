@@ -15,8 +15,10 @@ import {
 } from "../adapters/symbology-adapter";
 import {
   contested,
+  entitiesOf,
   entityName,
   modifierName,
+  modifiersOf,
   SYMBOL_SET_NAMES,
   type EditionKey,
 } from "../data/index";
@@ -35,6 +37,13 @@ import type {
 } from "../types";
 import { DiagnosticList } from "../diagnostics";
 import { mapFields } from "./field-mapping";
+import {
+  ancestors,
+  bestNameMatch,
+  calibratedCertainty,
+  nameScore,
+  plausibleSymbolSets,
+} from "./fuzzy";
 import { prepareInput } from "./prepare";
 import { failure, finalize, worst, inputAsString } from "./result";
 
@@ -88,7 +97,7 @@ export const NUMERIC_TARGETS = {
   },
 } as const satisfies Record<string, NumericTarget>;
 
-const NUMERIC_SIDC = /^\d{20}$/;
+const NUMERIC_SIDC = /^(\d{20}|\d{30})$/;
 
 /** Positions a numeric target needs concrete values for. */
 function requiredPositions(scheme: CodingScheme): number[] {
@@ -151,12 +160,15 @@ interface CheckedCandidate {
   modifierNames: string[];
   /** Name differences judged to be wording changes rather than different meanings. */
   renamed?: string[];
+  /** Parts found under a different code (same name) in the target edition. */
+  renumbered?: string[];
 }
 
 /** Checks that a candidate exists in the target edition with the meaning its source gave it. */
 function checkCandidate(
   e: MappingEvidence,
   target: NumericTarget,
+  allowExtended = false,
 ): CheckedCandidate {
   const code = `${e.symbolSet}${e.entity}${e.m1}${e.m2}`;
   const base: CheckedCandidate = {
@@ -173,73 +185,168 @@ function checkCandidate(
       ...base,
       reason: `${e.source} marks this 2525C symbol as retired (no 2525D counterpart)`,
     };
-  if (!/^\d{12}$/.test(code)) {
+  const modOk = (m: string) => /^(\d{2}|1\d{2})$/.test(m);
+  if (!/^\d{8}$/.test(e.symbolSet + e.entity) || !modOk(e.m1) || !modOk(e.m2)) {
     return {
       ...base,
       reason: `${e.source} maps to ${e.symbolSet}/${e.entity}/${e.m1}/${e.m2}, which needs the extended (30-digit) SIDC`,
     };
   }
-  const parts: [string, string | undefined, string | undefined][] = [
-    [
-      `entity ${e.entity}`,
-      entityName(e.nativeEdition, e.symbolSet, e.entity),
-      entityName(target.edition, e.symbolSet, e.entity),
-    ],
-    [
-      `sector 1 modifier ${e.m1}`,
-      modifierName(e.nativeEdition, e.symbolSet, 1, e.m1),
-      modifierName(target.edition, e.symbolSet, 1, e.m1),
-    ],
-    [
-      `sector 2 modifier ${e.m2}`,
-      modifierName(e.nativeEdition, e.symbolSet, 2, e.m2),
-      modifierName(target.edition, e.symbolSet, 2, e.m2),
-    ],
-  ];
+  // Resolve each part in the target edition. A code that is missing there, or names something
+  // else there, may have been renumbered: the target entry with the identical name is used,
+  // provided it is unique (see renumberEntity / renumberModifier).
   const renamed: string[] = [];
-  for (const [what, sourceName, targetName] of parts) {
-    if (targetName === undefined) {
+  const renumbered: string[] = [];
+  const entitySource = entityName(e.nativeEdition, e.symbolSet, e.entity);
+  if (entitySource === undefined) {
+    return {
+      ...base,
+      reason: `entity ${e.entity} of symbol set ${e.symbolSet} is not in the ${e.source} source catalog`,
+    };
+  }
+  let entity = e.entity;
+  let entityTarget = entityName(target.edition, e.symbolSet, entity);
+  if (
+    entityTarget === undefined ||
+    compareNames(entitySource, entityTarget) === "different"
+  ) {
+    const moved = renumberEntity(target.edition, e.symbolSet, entitySource);
+    if (!moved) {
       return {
         ...base,
-        reason: `${what} of symbol set ${e.symbolSet} is not in the ${target.label} catalog`,
+        reason:
+          entityTarget === undefined
+            ? `entity ${e.entity} of symbol set ${e.symbolSet} is not in the ${target.label} catalog`
+            : `entity ${e.entity} means "${entitySource}" for ${e.source} but "${entityTarget}" in ${target.label}`,
       };
     }
+    renumbered.push(`entity "${entitySource}" ${e.entity} -> ${moved[0]}`);
+    [entity, entityTarget] = moved;
+  } else if (compareNames(entitySource, entityTarget) === "renamed") {
+    renamed.push(`entity ${e.entity}: "${entitySource}" / "${entityTarget}"`);
+  }
+
+  const slots: Record<1 | 2, string> = { 1: "00", 2: "00" };
+  const modNames: string[] = [];
+  for (const [sector, code] of [
+    [1, e.m1],
+    [2, e.m2],
+  ] as const) {
+    if (code === "00") continue;
+    const what = `sector ${sector} modifier ${code}`;
+    // 3-digit codes are 2525E common modifiers (catalog symbol set "00").
+    const setOf = (c: string) => (c.length === 3 ? "00" : e.symbolSet);
+    const sourceName = modifierName(e.nativeEdition, setOf(code), sector, code);
     if (sourceName === undefined) {
       return {
         ...base,
         reason: `${what} of symbol set ${e.symbolSet} is not in the ${e.source} source catalog`,
       };
     }
-    const cmp = compareNames(sourceName, targetName);
-    if (cmp === "renamed")
-      renamed.push(`${what}: "${sourceName}" / "${targetName}"`);
-    if (cmp === "different") {
+    const targetName = modifierName(target.edition, setOf(code), sector, code);
+    let placed: [1 | 2, string, string] | undefined;
+    if (
+      targetName !== undefined &&
+      compareNames(sourceName, targetName) !== "different"
+    ) {
+      placed = [sector, code, targetName];
+      if (compareNames(sourceName, targetName) === "renamed") {
+        renamed.push(`${what}: "${sourceName}" / "${targetName}"`);
+      }
+    } else {
+      placed = renumberModifier(target.edition, e.symbolSet, sourceName);
+      if (!placed) {
+        return {
+          ...base,
+          reason:
+            targetName === undefined
+              ? `${what} of symbol set ${e.symbolSet} is not in the ${target.label} catalog`
+              : `${what} means "${sourceName}" for ${e.source} but "${targetName}" in ${target.label}`,
+        };
+      }
+      renumbered.push(
+        `modifier "${sourceName}" sector ${sector} ${code} -> sector ${placed[0]} ${placed[1]}`,
+      );
+    }
+    if (slots[placed[0]] !== "00") {
       return {
         ...base,
-        reason: `${what} means "${sourceName}" for ${e.source} but "${targetName}" in ${target.label}`,
+        reason: `both modifiers need sector ${placed[0]} in ${target.label}`,
       };
     }
+    slots[placed[0]] = placed[1];
+    modNames.push(placed[2]);
   }
+  // Common modifiers (3 digits) put their indicator in SIDC positions 21-22 of the 30-digit form.
+  const commonFlags = `${slots[1].length === 3 ? slots[1][0] : "0"}${slots[2].length === 3 ? slots[2][0] : "0"}`;
+  const finalCode =
+    `${e.symbolSet}${entity}${slots[1].slice(-2)}${slots[2].slice(-2)}` +
+    (commonFlags === "00" ? "" : `+${commonFlags}`);
+  if (finalCode.includes("+") && !allowExtended) {
+    return {
+      ...base,
+      reason: `${target.label} expresses ${modNames.join(", ")} as a common modifier, which needs the 30-digit SIDC (pass extendedSidc: true)`,
+    };
+  }
+
   const isContested = contested.some(
     (c) =>
       c.editions.includes(target.edition) &&
       c.symbolSet === e.symbolSet &&
-      ((c.kind === "entity" && c.code === e.entity) ||
-        (c.kind === "modifier1" && c.code === e.m1) ||
-        (c.kind === "modifier2" && c.code === e.m2)),
+      ((c.kind === "entity" && c.code === entity) ||
+        (c.kind === "modifier1" && c.code === slots[1]) ||
+        (c.kind === "modifier2" && c.code === slots[2])),
   );
   return {
     ...base,
+    code: finalCode,
     valid: true,
-    native: e.nativeEdition === target.edition,
+    native: e.nativeEdition === target.edition && renumbered.length === 0,
     contested: isContested,
     reason: "",
     renamed,
-    entityName: parts[0]?.[2],
-    modifierNames: [parts[1]?.[2], parts[2]?.[2]].filter(
-      (n): n is string => !!n && n !== "Unspecified",
-    ),
+    renumbered,
+    entityName: entityTarget,
+    modifierNames: modNames,
   };
+}
+
+const leafOf = (n: string) => normalizeName(n.split(":").pop() ?? "");
+const parentOf = (n: string) => n.split(":").slice(0, -1).join(":");
+
+/**
+ * The unique target entity with the same name: identical apart from case/punctuation, or with an
+ * identical most-specific segment whose parent segments are not different in meaning.
+ */
+function renumberEntity(
+  edition: EditionKey,
+  symbolSet: string,
+  sourceName: string,
+): [string, string] | undefined {
+  const hits = entitiesOf(edition, symbolSet).filter(
+    ([, n]) =>
+      compareNames(sourceName, n) === "same" ||
+      (leafOf(sourceName) === leafOf(n) &&
+        (parentOf(sourceName) === "" ||
+          compareNames(parentOf(sourceName), parentOf(n)) !== "different")),
+  );
+  return hits.length === 1 ? hits[0] : undefined;
+}
+
+/** The unique target modifier (either sector) whose name is identical apart from case/punctuation. */
+function renumberModifier(
+  edition: EditionKey,
+  symbolSet: string,
+  sourceName: string,
+): [1 | 2, string, string] | undefined {
+  const same = ([, , n]: [1 | 2, string, string]) =>
+    normalizeName(n) === normalizeName(sourceName);
+  const hits = modifiersOf(edition, symbolSet).filter(same);
+  if (hits.length === 1) return hits[0];
+  if (hits.length > 1) return undefined;
+  // 2525E moved many set-specific modifiers to the common modifiers (catalog set "00").
+  const common = modifiersOf(edition, "00").filter(same);
+  return common.length === 1 ? common[0] : undefined;
 }
 
 export function convertToNumeric(
@@ -247,6 +354,162 @@ export function convertToNumeric(
   target: NumericTarget,
   options: ConversionOptions = {},
   adapters: readonly MappingAdapter[] = defaultAdapters,
+): ConversionResult {
+  const strict = convertStrict(input, target, options, adapters);
+  if (strict.success || !options.fuzzy) return strict;
+  return fuzzyFallback(strict, target, options, adapters) ?? strict;
+}
+
+const FUZZY_ELIGIBLE = new Set([
+  "NO_MAPPING",
+  "NO_VALID_MAPPING",
+  "SOURCES_DISAGREE",
+  "SOURCES_DISAGREE_ON_MEANING",
+]);
+
+/** Approximate matching for strict failures caused by missing or conflicting mappings only. */
+function fuzzyFallback(
+  strict: ConversionResult,
+  target: NumericTarget,
+  options: ConversionOptions,
+  adapters: readonly MappingAdapter[],
+): ConversionResult | undefined {
+  const sidc = strict.normalizedInput;
+  const errors = strict.diagnostics.filter((x) => x.severity === "error");
+  if (
+    !sidc ||
+    errors.length === 0 ||
+    !errors.every((x) => FUZZY_ELIGIBLE.has(x.code))
+  )
+    return undefined;
+  const description = strict.metadata?.legacyDescription;
+  const minCertainty = options.minCertainty ?? 0.7;
+  const d = new DiagnosticList();
+  // Keep the strict diagnostics as context, demoted to info.
+  for (const x of strict.diagnostics)
+    d.add("info", x.code, x.message, x.positions);
+
+  const finish = (
+    output: string,
+    quality: MatchQuality,
+    fuzzy: NonNullable<ConversionResult["fuzzy"]>,
+  ) => {
+    d.warn(
+      "FUZZY_RESULT",
+      `Approximate result (${fuzzy.method}, certainty ${fuzzy.certainty.toFixed(2)}): ${fuzzy.basis}.`,
+    );
+    const lossyBlocked = quality === "lossy" && !options.allowLossy;
+    if (lossyBlocked)
+      d.error(
+        "LOSSY_NOT_ALLOWED",
+        "The approximate result is broader than the input; pass allowLossy: true to accept it.",
+      );
+    return finalize(
+      {
+        ...strict,
+        output: lossyBlocked ? null : output,
+        matchQuality: quality,
+        success: !lossyBlocked,
+        mappingSource: `fuzzy:${fuzzy.method}`,
+        confidence: "single-source",
+        fuzzy,
+        warnings: [],
+        errors: [],
+        diagnostics: [],
+        ...(lossyBlocked
+          ? {
+              candidates: [
+                {
+                  output,
+                  matchQuality: quality,
+                  sources: [fuzzy.method],
+                  note: fuzzy.basis,
+                },
+              ],
+            }
+          : {}),
+      },
+      d,
+    );
+  };
+
+  // 1. Sources disagree: pick the candidate whose target name best matches the 2525C description.
+  if (description && strict.candidates && strict.candidates.length > 1) {
+    const scored = strict.candidates
+      .map((c) => ({ c, score: nameScore(description, c.note) }))
+      .sort((a, b) => b.score - a.score);
+    const [best, second] = scored;
+    if (best) {
+      const certainty = calibratedCertainty(
+        best.score,
+        best.score - (second?.score ?? 0),
+      );
+      if (certainty >= minCertainty) {
+        return finish(best.c.output, "approximate", {
+          method: "source-choice",
+          certainty,
+          basis: `"${description}" matches "${best.c.note}" (${best.c.sources.join("+")}) better than the alternative`,
+        });
+      }
+    }
+  }
+
+  // 2. Search the target catalog by the 2525C description.
+  const fieldDigits = mapFields(sidc, new DiagnosticList());
+  if (description && fieldDigits && sidc[0] !== "W") {
+    const sets = plausibleSymbolSets(sidc);
+    for (const e of adapters.flatMap((a) => a.lookup(sidc)))
+      sets.add(e.symbolSet);
+    const m = bestNameMatch(target.edition, sets, description);
+    if (m) {
+      const certainty = calibratedCertainty(m.score, m.margin);
+      if (certainty >= minCertainty) {
+        const output =
+          target.version +
+          fieldDigits.standardIdentity +
+          m.symbolSet +
+          fieldDigits.status +
+          fieldDigits.hqtfd +
+          fieldDigits.amplifier +
+          m.entity +
+          "0000";
+        return finish(output, "approximate", {
+          method: "name-match",
+          certainty,
+          basis: `"${description}" ~ "${m.name}" (${SYMBOL_SET_NAMES[m.symbolSet] ?? m.symbolSet} ${m.entity}), similarity ${m.score.toFixed(2)}`,
+        });
+      }
+    }
+  }
+
+  // 3. Nearest 2525C ancestor with a strict mapping: a documented, broader symbol.
+  for (const [a, levels, aDescription] of ancestors(sidc)) {
+    const r = convertStrict(
+      a,
+      target,
+      { ...options, allowLossy: true },
+      adapters,
+    );
+    if (
+      r.success &&
+      r.output &&
+      (r.matchQuality === "exact" || r.matchQuality === "equivalent")
+    ) {
+      return finish(r.output, "lossy", {
+        method: "ancestor",
+        certainty: 1,
+        basis: `no mapping for "${description ?? sidc}"; using its 2525C parent ${levels > 1 ? `(${levels} levels up) ` : ""}"${aDescription}" (${a}), which loses the specialisation`,
+      });
+    }
+  }
+  return undefined;
+}
+
+function convertStrict(
+  input: unknown,
+  target: NumericTarget,
+  options: ConversionOptions,
+  adapters: readonly MappingAdapter[],
 ): ConversionResult {
   const d = new DiagnosticList();
   const prepared = prepareInput(input, options, target.standard, false, d);
@@ -320,7 +583,9 @@ export function convertToNumeric(
       metadata,
     });
   }
-  const checked = evidence.map((e) => checkCandidate(e, target));
+  const checked = evidence.map((e) =>
+    checkCandidate(e, target, options.extendedSidc === true),
+  );
   const valid = checked.filter((c) => c.valid);
   const retiredBy = checked
     .filter((c) => c.evidence.retired)
@@ -329,16 +594,21 @@ export function convertToNumeric(
     d.info("CANDIDATE_REJECTED", `Not used for ${target.label}: ${c.reason}.`);
   }
 
-  const compose = (c: CheckedCandidate) =>
-    fieldDigits
-      ? target.version +
-        fieldDigits.standardIdentity +
-        c.code.slice(0, 2) +
-        fieldDigits.status +
-        fieldDigits.hqtfd +
-        fieldDigits.amplifier +
-        c.code.slice(2)
-      : null;
+  // 20 digits, or 30 when a 2525E common modifier is used: positions 21-22 common-modifier
+  // indicators, 23 frame shape (0 = default for the symbol set), 24-30 zero (mil-sym-ts SymbolID).
+  const compose = (c: CheckedCandidate) => {
+    if (!fieldDigits) return null;
+    const [code12 = "", flags] = c.code.split("+");
+    const base20 =
+      target.version +
+      fieldDigits.standardIdentity +
+      code12.slice(0, 2) +
+      fieldDigits.status +
+      fieldDigits.hqtfd +
+      fieldDigits.amplifier +
+      code12.slice(2);
+    return flags ? `${base20}${flags}00000000` : base20;
+  };
 
   // Group valid candidates by code.
   const byCode = new Map<string, CheckedCandidate[]>();
@@ -459,6 +729,13 @@ export function convertToNumeric(
     );
   }
 
+  for (const r of new Set(chosen.flatMap((c) => c.renumbered ?? []))) {
+    d.warn(
+      "RENUMBERED",
+      `Found under a different code with the same name in ${target.label}: ${r}.`,
+    );
+  }
+
   // --- Match quality
   let quality: MatchQuality = chosen.some((c) => c.native)
     ? "exact"
@@ -532,7 +809,7 @@ export function convertToNumeric(
   if (output === null || !NUMERIC_SIDC.test(output)) {
     d.error(
       "INTERNAL_INVALID_OUTPUT",
-      `Internal error: composed SIDC "${output}" is not 20 digits.`,
+      `Internal error: composed SIDC "${output}" is not 20 or 30 digits.`,
     );
     return failure(input, target.standard, d, {
       normalizedInput: sidc,

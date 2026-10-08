@@ -24,6 +24,9 @@ export function useSidcConverter(
     mil2525dVersion,
     preferredSource,
     strictInput,
+    extendedSidc,
+    fuzzy,
+    minCertainty,
   } = options;
   return useMemo(() => {
     const o: ConversionOptions = {};
@@ -39,6 +42,9 @@ export function useSidcConverter(
     if (mil2525dVersion !== undefined) o.mil2525dVersion = mil2525dVersion;
     if (preferredSource !== undefined) o.preferredSource = preferredSource;
     if (strictInput !== undefined) o.strictInput = strictInput;
+    if (extendedSidc !== undefined) o.extendedSidc = extendedSidc;
+    if (fuzzy !== undefined) o.fuzzy = fuzzy;
+    if (minCertainty !== undefined) o.minCertainty = minCertainty;
     return convertSidc(input, o);
   }, [
     input,
@@ -54,5 +60,8 @@ export function useSidcConverter(
     mil2525dVersion,
     preferredSource,
     strictInput,
+    extendedSidc,
+    fuzzy,
+    minCertainty,
   ]);
 }

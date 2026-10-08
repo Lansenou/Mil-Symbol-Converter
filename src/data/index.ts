@@ -186,3 +186,28 @@ export const SYMBOL_SET_NAMES: Record<string, string> = {
   "54": "Signals Intelligence - Subsurface",
   "60": "Cyberspace",
 };
+
+/** All entities of a symbol set in an edition, as [entity code, name]. */
+export function entitiesOf(
+  edition: EditionKey,
+  symbolSet: string,
+): [string, string][] {
+  const prefix = `${symbolSet}|`;
+  return Object.entries(catalogs[edition].entities)
+    .filter(([k]) => k.startsWith(prefix))
+    .map(([k, i]) => [k.slice(prefix.length), names[i] ?? ""]);
+}
+
+/** All sector modifiers of a symbol set in an edition, as [sector, code, name]. */
+export function modifiersOf(
+  edition: EditionKey,
+  symbolSet: string,
+): [1 | 2, string, string][] {
+  const prefix = `${symbolSet}|`;
+  return Object.entries(catalogs[edition].modifiers)
+    .filter(([k]) => k.startsWith(prefix))
+    .map(([k, i]) => {
+      const [, sector, code] = k.split("|");
+      return [sector === "2" ? 2 : 1, code ?? "", names[i] ?? ""];
+    });
+}

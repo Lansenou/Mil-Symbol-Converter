@@ -2,21 +2,52 @@
 
 ## Coverage
 
-`npx tsx scripts/coverage-report.ts` converts every row of the 2525C SIDC tables (2,198 rows,
-including hierarchy-only rows) with affiliation F, status P and no modifier. With `allowLossy: true`:
+`npx tsx scripts/coverage-report.ts` converts every complete symbol of the 2525C SIDC tables
+(2,093 SIDCs with affiliation F, status P and no modifier; hierarchy-only rows that are not valid
+SIDCs are left out) in three modes. "Converted" counts successful results; `allowLossy` is on.
 
-| Target             | exact                      | equivalent | lossy | ambiguous | unsupported/invalid |
-| ------------------ | -------------------------- | ---------- | ----- | --------- | ------------------- |
-| MIL-STD-2525D (10) | 1,861 (1,725 corroborated) | 2          | 44    | 46        | 245                 |
-| APP-6D             | 6                          | 1,560      | 46    | 38        | 548                 |
-| MIL-STD-2525E (15) | 1                          | 1,549      | 40    | 31        | 577                 |
-| APP-6E (16)        | 0                          | 1,100      | 39    | 24        | 1,035               |
+| Target        | Mode                | converted    | exact | equivalent | lossy | approximate | ambiguous | unsupported |
+| ------------- | ------------------- | ------------ | ----- | ---------- | ----- | ----------- | --------- | ----------- |
+| MIL-STD-2525D | strict (allowLossy) | 1875 (89.6%) | 1830  | 2          | 43    | 0           | 45        | 173         |
+| MIL-STD-2525D | + extendedSidc      | 1875 (89.6%) | 1830  | 2          | 43    | 0           | 45        | 173         |
+| MIL-STD-2525D | + fuzzy             | 2003 (95.7%) | 1830  | 2          | 104   | 67          | 11        | 79          |
+| APP-6D        | strict (allowLossy) | 1588 (75.9%) | 6     | 1531       | 51    | 0           | 37        | 468         |
+| APP-6D        | + extendedSidc      | 1588 (75.9%) | 6     | 1531       | 51    | 0           | 37        | 468         |
+| APP-6D        | + fuzzy             | 1721 (82.2%) | 6     | 1531       | 133   | 51          | 11        | 361         |
+| MIL-STD-2525E | strict (allowLossy) | 1572 (75.1%) | 1     | 1532       | 39    | 0           | 29        | 492         |
+| MIL-STD-2525E | + extendedSidc      | 1644 (78.5%) | 1     | 1593       | 50    | 0           | 32        | 417         |
+| MIL-STD-2525E | + fuzzy             | 1886 (90.1%) | 1     | 1593       | 215   | 77          | 10        | 197         |
+| APP-6E        | strict (allowLossy) | 1131 (54.0%) | 0     | 1093       | 38    | 0           | 24        | 938         |
+| APP-6E        | + extendedSidc      | 1205 (57.6%) | 0     | 1156       | 49    | 0           | 27        | 861         |
+| APP-6E        | + fuzzy             | 1478 (70.6%) | 0     | 1156       | 269   | 53          | 9         | 606         |
 
-For 2525D, the 245 failures break down as 72 hierarchy-only rows that are not complete SIDCs
-(e.g. `GF------------X`), 129 rows that neither source maps (mostly hierarchy nodes such as
-`WEAPON`), and 44 rows whose only mapping is retired or not in the target catalog. Of the 46 ambiguous
-rows, 38 are rows where the sources propose different codes and 8 are rows where the same digits carry
-different meanings (see below).
+- **strict**: documented mappings only (`exact`, `equivalent`, `lossy`).
+- **+ extendedSidc**: also emits 30-digit 2525E/APP-6E codes when a modifier only exists there as a
+  common modifier.
+- **+ fuzzy**: approximate results for the remaining failures (see below). `approximate` results are
+  best guesses; `lossy` ones in this mode are mostly ancestor fallbacks (a correct but broader symbol).
+
+What remains unsupported is mostly symbols without any counterpart in the target catalog (e.g. APP-6E
+has no METOC symbol sets in mil-sym-ts), retired symbols without a mapped ancestor, and SIGINT for
+APP-6D/2525E.
+
+### Fuzzy certainty
+
+`certainty` of name-based results is the measured precision of the name matcher, not an estimate:
+`npx tsx scripts/calibrate-fuzzy.ts` runs it on the 1,391 symbols whose 2525D mapping both sources
+agree on and counts how often each score tier picks exactly the right code.
+
+| Tier | Score ≥ | Margin ≥ | Matched | Correct | Precision (= certainty) |
+| ---- | ------- | -------- | ------- | ------- | ----------------------- |
+| 0    | 0.9     | 0.1      | 499     | 468     | 0.938                   |
+| 1    | 0.7     | 0.2      | 82      | 61      | 0.744                   |
+| 2    | 0.8     | 0.05     | 93      | 33      | 0.355                   |
+| 3    | 0.6     | 0.1      | 121     | 51      | 0.421                   |
+| 4    | 0.5     | 0        | 371     | 106     | 0.286                   |
+
+The default `minCertainty` of 0.7 therefore admits tiers 0 and 1 only. The calibration set consists
+of symbols that _do_ have mappings; the symbols fuzzy mode is used for are harder, so the real
+precision on them is probably lower. Treat `approximate` output as a suggestion to review.
 
 ## Known limitations
 
