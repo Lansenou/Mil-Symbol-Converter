@@ -89,3 +89,9 @@ export {
 export { SYMBOL_SET_NAMES } from "./data/index";
 export type { WildcardFieldName, WildcardField } from "./wildcard";
 export type { LegacySidcFields } from "./types";
+export {
+  sidc,
+  type CheckedSidc,
+  type ValidateSidcLiteral,
+  type TypeOptions,
+} from "./sidc-literal";

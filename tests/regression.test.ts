@@ -56,7 +56,7 @@ describe("regression: silent defaults found in other converters are not reproduc
     expect(convertLetterSidc2NumberSidc("S-GPUCI--------").sidc).toBe(
       "10031000001211000000",
     );
-    expect(convertSidc("S-GPUCI--------").success).toBe(false);
+    expect(convertSidc("S-GPUCI--------" as string).success).toBe(false);
   });
 
   it("a symbol with no counterpart is not replaced by the closest one", () => {

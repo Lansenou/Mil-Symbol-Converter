@@ -62,7 +62,9 @@ describe("fuzzy mode is opt-in", () => {
   });
 
   it("does not override invalid input, unresolved wildcards or contested codes", () => {
-    expect(convertSidc("SFGPUUL-------Q", { fuzzy: true }).success).toBe(false);
+    expect(
+      convertSidc("SFGPUUL-------Q" as string, { fuzzy: true }).success,
+    ).toBe(false);
     expect(convertSidc("S*GPUUL--------", { fuzzy: true }).success).toBe(false);
     const contested = convertSidc("SFGPUCVRW------", {
       targetStandard: "APP-6D",

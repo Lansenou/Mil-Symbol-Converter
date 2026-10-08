@@ -1,6 +1,7 @@
 /**
  * Public conversion API.
  */
+import type { CheckedSidc } from "../sidc-literal";
 import type {
   ConversionOptions,
   ConversionResult,
@@ -14,8 +15,8 @@ import { convertNumericTo2525C, type ReverseOptions } from "./reverse";
 import { failure, finalize, inputAsString } from "./result";
 
 /** 15-character MIL-STD-2525C -> 20-digit MIL-STD-2525D (version 10, or 11 with mil2525dVersion). */
-export function convertSidc15To2525D(
-  input: unknown,
+export function convertSidc15To2525D<const S>(
+  input: CheckedSidc<S>,
   options: ConversionOptions = {},
 ): ConversionResult {
   const version = options.mil2525dVersion ?? "10";
@@ -35,24 +36,24 @@ export function convertSidc15To2525D(
 }
 
 /** 15-character MIL-STD-2525C -> 20-digit APP-6(D) (version 10). */
-export function convertSidc15ToApp6D(
-  input: unknown,
+export function convertSidc15ToApp6D<const S>(
+  input: CheckedSidc<S>,
   options: ConversionOptions = {},
 ): ConversionResult {
   return convertToNumeric(input, NUMERIC_TARGETS["APP-6D"], options);
 }
 
 /** 15-character MIL-STD-2525C -> 20-digit MIL-STD-2525E Change 1 (version 15). */
-export function convertSidc15To2525E(
-  input: unknown,
+export function convertSidc15To2525E<const S>(
+  input: CheckedSidc<S>,
   options: ConversionOptions = {},
 ): ConversionResult {
   return convertToNumeric(input, NUMERIC_TARGETS["2525E"], options);
 }
 
 /** 15-character MIL-STD-2525C -> 20-digit APP-6(E) Change 2 (version 16). */
-export function convertSidc15ToApp6E(
-  input: unknown,
+export function convertSidc15ToApp6E<const S>(
+  input: CheckedSidc<S>,
   options: ConversionOptions = {},
 ): ConversionResult {
   return convertToNumeric(input, NUMERIC_TARGETS["APP-6E"], options);
@@ -73,8 +74,8 @@ function unsupportedTarget(
 /**
  * Converts a MIL-STD-2525C SIDC to `options.targetStandard` (default MIL-STD-2525D).
  */
-export function convertSidc(
-  input: unknown,
+export function convertSidc<const S>(
+  input: CheckedSidc<S>,
   options: ConversionOptions = {},
 ): ConversionResult {
   const target = options.targetStandard ?? "MIL-STD-2525D";
@@ -163,8 +164,8 @@ export const ALL_TARGETS: readonly SidcStandard[] = [
 ];
 
 /** Converts to every target; each result stands on its own. */
-export function convertSidcToAll(
-  input: unknown,
+export function convertSidcToAll<const S>(
+  input: CheckedSidc<S>,
   options: Omit<ConversionOptions, "targetStandard"> = {},
 ): Record<string, ConversionResult> {
   const out: Record<string, ConversionResult> = {};

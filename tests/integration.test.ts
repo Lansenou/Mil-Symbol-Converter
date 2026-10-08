@@ -15,7 +15,7 @@ describe("convertSidc dispatch", () => {
     expect(convertSidc("SFGPUCIC---E---").targetStandard).toBe("MIL-STD-2525D");
   });
   it("identity target validates and normalizes", () => {
-    const r = convertSidc("sfgpucic---e---", {
+    const r = convertSidc("sfgpucic---e---" as string, {
       targetStandard: "MIL-STD-2525C",
     });
     expect(r.output).toBe("SFGPUCIC---E---");
