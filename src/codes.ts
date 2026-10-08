@@ -1,13 +1,26 @@
 /**
- * Named constants and literal types for the 2525C values callers pass as options.
+ * Named constants for the 2525C values callers pass as options (the overrides for `*`).
  *
- * Each constant is a plain object, so `Affiliation.Hostile` and the literal `"H"` are
- * interchangeable. The values are those of the MIL-STD-2525C field tables (`src/legacy/fields.ts`);
- * whether a value is allowed for a given coding scheme is still checked at runtime.
+ * Each field has two constants:
+ * - `Affiliation` holds full names: `Affiliation.Hostile === "Hostile"`.
+ * - `AffiliationLetter` maps each name to its 2525C letter: `AffiliationLetter.Hostile === "H"`.
+ *
+ * Options accept either form (`affiliation: "Hostile"` or `affiliation: "H"`); names are matched
+ * case-insensitively. The letters are those of the MIL-STD-2525C field tables
+ * (`src/legacy/fields.ts`); whether a value fits a given coding scheme is checked at runtime.
  */
 
+/** `{ Name: "Name" }` for every key, so values read as full names. */
+function namesOf<K extends string>(
+  letters: Record<K, string>,
+): { [P in K]: P } {
+  return Object.fromEntries(Object.keys(letters).map((k) => [k, k])) as {
+    [P in K]: P;
+  };
+}
+
 /** Position 2: standard identity (Tables A-I, B-I, D-I, E-I, G-I). */
-export const Affiliation = {
+export const AffiliationLetter = {
   Pending: "P",
   Unknown: "U",
   AssumedFriend: "A",
@@ -23,13 +36,16 @@ export const Affiliation = {
   Joker: "J",
   Faker: "K",
 } as const;
-export type Affiliation = (typeof Affiliation)[keyof typeof Affiliation];
+export const Affiliation = namesOf(AffiliationLetter);
+export type Affiliation = keyof typeof AffiliationLetter;
+export type AffiliationLetter = (typeof AffiliationLetter)[Affiliation];
 
 /**
- * Position 4: status. Operational codes C, D, X, F exist for warfighting, SIGINT and stability
- * operations only; Suspected and Known for tactical graphics only (Table B-I).
+ * Position 4: status. FullyCapable, Damaged, Destroyed and FullToCapacity exist for
+ * warfighting, SIGINT and stability operations only; Suspected and Known for tactical graphics
+ * only (Table B-I).
  */
-export const Status = {
+export const StatusLetter = {
   Anticipated: "A",
   Present: "P",
   FullyCapable: "C",
@@ -39,10 +55,12 @@ export const Status = {
   Suspected: "S",
   Known: "K",
 } as const;
-export type Status = (typeof Status)[keyof typeof Status];
+export const Status = namesOf(StatusLetter);
+export type Status = keyof typeof StatusLetter;
+export type StatusLetter = (typeof StatusLetter)[Status];
 
 /** Position 12 echelon (Tables A-II, B-II, E-II). */
-export const Echelon = {
+export const EchelonLetter = {
   TeamCrew: "A",
   Squad: "B",
   Section: "C",
@@ -58,10 +76,12 @@ export const Echelon = {
   Region: "M",
   Command: "N",
 } as const;
-export type Echelon = (typeof Echelon)[keyof typeof Echelon];
+export const Echelon = namesOf(EchelonLetter);
+export type Echelon = keyof typeof EchelonLetter;
+export type EchelonLetter = (typeof EchelonLetter)[Echelon];
 
 /** Position 11 headquarters / task force / feint-dummy indicator (Tables A-II, E-II). */
-export const UnitIndicator = {
+export const UnitIndicatorLetter = {
   Headquarters: "A",
   TaskForceHeadquarters: "B",
   FeintDummyHeadquarters: "C",
@@ -70,10 +90,12 @@ export const UnitIndicator = {
   FeintDummy: "F",
   FeintDummyTaskForce: "G",
 } as const;
-export type UnitIndicator = (typeof UnitIndicator)[keyof typeof UnitIndicator];
+export const UnitIndicator = namesOf(UnitIndicatorLetter);
+export type UnitIndicator = keyof typeof UnitIndicatorLetter;
+export type UnitIndicatorLetter = (typeof UnitIndicatorLetter)[UnitIndicator];
 
-/** Positions 11-12 values that are not an echelon combination. */
-export const SymbolModifier = {
+/** Positions 11-12 values that are not an echelon combination (use `echelonModifier` for those). */
+export const SymbolModifierLetter = {
   None: "--",
   Installation: "H-",
   FeintDummyInstallation: "HB",
@@ -91,24 +113,17 @@ export const SymbolModifier = {
   TowedArrayShort: "NS",
   TowedArrayLong: "NL",
 } as const;
+export const SymbolModifier = namesOf(SymbolModifierLetter);
+export type SymbolModifier = keyof typeof SymbolModifierLetter;
+/** Positions 11-12: any two-character value of the 2525C modifier tables. */
+export type SymbolModifierLetter =
+  | (typeof SymbolModifierLetter)[SymbolModifier]
+  | `-${EchelonLetter}`
+  | `${UnitIndicatorLetter}-`
+  | `${UnitIndicatorLetter}${EchelonLetter}`;
 
-/** Positions 11-12: any value of the 2525C modifier tables. */
-export type SymbolModifier =
-  | (typeof SymbolModifier)[keyof typeof SymbolModifier]
-  | `-${Echelon}`
-  | `${UnitIndicator}-`
-  | `${UnitIndicator}${Echelon}`;
-
-/** Builds positions 11-12 from an echelon and an optional indicator: `echelonModifier(Echelon.Battalion, UnitIndicator.Headquarters)` is `"AF"`. */
-export function echelonModifier(
-  echelon: Echelon,
-  indicator?: UnitIndicator,
-): SymbolModifier {
-  return `${indicator ?? "-"}${echelon}`;
-}
-
-/** Position 15: order of battle ("X" for tactical graphics, "-" for none). */
-export const OrderOfBattle = {
+/** Position 15: order of battle ("ControlMarkings" X for tactical graphics, "None" for -). */
+export const OrderOfBattleLetter = {
   None: "-",
   Air: "A",
   Electronic: "E",
@@ -118,9 +133,54 @@ export const OrderOfBattle = {
   StrategicForceRelated: "S",
   ControlMarkings: "X",
 } as const;
-export type OrderOfBattle = (typeof OrderOfBattle)[keyof typeof OrderOfBattle];
+export const OrderOfBattle = namesOf(OrderOfBattleLetter);
+export type OrderOfBattle = keyof typeof OrderOfBattleLetter;
+export type OrderOfBattleLetter = (typeof OrderOfBattleLetter)[OrderOfBattle];
 
-type Letter =
+// ---- name/letter lookups
+
+function lookup(table: Record<string, string>) {
+  const byName = new Map(
+    Object.entries(table).map(([n, l]) => [n.toLowerCase(), l]),
+  );
+  const letters = new Set(Object.values(table));
+  return (v: unknown): string | undefined => {
+    if (typeof v !== "string") return undefined;
+    if (letters.has(v.toUpperCase())) return v.toUpperCase();
+    return byName.get(v.toLowerCase());
+  };
+}
+const affiliationOf = lookup(AffiliationLetter);
+const statusOf = lookup(StatusLetter);
+const echelonOf = lookup(EchelonLetter);
+const indicatorOf = lookup(UnitIndicatorLetter);
+const plainModifierOf = lookup(SymbolModifierLetter);
+const orderOfBattleOf = lookup(OrderOfBattleLetter);
+
+function modifierOf(v: unknown): string | undefined {
+  const plain = plainModifierOf(v);
+  if (plain) return plain;
+  if (typeof v !== "string" || v.length !== 2) return undefined;
+  const [a = "", b = ""] = v.toUpperCase();
+  const ok =
+    (a === "-" && echelonOf(b)) ||
+    (indicatorOf(a) && (b === "-" || echelonOf(b)));
+  return ok ? `${a}${b}` : undefined;
+}
+
+/** Builds positions 11-12 from an echelon and an optional indicator: `echelonModifier("Battalion", "Headquarters")` is `"AF"`. */
+export function echelonModifier(
+  echelon: Echelon | EchelonLetter,
+  indicator?: UnitIndicator | UnitIndicatorLetter,
+): SymbolModifierLetter {
+  const e = echelonOf(echelon);
+  const i = indicator === undefined ? "-" : indicatorOf(indicator);
+  if (!e || !i)
+    throw new RangeError(`Unknown echelon/indicator: ${echelon}, ${indicator}`);
+  return `${i}${e}` as SymbolModifierLetter;
+}
+
+type Upper =
   | "A"
   | "B"
   | "C"
@@ -149,31 +209,31 @@ type Letter =
   | "Z";
 
 /** Positions 13-14: ISO 3166-1 alpha-2 code, or "--" for none. */
-export type CountryCode = `${Letter}${Letter}` | "--";
+export type CountryCode = `${Upper}${Upper}` | "--";
 
-const values = (o: Record<string, string>) => new Set(Object.values(o));
-const AFFILIATIONS = values(Affiliation);
-const STATUSES = values(Status);
-const ECHELONS = values(Echelon);
-const INDICATORS = values(UnitIndicator);
-const PLAIN_MODIFIERS = values(SymbolModifier);
-const ORDERS = values(OrderOfBattle);
-
-/** Type guards for values read at runtime (form fields, files, other systems). */
-export const isAffiliation = (v: unknown): v is Affiliation =>
-  typeof v === "string" && AFFILIATIONS.has(v);
-export const isStatus = (v: unknown): v is Status =>
-  typeof v === "string" && STATUSES.has(v);
-export const isOrderOfBattle = (v: unknown): v is OrderOfBattle =>
-  typeof v === "string" && ORDERS.has(v);
+/** Type guards for values read at runtime (form fields, files, other systems): name or letter. */
+export const isAffiliation = (
+  v: unknown,
+): v is Affiliation | AffiliationLetter => affiliationOf(v) !== undefined;
+export const isStatus = (v: unknown): v is Status | StatusLetter =>
+  statusOf(v) !== undefined;
+export const isOrderOfBattle = (
+  v: unknown,
+): v is OrderOfBattle | OrderOfBattleLetter => orderOfBattleOf(v) !== undefined;
+export const isSymbolModifier = (
+  v: unknown,
+): v is SymbolModifier | SymbolModifierLetter => modifierOf(v) !== undefined;
 export const isCountryCode = (v: unknown): v is CountryCode =>
   typeof v === "string" && /^([A-Z]{2}|--)$/.test(v);
-export const isSymbolModifier = (v: unknown): v is SymbolModifier => {
-  if (typeof v !== "string" || v.length !== 2) return false;
-  if (PLAIN_MODIFIERS.has(v)) return true;
-  const [a = "", b = ""] = v;
-  return (
-    (a === "-" && ECHELONS.has(b)) ||
-    (INDICATORS.has(a) && (b === "-" || ECHELONS.has(b)))
-  );
-};
+
+/**
+ * The 2525C characters for an override given by name or letter; values that are neither are
+ * returned unchanged so the converter can report them.
+ */
+export const overrideLetters = {
+  affiliation: (v: string) => affiliationOf(v) ?? v,
+  status: (v: string) => statusOf(v) ?? v,
+  symbolModifier: (v: string) => modifierOf(v) ?? v,
+  countryCode: (v: string) => v,
+  orderOfBattle: (v: string) => orderOfBattleOf(v) ?? v,
+} as const;

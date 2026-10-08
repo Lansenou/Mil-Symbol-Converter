@@ -9,6 +9,7 @@
  */
 import type { ConversionOptions, Diagnostic } from "./types";
 import { DiagnosticList } from "./diagnostics";
+import { overrideLetters } from "./codes";
 
 export type WildcardFieldName =
   | "standardIdentity"
@@ -95,7 +96,11 @@ export function resolveWildcards(
   for (const f of WILDCARD_FIELDS) {
     const current = slice(sidc, f.positions);
     const raw = options[f.option];
-    const supplied = typeof raw === "string" ? raw.toUpperCase() : undefined;
+    // Overrides may be given by full name ("Hostile") or by 2525C letter ("H").
+    const supplied =
+      typeof raw === "string"
+        ? overrideLetters[f.option](raw).toUpperCase()
+        : undefined;
     if (!current.includes("*")) {
       if (supplied !== undefined && supplied !== current) {
         d.warn(

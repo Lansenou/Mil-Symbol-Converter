@@ -1,9 +1,13 @@
 import type {
   Affiliation,
+  AffiliationLetter,
   CountryCode,
   OrderOfBattle,
+  OrderOfBattleLetter,
   Status,
+  StatusLetter,
   SymbolModifier,
+  SymbolModifierLetter,
 } from "./codes";
 
 /**
@@ -13,14 +17,31 @@ import type {
  * APP-6(D)/(E) (numeric, 20 digits). See docs/standards-research.md.
  */
 
-export type SidcStandard =
-  | "MIL-STD-2525C"
-  | "MIL-STD-2525D"
-  | "MIL-STD-2525E"
-  | "APP-6C"
-  | "APP-6D"
-  | "APP-6E"
-  | "LEGACY-12";
+export type {
+  SidcStandard,
+  MatchQuality,
+  WildcardPolicy,
+  MappingSourceName,
+  Mil2525dVersion,
+  DiagnosticSeverity,
+  DiagnosticCode,
+  FuzzyMethod,
+  Confidence,
+  NumericSourceStandard,
+  CodingScheme,
+  CodingSchemeLetter,
+} from "./constants";
+import type {
+  SidcStandard,
+  MatchQuality,
+  WildcardPolicy,
+  MappingSourceName,
+  Mil2525dVersion,
+  DiagnosticSeverity,
+  DiagnosticCode,
+  FuzzyMethod,
+  Confidence,
+} from "./constants";
 
 /**
  * How faithfully the output represents the input.
@@ -36,36 +57,22 @@ export type SidcStandard =
  * - `ambiguous`: more than one output is supported by the evidence; no output is chosen.
  * - `unsupported`: no output can be produced without inventing data.
  */
-export type MatchQuality =
-  | "exact"
-  | "equivalent"
-  | "lossy"
-  | "approximate"
-  | "ambiguous"
-  | "unsupported";
-
-export type WildcardPolicy = "preserve" | "resolve" | "reject";
-
-/** Mapping evidence providers. */
-export type MappingSourceName = "JMSML" | "mil-sym-ts";
-
-export type Mil2525dVersion = "10" | "11";
 
 export interface ConversionOptions {
   /** Only MIL-STD-2525C letter SIDCs are accepted as input. */
   sourceStandard?: SidcStandard;
   /** Used by `convertSidc`. Defaults to MIL-STD-2525D. */
   targetStandard?: SidcStandard;
-  /** 2525C standard identity letter used to resolve a `*` in position 2 (e.g. "F", "H"). */
-  affiliation?: Affiliation;
-  /** 2525C status letter used to resolve a `*` in position 4 (e.g. "P", "A"). */
-  status?: Status;
-  /** Two characters used to resolve `*` in positions 11-12 (e.g. "--", "-E", "A-"). */
-  symbolModifier?: SymbolModifier;
+  /** Standard identity for a `*` in position 2: full name ("Hostile") or 2525C letter ("H"). */
+  affiliation?: Affiliation | AffiliationLetter;
+  /** Status for a `*` in position 4: full name ("Present") or 2525C letter ("P"). */
+  status?: Status | StatusLetter;
+  /** Positions 11-12 for `*`: a name ("None", "Installation") or two characters ("--", "-E"; see `echelonModifier`). */
+  symbolModifier?: SymbolModifier | SymbolModifierLetter;
   /** Two characters used to resolve `*` in positions 13-14 (ISO 3166-1 alpha-2 or "--"). */
   countryCode?: CountryCode;
-  /** One character used to resolve a `*` in position 15. */
-  orderOfBattle?: OrderOfBattle;
+  /** Order of battle for a `*` in position 15: full name ("Ground") or letter ("G"). */
+  orderOfBattle?: OrderOfBattle | OrderOfBattleLetter;
   /**
    * - `resolve` (default): replace `*` only with values supplied in these options; any
    *   remaining wildcard that the target needs makes the conversion fail.
@@ -98,12 +105,10 @@ export interface ConversionOptions {
   strictInput?: boolean;
 }
 
-export type DiagnosticSeverity = "error" | "warning" | "info";
-
 export interface Diagnostic {
   severity: DiagnosticSeverity;
-  /** Stable machine-readable code, e.g. "INVALID_LENGTH". */
-  code: string;
+  /** Stable machine-readable code, e.g. "INVALID_LENGTH" (see `DiagnosticCode`). */
+  code: DiagnosticCode;
   message: string;
   /** 1-based SIDC positions the diagnostic refers to. */
   positions?: number[];
@@ -145,7 +150,7 @@ export interface ConversionResult {
   errors: string[];
   diagnostics: Diagnostic[];
   mappingSource?: string;
-  confidence?: "corroborated" | "single-source";
+  confidence?: Confidence;
   candidates?: ConversionCandidate[];
   /** 1-based positions whose unresolved value makes the result ambiguous. */
   ambiguousPositions?: number[];
@@ -155,7 +160,7 @@ export interface ConversionResult {
 }
 
 export interface FuzzyInfo {
-  method: "source-choice" | "name-match" | "ancestor";
+  method: FuzzyMethod;
   /**
    * For name-based methods: measured precision of the matcher at this score (see
    * scripts/calibrate-fuzzy.ts). For "ancestor": 1, the output is a documented broader symbol.

@@ -1,4 +1,4 @@
-import type { Diagnostic, DiagnosticSeverity } from "./types";
+import type { Diagnostic, DiagnosticCode, DiagnosticSeverity } from "./types";
 
 /** Accumulates structured diagnostics; messages are derived for the string arrays of results. */
 export class DiagnosticList {
@@ -6,7 +6,7 @@ export class DiagnosticList {
 
   add(
     severity: DiagnosticSeverity,
-    code: string,
+    code: DiagnosticCode,
     message: string,
     positions?: number[],
   ): void {
@@ -16,13 +16,13 @@ export class DiagnosticList {
         : { severity, code, message },
     );
   }
-  error(code: string, message: string, positions?: number[]): void {
+  error(code: DiagnosticCode, message: string, positions?: number[]): void {
     this.add("error", code, message, positions);
   }
-  warn(code: string, message: string, positions?: number[]): void {
+  warn(code: DiagnosticCode, message: string, positions?: number[]): void {
     this.add("warning", code, message, positions);
   }
-  info(code: string, message: string, positions?: number[]): void {
+  info(code: DiagnosticCode, message: string, positions?: number[]): void {
     this.add("info", code, message, positions);
   }
   extend(items: readonly Diagnostic[]): void {
