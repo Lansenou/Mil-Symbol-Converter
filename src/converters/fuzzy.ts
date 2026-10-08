@@ -30,7 +30,18 @@ const STOP = new Set([
   "general",
 ]);
 
-export function words(text: string): Set<string> {
+const wordCache = new Map<string, ReadonlySet<string>>();
+/** Content words, lowercased and singularized. Cached: inputs are catalog names. */
+export function words(text: string): ReadonlySet<string> {
+  let w = wordCache.get(text);
+  if (!w) {
+    w = splitWords(text);
+    wordCache.set(text, w);
+  }
+  return w;
+}
+
+function splitWords(text: string): Set<string> {
   return new Set(
     text
       .toLowerCase()
@@ -46,7 +57,7 @@ export function words(text: string): Set<string> {
 }
 
 /** Dice coefficient of two word sets. */
-export function dice(a: Set<string>, b: Set<string>): number {
+export function dice(a: ReadonlySet<string>, b: ReadonlySet<string>): number {
   if (a.size === 0 || b.size === 0) return 0;
   let common = 0;
   for (const w of a) if (b.has(w)) common++;
