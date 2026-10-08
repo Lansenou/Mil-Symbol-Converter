@@ -43,6 +43,32 @@ export function parseLegacyFields(sidc: string): LegacySidcFields {
   };
 }
 
+const DASH_READINGS: Record<string, string[]> = {
+  "\u2014": ["---", "--"],
+  "\u2013": ["--", "-"],
+};
+
+/** The single 15-character reading of a code containing typographic dashes, if there is one. */
+function repairDashes(s: string): string | null {
+  const parts = s.split(/([\u2013\u2014])/);
+  if (parts.length > 15) return null; // more than 7 dashes: not a SIDC
+  let readings = [""];
+  for (const p of parts) {
+    const options = DASH_READINGS[p] ?? [p];
+    readings = readings.flatMap((r) => options.map((o) => r + o));
+  }
+  const fits = [
+    ...new Set(
+      readings.filter(
+        (r) => r.length === LEGACY_SIDC_LENGTH && /^[A-Za-z0-9*-]+$/.test(r),
+      ),
+    ),
+  ];
+  if (fits.length === 1) return fits[0]!;
+  const listed = fits.filter((r) => findCatalogEntry(r.toUpperCase()));
+  return listed.length === 1 ? listed[0]! : null;
+}
+
 /** Normalizes raw input to an uppercase 15-character candidate string, or reports why not. */
 export function normalizeInput(
   input: unknown,
@@ -72,17 +98,15 @@ export function normalizeInput(
     s = s.trim();
     d.warn("WHITESPACE_TRIMMED", "Leading/trailing whitespace was removed.");
   }
-  // Some published lists write "---" as an em dash and "--" as an en dash. Undo that only when it
-  // gives exactly 15 characters, so a stray dash elsewhere is still reported.
+  // Typographic dashes stand for runs of hyphens: web lists print "---" as an em dash and "--"
+  // as an en dash, phone keyboards turn a typed "--" into an em dash. Undo that only when exactly
+  // one reading gives 15 characters (or, if several do, exactly one names a 2525C table row).
   if (!options.strictInput && /[\u2013\u2014]/.test(s)) {
-    const repaired = s.replace(/\u2014/g, "---").replace(/\u2013/g, "--");
-    if (
-      repaired.length === LEGACY_SIDC_LENGTH &&
-      /^[A-Za-z0-9*-]+$/.test(repaired)
-    ) {
+    const repaired = repairDashes(s);
+    if (repaired) {
       d.warn(
         "TYPOGRAPHIC_DASHES_REPAIRED",
-        'Typographic dashes were read as ASCII hyphens ("\u2014" as "---", "\u2013" as "--").',
+        `Typographic dashes were read as ASCII hyphens: "${s}" -> "${repaired}".`,
       );
       s = repaired;
     }

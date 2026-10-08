@@ -9,8 +9,9 @@ Every rule below is implemented in `src/` and covered by tests in `tests/`.
    non-ASCII text. Typographic dashes (`—`) get a specific hint.
 2. Lowercase and surrounding whitespace are normalized with a warning; `strictInput: true` rejects them.
    Two conventions of web symbol lists are also undone (warnings, rejected by `strictInput`):
-   - `—` is read as `---` and `–` as `--`, only when the result has exactly 15 characters
-     (`TYPOGRAPHIC_DASHES_REPAIRED`).
+   - `—` is read as `---` (web lists) or `--` (phone keyboards turn a typed `--` into `—`), `–` as
+     `--` or `-`. A reading is used only if it is the only one giving 15 characters, or the only
+     one of those naming a 2525C table row (`TYPOGRAPHIC_DASHES_REPAIRED`).
    - A `*` in positions 11-15 where the matching 2525C table row has a fixed value is replaced by it:
      the `X` of tactical graphics, the installation `H`, the METOC graphic type and unused tail
      (`FIXED_POSITIONS_FILLED`). Only done when every table row that fits the input agrees on the

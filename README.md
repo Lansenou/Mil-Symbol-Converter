@@ -76,7 +76,7 @@ The package is not published to the npm registry yet. Install the prebuilt tarba
 pulls in no other packages:
 
 ```bash
-npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.3.0/mil-symbol-converter-0.3.0.tgz
+npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.3.1/mil-symbol-converter-0.3.1.tgz
 ```
 
 `npm install github:Lansenou/Mil-Symbol-Converter` also works, but npm then builds the package on
@@ -288,7 +288,7 @@ analyzeSidc("S*GPUCI---*****").wildcards; // which option resolves each "*" and 
 
 ### Codes copied from web lists
 
-Some symbol lists print `---` as `—`, `--` as `–`, and end every code in `*****`. Such codes are
+Some symbol lists print `---` as `—`, `--` as `–`, phones turn a typed `--` into `—`, and end every code in `*****`. Such codes are
 accepted with a warning: the dashes are restored when that gives 15 characters, and `*` is replaced
 where the 2525C table fixes the value (the `X` of tactical graphics, the installation `H`, the METOC
 tail). `*` in user-defined positions stays a wildcard, so pass `symbolModifier` etc. to convert.

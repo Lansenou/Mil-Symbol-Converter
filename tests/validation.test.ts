@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateSidc } from "../src";
+import { convertSidc, validateSidc } from "../src";
 
 const codes = (r: ReturnType<typeof validateSidc>) =>
   r.diagnostics.map((d) => d.code);
@@ -183,6 +183,19 @@ describe("codes copied from web lists", () => {
     expect(v("SFGPUCI–-*****")[1]).toBe("SFGPUCI---*****");
     // 12 characters after repair: still an error, nothing is guessed.
     expect(v("SFGPUCI—–")[0]).toBe(false);
+  });
+
+  it("reads a phone's em dash for a typed -- as two hyphens", () => {
+    // iOS/Android smart punctuation turns "--" into one em dash.
+    expect(v("SPG*UCMT\u2014*****")).toEqual([
+      true,
+      "SPG*UCMT--*****",
+      ["TYPOGRAPHIC_DASHES_REPAIRED"],
+    ]);
+    expect(
+      convertSidc("SPG*UCMT\u2014*****", { status: "P", symbolModifier: "--" })
+        .output,
+    ).toBe(convertSidc("SPGPUCMT-------").output);
   });
 
   it("strictInput rejects typographic dashes", () => {
