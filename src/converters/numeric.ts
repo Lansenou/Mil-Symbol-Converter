@@ -297,6 +297,31 @@ export function convertToNumeric(
   const sources = [...new Set(chosen.map((c) => c.evidence.source))];
   const corroborated = sources.length > 1 && byCode.size === 1;
 
+  // The same digits proposed by another source with a different meaning: one source is using a
+  // code whose meaning changed between editions, so the digits alone cannot be trusted.
+  const meaningClash = checked.find(
+    (c) => !c.valid && !c.evidence.retired && c.code === lead.code && c.reason.includes(" means "),
+  );
+  const preferredChosen =
+    options.preferredSource !== undefined && chosen.some((c) => c.evidence.source === options.preferredSource);
+  if (meaningClash && preferredChosen) {
+    d.warn(
+      "PREFERRED_SOURCE_USED",
+      `${meaningClash.evidence.source} gives code ${lead.code} a different meaning (${meaningClash.reason}); using ${options.preferredSource} as requested by preferredSource.`,
+    );
+  } else if (meaningClash) {
+    d.error(
+      "SOURCES_DISAGREE_ON_MEANING",
+      `${meaningClash.evidence.source} proposes the same code ${lead.code}, but ${meaningClash.reason}; the code's meaning differs between editions, so no output is chosen. Set preferredSource to choose explicitly.`,
+    );
+    return failure(input, target.standard, d, {
+      normalizedInput: sidc,
+      matchQuality: "ambiguous",
+      candidates: candidateList("ambiguous"),
+      metadata,
+    });
+  }
+
   if (chosen.some((c) => c.contested)) {
     d.error(
       "CONTESTED_CODE",
