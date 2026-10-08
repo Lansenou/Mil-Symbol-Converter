@@ -1,6 +1,6 @@
 {
   "name": "mil-symbol-converter",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Convert MIL-STD-2525C letter SIDCs to MIL-STD-2525D/E and APP-6D/E numeric SIDCs with explicit, data-backed match quality.",
   "type": "module",
   "license": "MIT",

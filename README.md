@@ -76,7 +76,7 @@ The package is not published to the npm registry yet. Install the prebuilt tarba
 pulls in no other packages:
 
 ```bash
-npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.4.2/mil-symbol-converter-0.4.2.tgz
+npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.4.3/mil-symbol-converter-0.4.3.tgz
 ```
 
 `npm install github:Lansenou/Mil-Symbol-Converter` also works, but npm then builds the package on
