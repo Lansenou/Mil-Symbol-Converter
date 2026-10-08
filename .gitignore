@@ -4,3 +4,4 @@ coverage
 .sources
 *.log
 *.tgz
+site-dist
