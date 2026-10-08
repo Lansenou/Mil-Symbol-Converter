@@ -1,3 +1,11 @@
+import type {
+  Affiliation,
+  CountryCode,
+  OrderOfBattle,
+  Status,
+  SymbolModifier,
+} from "./codes";
+
 /**
  * Public types for the SIDC converter.
  *
@@ -49,15 +57,15 @@ export interface ConversionOptions {
   /** Used by `convertSidc`. Defaults to MIL-STD-2525D. */
   targetStandard?: SidcStandard;
   /** 2525C standard identity letter used to resolve a `*` in position 2 (e.g. "F", "H"). */
-  affiliation?: string;
+  affiliation?: Affiliation;
   /** 2525C status letter used to resolve a `*` in position 4 (e.g. "P", "A"). */
-  status?: string;
+  status?: Status;
   /** Two characters used to resolve `*` in positions 11-12 (e.g. "--", "-E", "A-"). */
-  symbolModifier?: string;
+  symbolModifier?: SymbolModifier;
   /** Two characters used to resolve `*` in positions 13-14 (ISO 3166-1 alpha-2 or "--"). */
-  countryCode?: string;
+  countryCode?: CountryCode;
   /** One character used to resolve a `*` in position 15. */
-  orderOfBattle?: string;
+  orderOfBattle?: OrderOfBattle;
   /**
    * - `resolve` (default): replace `*` only with values supplied in these options; any
    *   remaining wildcard that the target needs makes the conversion fail.

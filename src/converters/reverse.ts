@@ -39,9 +39,9 @@ export interface ReverseOptions {
    */
   sourceStandard?: NumericSourceStandard;
   /** 2525C country code to put in positions 13-14 (default "--"). */
-  countryCode?: string;
+  countryCode?: ConversionOptions["countryCode"];
   /** 2525C order of battle for position 15 (default "-", or "X" for tactical graphics). */
-  orderOfBattle?: string;
+  orderOfBattle?: ConversionOptions["orderOfBattle"];
   preferredSource?: ConversionOptions["preferredSource"];
   strictInput?: boolean;
 }

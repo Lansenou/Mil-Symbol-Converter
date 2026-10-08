@@ -6,6 +6,9 @@ import {
   wildcardFields,
 } from "../src";
 
+// Values the option types rule out, as plain-JavaScript callers could still pass them.
+const raw = (v: string) => v as never;
+
 const TEMPLATE = "S*GPUCI---*****";
 const codes = (r: { diagnostics: { code: string }[] }) =>
   r.diagnostics.map((d) => d.code);
@@ -46,11 +49,11 @@ describe("resolveWildcards", () => {
 
   it("rejects values of the wrong length or containing *", () => {
     expect(
-      codes(resolveWildcards(TEMPLATE, { symbolModifier: "-" })),
+      codes(resolveWildcards(TEMPLATE, { symbolModifier: raw("-") })),
     ).toContain("INVALID_RESOLUTION_VALUE");
-    expect(codes(resolveWildcards(TEMPLATE, { affiliation: "*" }))).toContain(
-      "INVALID_RESOLUTION_VALUE",
-    );
+    expect(
+      codes(resolveWildcards(TEMPLATE, { affiliation: raw("*") })),
+    ).toContain("INVALID_RESOLUTION_VALUE");
   });
 
   it("rejects a value that conflicts with a partially specified field", () => {
@@ -93,7 +96,10 @@ describe("wildcards in conversions", () => {
   });
 
   it("rejects an invalid resolution value", () => {
-    const r = convertSidc(TEMPLATE, { affiliation: "X", symbolModifier: "--" });
+    const r = convertSidc(TEMPLATE, {
+      affiliation: raw("X"),
+      symbolModifier: "--",
+    });
     expect(r.success).toBe(false);
     expect(codes(r)).toContain("INVALID_RESOLUTION_VALUE");
   });

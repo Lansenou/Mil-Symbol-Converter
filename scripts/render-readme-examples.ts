@@ -6,6 +6,9 @@ import ms from "milsymbol";
 import {
   convertSidc,
   type ConversionOptions,
+  type CountryCode,
+  type OrderOfBattle,
+  type SymbolModifier,
   type ConversionResult,
   type SidcStandard,
 } from "../src/index";
@@ -38,9 +41,9 @@ const LIST_FORMS: Record<string, string> = {
   "SHGPUCA---EE---": "SFGPUCA\u2014*****",
 };
 const tailOf = (s: string): ConversionOptions => ({
-  symbolModifier: s.slice(10, 12),
-  countryCode: s.slice(12, 14),
-  orderOfBattle: s[14]!,
+  symbolModifier: s.slice(10, 12) as SymbolModifier,
+  countryCode: s.slice(12, 14) as CountryCode,
+  orderOfBattle: s[14] as OrderOfBattle,
 });
 const asFriendPresent = (s: string) => `${s[0]}F${s[2]}P${s.slice(4)}`;
 const TARGETS: [SidcStandard, Std][] = [
