@@ -1,0 +1,10 @@
+{
+  "jmsml": {
+    "url": "https://github.com/Esri/joint-military-symbology-xml.git",
+    "commit": "094e7647f0bdd001e42fd2a73ba802c995af20aa"
+  },
+  "mil-sym-ts": {
+    "url": "https://github.com/missioncommand/mil-sym-ts.git",
+    "commit": "9f3c5512ecc8b9458da32328991b899910dafe7b"
+  }
+}

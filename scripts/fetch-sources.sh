@@ -5,6 +5,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p .sources
 
+# Upstream commits are pinned in scripts/sources.json (updated by .github/workflows/data-update.yml).
+pin() { node -p "require('./scripts/sources.json')['$1'].$2"; }
+
 fetch() {
   local name="$1" url="$2" sha="$3"; shift 3
   if [ ! -d ".sources/$name/.git" ]; then
@@ -16,17 +19,13 @@ fetch() {
 }
 
 # Esri Joint Military Symbology XML (Apache-2.0): MIL-STD-2525D catalog + 2525C legacy mappings.
-fetch jmsml https://github.com/Esri/joint-military-symbology-xml.git \
-  094e7647f0bdd001e42fd2a73ba802c995af20aa '/instance/*.xml' '/license.txt'
+fetch jmsml "$(pin jmsml url)" "$(pin jmsml commit)" '/instance/*.xml' '/license.txt'
 
 # US Army C5ISR mil-sym-ts renderer (Apache-2.0): 2525C->2525Dch1 table and per-edition catalogs.
-fetch mil-sym-ts https://github.com/missioncommand/mil-sym-ts.git \
-  9f3c5512ecc8b9458da32328991b899910dafe7b \
+fetch mil-sym-ts "$(pin mil-sym-ts url)" "$(pin mil-sym-ts commit)" \
   '/src/main/ts/armyc2/c5isr/data/c2d.json' '/src/main/ts/armyc2/c5isr/data/msd.json' \
   '/src/main/ts/armyc2/c5isr/data/mse.json' '/src/main/ts/armyc2/c5isr/data/smd.json' \
   '/src/main/ts/armyc2/c5isr/data/sme.json' '/LICENSE'
-
-
 
 # MIL-STD-2525C (17 Nov 2008, Distribution A: approved for public release) and MIL-STD-2525D
 # (10 Jun 2014). Used to extract the normative 2525C SIDC catalog and for manual fixture review.

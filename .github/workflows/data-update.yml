@@ -1,0 +1,110 @@
+# Keeps the mapping data current. Every Monday (or from Actions > Data update > Run workflow) it
+# checks the upstream repositories pinned in scripts/sources.json. When one has new commits, it
+# rebuilds src/data/ from them; if the mappings change (not just the recorded commit), it opens or
+# updates the pull request "data/update" with the new pins, the rebuilt data and a patch version
+# bump, so merging it releases the new data (see release.yml).
+#
+# Needs Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests".
+# A pull request opened by this workflow does not start CI by itself (a GitHub rule for
+# GITHUB_TOKEN), so the full check runs here and its result is in the pull request description.
+name: Data update
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency: data-update
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Latest upstream commits
+        id: pins
+        run: |
+          node --input-type=module -e '
+            import fs from "node:fs";
+            import { execFileSync } from "node:child_process";
+            const file = "scripts/sources.json";
+            const pins = JSON.parse(fs.readFileSync(file, "utf8"));
+            const lines = [];
+            for (const [name, p] of Object.entries(pins)) {
+              const head = execFileSync("git", ["ls-remote", p.url, "HEAD"], { encoding: "utf8" }).split("\t")[0];
+              if (head && head !== p.commit) {
+                const repo = p.url.replace(/\.git$/, "");
+                lines.push(`- ${name}: [${p.commit.slice(0, 8)}...${head.slice(0, 8)}](${repo}/compare/${p.commit}...${head})`);
+                p.commit = head;
+              }
+            }
+            fs.writeFileSync(file, JSON.stringify(pins, null, 2) + "\n");
+            fs.writeFileSync("/tmp/upstream.md", lines.join("\n"));
+          '
+          if git diff --quiet scripts/sources.json; then
+            echo "::notice::Upstream unchanged."
+          else
+            echo "moved=yes" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Rebuild the data
+        if: steps.pins.outputs.moved == 'yes'
+        id: data
+        run: |
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          npm ci
+          bash scripts/fetch-sources.sh
+          npm run build-data
+          npx prettier --write src/data scripts/sources.json >/dev/null
+          if git diff --quiet -- src/data ':!src/data/provenance.json'; then
+            echo "::notice::Upstream moved, but the mappings are unchanged; nothing to do."
+          else
+            echo "changed=yes" >> "$GITHUB_OUTPUT"
+            git diff --stat -- src/data
+          fi
+      - name: Check and open the pull request
+        if: steps.data.outputs.changed == 'yes'
+        run: |
+          npm version patch --no-git-tag-version >/dev/null
+          version=$(node -p 'require("./package.json").version')
+          if npm run check > /tmp/check.log 2>&1; then
+            result="passed"
+          else
+            result="**failed**: the new data breaks tests; review before merging. Last lines:
+          \`\`\`
+          $(tail -n 30 /tmp/check.log)
+          \`\`\`"
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B data/update
+          git add scripts/sources.json src/data package.json package-lock.json
+          git commit -q -m "Update mapping data from upstream ($version)"
+          git push -f origin data/update
+          {
+            echo "Upstream changes:"
+            cat /tmp/upstream.md
+            echo
+            echo "Changed data:"
+            echo '```'
+            git diff --stat HEAD~1 -- src/data
+            echo '```'
+            echo
+            echo "\`npm run check\` in this workflow: $result"
+            echo
+            echo "Merging releases $version (GitHub release and npm)."
+          } > /tmp/body.md
+          if gh pr view data/update --json state -q .state 2>/dev/null | grep -q OPEN; then
+            gh pr edit data/update --title "Update mapping data ($version)" --body-file /tmp/body.md
+          else
+            gh pr create --head data/update --base main --title "Update mapping data ($version)" --body-file /tmp/body.md
+          fi

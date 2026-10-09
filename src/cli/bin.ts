@@ -1,5 +1,12 @@
+#!/usr/bin/env node
 import { readFile } from "node:fs/promises";
 import { run } from "./run";
+
+// A closed pipe (`... | head`) is not an error: stop quietly.
+process.stdout.on("error", (e: NodeJS.ErrnoException) => {
+  if (e.code === "EPIPE") process.exit(0);
+  throw e;
+});
 
 async function readStdin(): Promise<string | null> {
   if (process.stdin.isTTY) return null;
