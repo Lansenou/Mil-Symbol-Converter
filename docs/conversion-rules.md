@@ -125,7 +125,7 @@ input, unresolved wildcards, contested codes or blocked lossy results. In order:
 2. **name-match**: best entity in the plausible symbol sets of the target catalog for the 2525C
    description (word overlap, Dice coefficient) → `approximate`; modifiers are not guessed.
 3. **ancestor**: nearest 2525C parent (shorter function ID) with a strict mapping → `lossy`
-   (a documented but broader symbol), certainty 1; needs `allowLossy`.
+   (a documented but broader symbol), certainty 1; accepted with `fuzzy` unless `allowLossy: false`.
 
 Steps 1-2 need a calibrated `certainty` ≥ `minCertainty` (default 0.7); see docs/limitations.md for
 the calibration. Fuzzy results carry `fuzzy: { method, certainty, basis }` and

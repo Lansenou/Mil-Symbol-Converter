@@ -176,9 +176,9 @@ f.output; // "10031000002000000000" (Land unit : Law Enforcement)
 f.matchQuality; // "approximate"
 f.fuzzy; // { method: "name-match", certainty: 0.938, basis: '"LAW ENFORCEMENT UNIT" ~ "Law Enforcement" …' }
 
-// No name match: fall back to the nearest mapped 2525C parent (lossy, needs allowLossy)
-convertSidc15To2525D("SFAPMFFI-------", { fuzzy: true, allowLossy: true })
-  .output;
+// No name match: fall back to the nearest mapped 2525C parent (lossy; fuzzy accepts lossy
+// results unless allowLossy: false is set)
+convertSidc15To2525D("SFAPMFFI-------", { fuzzy: true }).output;
 // "10030100001101040000": INTERCEPTOR -> its parent FIGHTER
 ```
 

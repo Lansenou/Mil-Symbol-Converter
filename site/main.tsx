@@ -148,7 +148,11 @@ function ResultCard({
   const name =
     [r.metadata?.entity, ...(r.metadata?.modifiers ?? [])]
       .filter(Boolean)
-      .join(" · ") || r.metadata?.legacyDescription;
+      .join(" · ") ||
+    // The input's own name only fits when nothing was dropped or approximated.
+    (quality === "exact" || quality === "equivalent"
+      ? r.metadata?.legacyDescription
+      : undefined);
   return (
     <article className="card">
       <header>
@@ -193,6 +197,9 @@ function ResultCard({
   );
 }
 
+/** How much a Strict result may differ from the input; fuzzy implies lossy. */
+type Accept = "exact" | "lossy" | "fuzzy";
+
 function readHash(): string {
   const v = new URLSearchParams(location.hash.slice(1)).get("sidc");
   return v ?? EXAMPLES[0]!.sidc;
@@ -203,9 +210,8 @@ function App() {
   const [affiliation, setAffiliation] = useState("");
   const [status, setStatus] = useState("");
   const [modifier, setModifier] = useState("");
-  const [allowLossy, setAllowLossy] = useState(false);
+  const [accept, setAccept] = useState<Accept>("exact");
   const [strict, setStrict] = useState(false);
-  const [fuzzy, setFuzzy] = useState(false);
   const [extendedSidc, setExtendedSidc] = useState(false);
 
   useEffect(() => {
@@ -215,8 +221,8 @@ function App() {
   const mod = modifier.toUpperCase();
   const options: ConversionOptions = {
     // Robust mode already shows what loss or approximation gives; these refine Strict only.
-    allowLossy: strict && allowLossy,
-    fuzzy: strict && fuzzy,
+    allowLossy: strict && accept !== "exact",
+    fuzzy: strict && accept === "fuzzy",
     extendedSidc,
     ...(affiliation && {
       affiliation: affiliation as AffiliationLetter,
@@ -352,26 +358,18 @@ function App() {
             Strict
           </label>
           {strict && (
-            <>
-              {" "}
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={allowLossy}
-                  onChange={(e) => setAllowLossy(e.target.checked)}
-                />
-                Allow lossy
-              </label>
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={fuzzy}
-                  onChange={(e) => setFuzzy(e.target.checked)}
-                />
-                Fuzzy (with certainty)
-              </label>
-            </>
-          )}{" "}
+            <label>
+              <span>Accept</span>
+              <select
+                value={accept}
+                onChange={(e) => setAccept(e.target.value as Accept)}
+              >
+                <option value="exact">exact and equivalent only</option>
+                <option value="lossy">also lossy (allowLossy)</option>
+                <option value="fuzzy">also approximate (fuzzy)</option>
+              </select>
+            </label>
+          )}
           <label className="check">
             <input
               type="checkbox"
