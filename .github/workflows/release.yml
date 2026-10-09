@@ -1,9 +1,9 @@
 # Releases each new version automatically. Runs when package.json changes on main (a version bump
 # merged), or manually (Actions > Release > Run workflow). For the version in package.json it:
 #   1. creates the GitHub release v<version> (and its tag) with the prebuilt tarballs;
-#   2. publishes mil-symbol-converter (ESM) and mil-symbol-converter-cjs (CommonJS, built into
-#      dist-cjs/) to npm, via Trusted Publishing (OIDC) once it is set up on npmjs.com for each
-#      package, or via the NPM_TOKEN secret for a package's very first publish.
+#   2. publishes to npm via Trusted Publishing (OIDC): the ES module build as <version> (dist-tag
+#      latest) and the CommonJS build in dist-cjs/ as <version>-cjs (dist-tag cjs, for Jest).
+#      NPM_TOKEN is only needed if the package itself is ever new on npm.
 # Each step is skipped when already done, so re-runs and unrelated package.json edits are no-ops.
 # See docs/development.md, "Publishing".
 name: Release
@@ -39,9 +39,9 @@ jobs:
           version=$(node -p 'require("./package.json").version')
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
           gh release view "v$version" >/dev/null 2>&1 && echo "github=done" >> "$GITHUB_OUTPUT"
-          # Both packages (main and -cjs) carry the same version.
+          # Both builds: <version> (ES modules) and <version>-cjs (CommonJS).
           if [ -n "$(npm view "$name@$version" version 2>/dev/null)" ] &&
-             [ -n "$(npm view "$name-cjs@$version" version 2>/dev/null)" ]; then
+             [ -n "$(npm view "$name@$version-cjs" version 2>/dev/null)" ]; then
             echo "npm=done" >> "$GITHUB_OUTPUT"
           fi
           true
@@ -61,8 +61,10 @@ jobs:
           # Empty when the secret is not set; npm then uses Trusted Publishing (OIDC).
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # mil-symbol-converter from the repository root, mil-symbol-converter-cjs from dist-cjs/.
-          for dir in . dist-cjs; do
+          # The ES module build from the repository root (tag latest), the CommonJS build from
+          # dist-cjs/ (version <version>-cjs, tag cjs).
+          for build in ".:latest" "dist-cjs:cjs"; do
+            dir=${build%%:*} tag=${build##*:}
             name=$(node -p "require('./$dir/package.json').name")
             version=$(node -p "require('./$dir/package.json').version")
             if [ -n "$(npm view "$name@$version" version 2>/dev/null)" ]; then
@@ -71,6 +73,6 @@ jobs:
               # A trusted publisher can only be added to a package that exists: the first publish needs a token.
               echo "::warning::$name is not on npm yet and there is no NPM_TOKEN secret: skipped (see docs/development.md, Publishing)."
             else
-              npm publish "./$dir" --access public
+              npm publish "./$dir" --access public --tag "$tag"
             fi
           done
