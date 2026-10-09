@@ -460,7 +460,7 @@ function App() {
         milsymbol. Install:{" "}
         <code>
           npm install
-          https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.6.1/mil-symbol-converter-0.6.1.tgz
+          https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.7.0/mil-symbol-converter-0.7.0.tgz
         </code>
       </footer>
     </main>

@@ -19,7 +19,7 @@ It helps with two jobs:
 ## Install
 
 ```bash
-npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.6.1/mil-symbol-converter-0.6.1.tgz
+npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.7.0/mil-symbol-converter-0.7.0.tgz
 ```
 
 Node.js 22+, no runtime dependencies. ESM and CommonJS; React hook and component in
