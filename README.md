@@ -9,13 +9,20 @@ Converts **MIL-STD-2525C** letter symbol identification codes (15 characters) to
 
 and converts numeric codes back to 2525C.
 
-Each result says how faithful it is (`exact`, `equivalent`, `lossy`, `approximate`, `ambiguous`,
-`unsupported`), which datasets support it, and why it failed if it did. By default the converter
-does not guess: it never picks a "closest" symbol, never replaces `*` with a default, and never
-treats APP-6D as identical to 2525D. Approximate matching is available only on request
-(`fuzzy: true`), with a measured certainty.
-For drawing, `toRenderableSidc` makes the best code it can and lists everything it filled in or
-left out (see [Drawing codes with missing fields](#drawing-codes-with-missing-fields)).
+It helps with two different jobs:
+
+- **Reading codes** from data, files or other systems: `toRenderableSidc` repairs pasted input
+  (typographic dashes, case, whitespace), fills fields left as `*`, and returns a code milsymbol
+  can draw, with a list of what it assumed or left out
+  ([Drawing codes with missing fields](#drawing-codes-with-missing-fields)).
+- **Writing codes** yourself: SIDC string literals are checked at compile time, so a typo is a type
+  error naming the wrong position ([Compile-time checks](#compile-time-checks-for-sidc-literals)).
+  At runtime, `validateSidc` and `convertSidc` point at each wrong character and return no code
+  rather than one for a different symbol.
+
+Every conversion says how faithful it is (`exact`, `equivalent`, `lossy`, `approximate`,
+`ambiguous`, `unsupported`) and which datasets back it. APP-6D and 2525D are converted separately,
+not treated as the same standard.
 
 - [Standards research](docs/standards-research.md): field layouts, the 12-character question,
   APP-6D vs 2525D, existing converters
