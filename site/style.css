@@ -246,7 +246,8 @@ h3 {
 .badge.lossy {
   color: var(--lossy);
 }
-.badge.approximate {
+.badge.approximate,
+.badge.assumed {
   color: var(--approximate);
 }
 .badge.ambiguous {
@@ -312,12 +313,6 @@ footer code {
   margin: 4px 0 0;
   font-size: 13px;
   color: var(--unsupported);
-}
-.symbol.faded svg {
-  opacity: 0.55;
-}
-.code code.preview {
-  color: var(--muted);
 }
 .lost {
   margin: 4px 0 0;

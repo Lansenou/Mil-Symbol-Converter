@@ -1,4 +1,4 @@
-// Renders the README example tables: 2525C inputs, their converted codes, and milsymbol SVGs.
+// Renders the example tables (README.md, docs/examples.md): 2525C inputs, converted codes, milsymbol SVGs.
 // Every code, quality and name in the tables comes from running the converter.
 // Run: npx tsx scripts/render-readme-examples.ts  (writes docs/images/*.svg, prints the tables)
 import fs from "node:fs";

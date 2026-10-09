@@ -49,21 +49,10 @@ function symbolSvg(sidc: string, standard: "2525" | "APP6"): string | null {
   }
 }
 
-function Symbol({
-  sidc,
-  std,
-  faded = false,
-}: {
-  sidc: string | null;
-  std: "2525" | "APP6";
-  faded?: boolean;
-}) {
+function Symbol({ sidc, std }: { sidc: string | null; std: "2525" | "APP6" }) {
   const svg = useMemo(() => (sidc ? symbolSvg(sidc, std) : null), [sidc, std]);
   return svg ? (
-    <div
-      className={faded ? "symbol faded" : "symbol"}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    <div className="symbol" dangerouslySetInnerHTML={{ __html: svg }} />
   ) : (
     <div className="symbol empty" aria-hidden="true">
       —
@@ -103,15 +92,21 @@ function Copy({ text }: { text: string }) {
 }
 
 /**
- * What toRenderableSidc draws when the strict conversion gives nothing, so the card can still show
- * a code and symbol and say what was filled in or left out.
+ * Robust mode: what toRenderableSidc draws when the strict conversion gives nothing, so the card
+ * still shows a code and symbol and says what was assumed or left out.
  */
 function previewOf(
   input: string,
   r: ConversionResult,
   options: ConversionOptions,
-): { code: string; note: string; lost: string[] } | null {
-  if (r.output) return null;
+): {
+  code: string;
+  /** A MatchQuality, or "assumed" when identity or status was not given. */
+  quality: string;
+  lost: string[];
+} | null {
+  // A 12-character template ("S*GPUCI---**") is a valid output but cannot be drawn.
+  if (r.output && !r.output.includes("*")) return null;
   const p = toRenderableSidc(input, {
     targetStandard: r.targetStandard,
     extendedSidc: options.extendedSidc ?? false,
@@ -132,7 +127,7 @@ function previewOf(
     .map((f) => `${f.field} "${f.value}" assumed (no value given)`);
   return {
     code: p.sidc,
-    note: `Not returned in strict mode; drawn via toRenderableSidc (${p.matchQuality}).`,
+    quality: defaults.length > 0 ? "assumed" : p.matchQuality,
     lost: [...defaults, ...p.dropped],
   };
 }
@@ -148,6 +143,8 @@ function ResultCard({
   r: ConversionResult;
   preview?: ReturnType<typeof previewOf>;
 }) {
+  const output = preview?.code ?? r.output;
+  const quality = preview?.quality ?? r.matchQuality;
   const name =
     [r.metadata?.entity, ...(r.metadata?.modifiers ?? [])]
       .filter(Boolean)
@@ -156,28 +153,19 @@ function ResultCard({
     <article className="card">
       <header>
         <h3>{label}</h3>
-        <span className={`badge ${r.matchQuality}`}>
-          {r.matchQuality}
+        <span className={`badge ${quality}`}>
+          {quality}
           {r.fuzzy ? ` · ${Math.round(r.fuzzy.certainty * 100)}%` : ""}
         </span>
       </header>
       <div className="row">
-        <Symbol
-          sidc={r.output ?? preview?.code ?? null}
-          std={std}
-          faded={!r.output}
-        />
+        <Symbol sidc={output} std={std} />
         <div className="code">
-          {r.output ? (
+          {output ? (
             <>
-              <code>{r.output}</code>
-              <Copy text={r.output} />
-            </>
-          ) : preview ? (
-            <>
-              <code className="preview">{preview.code}</code>
-              <p className="reason">{preview.note}</p>
-              {preview.lost.length > 0 && (
+              <code>{output}</code>
+              <Copy text={output} />
+              {preview && preview.lost.length > 0 && (
                 <ul className="lost">
                   {preview.lost.map((w, i) => (
                     <li key={i}>{w}</li>
@@ -196,6 +184,7 @@ function ResultCard({
       </div>
       <details>
         <summary>
+          {preview ? "Strict result: " : ""}
           {r.errors.length} error(s), {r.warnings.length} warning(s)
         </summary>
         <Diagnostics items={r.diagnostics} />
@@ -215,6 +204,7 @@ function App() {
   const [status, setStatus] = useState("");
   const [modifier, setModifier] = useState("");
   const [allowLossy, setAllowLossy] = useState(false);
+  const [strict, setStrict] = useState(false);
   const [fuzzy, setFuzzy] = useState(false);
   const [extendedSidc, setExtendedSidc] = useState(false);
 
@@ -254,7 +244,11 @@ function App() {
   const results = letter
     ? TARGETS.map((t) => {
         const r = convertSidc(letter, { ...options, targetStandard: t.id });
-        return { ...t, r, preview: previewOf(letter, r, options) };
+        return {
+          ...t,
+          r,
+          preview: strict ? null : previewOf(letter, r, options),
+        };
       })
     : [];
   const shown = validation?.normalized ?? input;
@@ -266,8 +260,10 @@ function App() {
           <h1>SIDC Converter</h1>
           <p>
             MIL-STD-2525C letter codes to MIL-STD-2525D/E and APP-6(D)/(E)
-            numeric codes, and back. Strict by default: no output rather than a
-            wrong one.
+            numeric codes, and back. Paste a code from your data to see it drawn
+            in every edition, with anything the code left open filled in and
+            listed. Writing codes yourself? Tick Strict to see only verified
+            conversions and which characters are wrong.
           </p>
         </div>
         <a href="https://github.com/Lansenou/Mil-Symbol-Converter">GitHub</a>
@@ -349,6 +345,14 @@ function App() {
           <label className="check">
             <input
               type="checkbox"
+              checked={strict}
+              onChange={(e) => setStrict(e.target.checked)}
+            />
+            Strict
+          </label>
+          <label className="check">
+            <input
+              type="checkbox"
               checked={allowLossy}
               onChange={(e) => setAllowLossy(e.target.checked)}
             />
@@ -376,9 +380,14 @@ function App() {
       {validation && (
         <section className="panel input">
           <Symbol
-            sidc={drawn?.sidc ?? null}
+            sidc={
+              strict
+                ? validation.valid && !validation.isTemplate
+                  ? shown
+                  : null
+                : (drawn?.sidc ?? null)
+            }
             std="2525"
-            faded={drawn?.matchQuality !== "exact" || drawn.filled.length > 0}
           />
           <div>
             <h2>
@@ -389,7 +398,7 @@ function App() {
               <code>{shown}</code>
               {validation.isTemplate && " · template"}
             </p>
-            {drawn?.sidc && drawn.sidc !== shown && (
+            {!strict && drawn?.sidc && drawn.sidc !== shown && (
               <p className="muted">
                 Drawn as <code>{drawn.sidc}</code> (
                 <code>toRenderableSidc</code>
