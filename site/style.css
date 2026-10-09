@@ -313,3 +313,15 @@ footer code {
   font-size: 13px;
   color: var(--unsupported);
 }
+.symbol.faded svg {
+  opacity: 0.55;
+}
+.code code.preview {
+  color: var(--muted);
+}
+.lost {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--muted);
+}
