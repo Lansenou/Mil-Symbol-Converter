@@ -153,10 +153,6 @@ type CheckLetterSidc<S extends string> =
       : LengthError<S>
     : LengthError<S>;
 
-/**
- * `true` for a valid SIDC literal (15-character 2525C, or a 20/30-digit numeric code, which is
- * checked at runtime), otherwise the error message as a string literal type.
- */
 type HeaderKey = {
   [
     Sc in keyof SchemeTables
@@ -175,28 +171,40 @@ type ObKey = {
 }[keyof SchemeTables];
 type CountryKey = `${Upper}${Upper}` | "--" | "**";
 
-/** One flat comparison for the common (valid) case; the detailed walk only runs on failure. */
-type FastLetter<S extends string> =
-  S extends `${infer Sc}${infer Af}${infer Di}${infer St}${infer F1}${infer F2}${infer F3}${infer F4}${infer F5}${infer F6}${infer M1}${infer M2}${infer C1}${infer C2}${infer Ob}${infer Rest}`
-    ? [
-        Rest,
-        `${Sc}${Af}${Di}${St}`,
-        `${Sc}${Di}${F1}${F2}${F3}${F4}${F5}${F6}`,
-        `${Sc}${M1}${M2}`,
-        `${C1}${C2}`,
-        `${Sc}${Ob}`,
-      ] extends [
-        "",
-        HeaderKey,
-        FnKey,
-        ModKey | `${string}*${string}`,
-        CountryKey | `${string}*${string}`,
-        ObKey,
-      ]
-      ? true
-      : CheckLetterSidc<S>
-    : CheckLetterSidc<S>;
+/**
+ * Every valid field of a letter SIDC, each tagged with a letter so one union holds them all:
+ * a literal is checked with a single comparison of its (at most six) tagged fields against it.
+ * A union of string literals tested against a union is a lookup per member, while a tuple
+ * comparison resolves the members of each new tuple type (all of `Array`), which dominated.
+ */
+type FieldKey =
+  | "r"
+  | `h${HeaderKey}`
+  | `f${FnKey}`
+  | `m${ModKey}`
+  | `m${string}*${string}`
+  | `c${CountryKey}`
+  | `c${string}*${string}`
+  | `o${ObKey}`;
 
+/** `true` for a valid 15-character letter SIDC, else `false` (no message: see CheckLetterSidc). */
+type IsValidLetterSidc<S extends string> =
+  S extends `${infer Sc}${infer Af}${infer Di}${infer St}${infer F1}${infer F2}${infer F3}${infer F4}${infer F5}${infer F6}${infer M1}${infer M2}${infer C1}${infer C2}${infer Ob}${infer Rest}`
+    ?
+        | `r${Rest}`
+        | `h${Sc}${Af}${Di}${St}`
+        | `f${Sc}${Di}${F1}${F2}${F3}${F4}${F5}${F6}`
+        | `m${Sc}${M1}${M2}`
+        | `c${C1}${C2}`
+        | `o${Sc}${Ob}` extends FieldKey
+      ? true
+      : false
+    : false;
+
+/**
+ * `true` for a valid SIDC literal (15-character 2525C, or a 20/30-digit numeric code, which is
+ * checked at runtime), otherwise the error message as a string literal type.
+ */
 export type ValidateSidcLiteral<S extends string> =
   S extends `${Digit}${string}`
     ? AllDigits<S> extends true
@@ -206,24 +214,35 @@ export type ValidateSidcLiteral<S extends string> =
       : LengthError<S>
     : S extends MetocSidc
       ? true
-      : FastLetter<S>;
+      : IsValidLetterSidc<S> extends true
+        ? true
+        : CheckLetterSidc<S>;
 
-/**
- * Parameter type of SIDC inputs: a valid literal passes as itself, a bad literal becomes the
- * error message (so the compiler shows it), anything that is not a literal passes unchanged.
- */
 /** True for a fully known string literal; false for `string` and patterns like `S${string}`. */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- {} is the point: only index signatures accept it
 type IsLiteral<S extends string> = {} extends Record<S, 1> ? false : true;
 
+/**
+ * Parameter type of SIDC inputs: a valid literal passes as itself, a bad literal becomes the
+ * error message (so the compiler shows it), anything that is not a literal passes unchanged.
+ *
+ * Cost per checked literal matters (every call site pays it), so:
+ * - valid letter SIDCs, the common case, are accepted by IsValidLetterSidc alone; whatever it
+ *   accepts is a valid literal or not a literal, and both pass unchanged anyway;
+ * - the error type is wrapped in an indexed access, which type-argument inference does not
+ *   descend into (otherwise it walks every branch and message template of the validation for
+ *   each call). It evaluates to the plain message once `S` is known.
+ */
 export type CheckedSidc<S> = CheckEnabled extends false
   ? S
   : S extends string
-    ? IsLiteral<S> extends false
+    ? IsValidLetterSidc<S> extends true
       ? S
-      : ValidateSidcLiteral<S> extends true
+      : IsLiteral<S> extends false
         ? S
-        : ValidateSidcLiteral<S>
+        : ValidateSidcLiteral<S> extends true
+          ? S
+          : { error: ValidateSidcLiteral<S> }[S extends S ? "error" : never]
     : S;
 
 /** Identity function that checks a SIDC literal at compile time: `const s = sidc("SHGPUCI--------")`. */
