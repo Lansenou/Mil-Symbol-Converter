@@ -457,11 +457,7 @@ function App() {
 
       <footer>
         Mappings from Esri JMSML and US Army mil-sym-ts; symbols drawn by
-        milsymbol. Install:{" "}
-        <code>
-          npm install
-          https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.7.0/mil-symbol-converter-0.7.0.tgz
-        </code>
+        milsymbol. Install: <code>npm install mil-symbol-converter</code>
       </footer>
     </main>
   );
