@@ -29,14 +29,21 @@ were not produced by the converter.
 or push a matching `v*` tag. That needs no npm account. (A release created by the workflow does not
 trigger the npm workflow below.)
 
-`.github/workflows/release.yml` publishes to npm when a GitHub release is published. It uses
-[npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers): GitHub Actions proves its
-identity to npm via OIDC, so no npm token is stored anywhere. npm requires the package to exist
-before a trusted publisher can be attached, so the first release takes two manual steps:
+`.github/workflows/release.yml` publishes to npm when a GitHub release is published, or when run
+from Actions → Release → _Run workflow_. npm only lets a trusted publisher be attached to a package
+that exists, so the first publish uses a token. Everything happens in the browser:
 
-1. Publish once from a machine logged in to npm: `npm login && npm publish --access public`.
-2. On npmjs.com → package settings → _Trusted Publisher_, add GitHub Actions with repository
-   `Lansenou/Mil-Symbol-Converter` and workflow `release.yml`.
+1. On npmjs.com → avatar → _Access Tokens_ → _Generate New Token_ → _Granular Access Token_:
+   permissions _Read and write_ for _All packages_ and _Bypass two-factor authentication_ ticked
+   (CI cannot type a one-time code); a short expiry is fine.
+2. On GitHub → repository _Settings_ → _Secrets and variables_ → _Actions_ → _New repository
+   secret_: name `NPM_TOKEN`, value the token.
+3. Actions → Release → _Run workflow_ on `main`.
+
+Then switch to [Trusted Publishing](https://docs.npmjs.com/trusted-publishers), so no token is
+stored: on npmjs.com → the package → _Settings_ → _Trusted Publisher_, add GitHub Actions with
+repository `Lansenou/Mil-Symbol-Converter` and workflow `release.yml`, then delete the `NPM_TOKEN`
+secret and the token.
 
 After that, bump `version` in `package.json` and publish a GitHub release; CI tests, builds and
 publishes with provenance.

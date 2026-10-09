@@ -214,8 +214,9 @@ function App() {
 
   const mod = modifier.toUpperCase();
   const options: ConversionOptions = {
-    allowLossy,
-    fuzzy,
+    // Robust mode already shows what loss or approximation gives; these refine Strict only.
+    allowLossy: strict && allowLossy,
+    fuzzy: strict && fuzzy,
     extendedSidc,
     ...(affiliation && {
       affiliation: affiliation as AffiliationLetter,
@@ -350,22 +351,27 @@ function App() {
             />
             Strict
           </label>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={allowLossy}
-              onChange={(e) => setAllowLossy(e.target.checked)}
-            />
-            Allow lossy
-          </label>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={fuzzy}
-              onChange={(e) => setFuzzy(e.target.checked)}
-            />
-            Fuzzy (with certainty)
-          </label>
+          {strict && (
+            <>
+              {" "}
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={allowLossy}
+                  onChange={(e) => setAllowLossy(e.target.checked)}
+                />
+                Allow lossy
+              </label>
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={fuzzy}
+                  onChange={(e) => setFuzzy(e.target.checked)}
+                />
+                Fuzzy (with certainty)
+              </label>
+            </>
+          )}{" "}
           <label className="check">
             <input
               type="checkbox"
