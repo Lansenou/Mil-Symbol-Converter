@@ -14,6 +14,8 @@ Each result says how faithful it is (`exact`, `equivalent`, `lossy`, `approximat
 does not guess: it never picks a "closest" symbol, never replaces `*` with a default, and never
 treats APP-6D as identical to 2525D. Approximate matching is available only on request
 (`fuzzy: true`), with a measured certainty.
+For drawing, `toRenderableSidc` makes the best code it can and lists everything it filled in or
+left out (see [Drawing codes with missing fields](#drawing-codes-with-missing-fields)).
 
 - [Standards research](docs/standards-research.md): field layouts, the 12-character question,
   APP-6D vs 2525D, existing converters
@@ -69,6 +71,44 @@ documented mapping.
 | `SFAPMFFI-------`<br><sub>INTERCEPTOR</sub>                       | <img src="docs/images/case9-input.svg" alt="SFAPMFFI-------" height="40">  | 2525D  | `fuzzy: true`<br>`allowLossy: true`          | `10030100001101040000`<br>lossy (ancestor, certainty 1)             | <img src="docs/images/case9-output.svg" alt="10030100001101040000" height="40">            | No mapping; falls back to its 2525C parent (Fighter).                                                                              |
 | `SFAPMHA--------`<br><sub>ATTACK</sub>                            | <img src="docs/images/case10-input.svg" alt="SFAPMHA--------" height="40"> | 2525E  | `extendedSidc: true`                         | `150301000011020006001000000000`<br>equivalent                      | <img src="docs/images/case10-output.svg" alt="150301000011020006001000000000" height="40"> | 2525E common modifier Attack/Strike needs the 30-digit code.                                                                       |
 
+## Drawing codes with missing fields
+
+Codes from real data often leave fields as `*` or arrive mangled by copy and paste, and milsymbol
+then draws nothing or the wrong frame. `toRenderableSidc` returns a code to draw that keeps every
+field the input does give:
+
+- each `*` field takes your `fallback` value; a fallback is only used where the code has `*`, never
+  over a value the code carries, and only if it is valid for that code;
+- a `*` with no fallback gets a neutral value: Unknown identity, Present status, no modifier,
+  country or order of battle;
+- a function ID outside the 2525C tables is drawn as its nearest listed parent;
+- with a numeric `targetStandard`, it converts with loss allowed, so only what the target cannot
+  carry is dropped. The default target is 2525C itself, which milsymbol draws with every field.
+
+```ts
+import ms from "milsymbol";
+import { toRenderableSidc } from "mil-symbol-converter";
+
+const r = toRenderableSidc("S*G*UCMT--*****", {
+  fallback: { affiliation: "Hostile", status: "Present" },
+});
+r.sidc; // "SHGPUCMT-------"
+r.filled; // [{ field: "standardIdentity", value: "H", from: "fallback" }, ...]
+r.dropped; // [] (what the drawing leaves out, as text)
+if (r.sidc) new ms.Symbol(r.sidc).asSVG();
+```
+
+| Input             | milsymbol as is                                                             | Options                               | Result                          | Symbol                                                                            | Filled / dropped                                                                                                                                                                                                                       |
+| ----------------- | --------------------------------------------------------------------------- | ------------------------------------- | ------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `S*G*UCMT--*****` | not drawn                                                                   | default                               | `SUGPUCMT-------`<br>exact      | <img src="docs/images/render1-output.svg" alt="SUGPUCMT-------" height="40">      | standardIdentity `U` (default)<br>status `P` (default)<br>symbolModifier `--` (default)                                                                                                                                                |
+| `S*GPUCI---*****` | not drawn                                                                   | `fallback: {"affiliation":"Hostile"}` | `SHGPUCI--------`<br>exact      | <img src="docs/images/render2-output.svg" alt="SHGPUCI--------" height="40">      | standardIdentity `H` (fallback)<br>symbolModifier `--` (default)                                                                                                                                                                       |
+| `SPG*UCMT—*****`  | not drawn                                                                   | `fallback: {"status":"Present"}`      | `SPGPUCMT-------`<br>exact      | <img src="docs/images/render3-output.svg" alt="SPGPUCMT-------" height="40">      | status `P` (fallback)<br>symbolModifier `--` (default)                                                                                                                                                                                 |
+| `SFGPUCIZE------` | not drawn                                                                   | default                               | `SFGPUCIZ-------`<br>lossy      | <img src="docs/images/render4-output.svg" alt="SFGPUCIZ-------" height="40">      | Function ID "UCIZE-" is not in the 2525C tables; drawn as its parent "UCIZ--" (INFANTRY MECHANIZED).                                                                                                                                   |
+| `SFGPUCVRW-*****` | <img src="docs/images/render5-input.svg" alt="SFGPUCVRW-*****" height="40"> | `targetStandard: "MIL-STD-2525D"`     | `10031000001206000000`<br>lossy | <img src="docs/images/render5-output.svg" alt="10031000001206000000" height="40"> | symbolModifier `--` (default)<br>Approximate result (ancestor, certainty 1.00): no mapping for "ANTISUBMARINE WARFARE ROTARY WING"; using its 2525C parent (2 levels up) "AVIATION" (SFGPUCV--------), which loses the specialisation. |
+
+The result is for display: `matchQuality`, `filled` and `dropped` say how far it is from the
+input. Use `convertSidc` when a wrong code would be worse than none.
+
 ## Install
 
 The package is not published to the npm registry yet. Install the prebuilt tarball from the
@@ -76,7 +116,7 @@ The package is not published to the npm registry yet. Install the prebuilt tarba
 pulls in no other packages:
 
 ```bash
-npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.5.1/mil-symbol-converter-0.5.1.tgz
+npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.6.0/mil-symbol-converter-0.6.0.tgz
 ```
 
 `npm install github:Lansenou/Mil-Symbol-Converter` also works, but npm then builds the package on

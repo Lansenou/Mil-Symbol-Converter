@@ -24,6 +24,12 @@ export {
 } from "./converters/numeric";
 export { validateSidc, parseLegacyFields, normalizeInput } from "./validation";
 export {
+  toRenderableSidc,
+  type RenderOptions,
+  type RenderableSidc,
+  type FilledField,
+} from "./render";
+export {
   resolveWildcards,
   wildcardFields,
   WILDCARD_FIELDS,

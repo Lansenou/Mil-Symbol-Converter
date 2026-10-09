@@ -7,6 +7,7 @@ import {
   convertNumericTo2525C,
   convertSidc,
   isSymbolModifier,
+  toRenderableSidc,
   validateSidc,
   type ConversionOptions,
   type ConversionResult,
@@ -102,8 +103,8 @@ function Copy({ text }: { text: string }) {
 }
 
 /**
- * What a strict conversion would give with loss allowed, so the card can still show the code and
- * symbol and say what is missing. Never returned by the library unless the caller opts in.
+ * What toRenderableSidc draws when the strict conversion gives nothing, so the card can still show
+ * a code and symbol and say what was filled in or left out.
  */
 function previewOf(
   input: string,
@@ -111,29 +112,29 @@ function previewOf(
   options: ConversionOptions,
 ): { code: string; note: string; lost: string[] } | null {
   if (r.output) return null;
-  const lossy = convertSidc(input, {
-    ...options,
+  const p = toRenderableSidc(input, {
     targetStandard: r.targetStandard,
-    allowLossy: true,
+    extendedSidc: options.extendedSidc ?? false,
+    fallback: {
+      ...(options.affiliation && { affiliation: options.affiliation }),
+      ...(options.status && { status: options.status }),
+      ...(options.symbolModifier && { symbolModifier: options.symbolModifier }),
+    },
   });
-  if (lossy.output)
-    return {
-      code: lossy.output,
-      note: "Lossy: only returned with “Allow lossy”.",
-      lost: lossy.warnings,
-    };
-  const candidates = lossy.candidates ?? r.candidates ?? [];
-  const first = candidates[0];
-  if (first)
-    return {
-      code: first.output,
-      note:
-        candidates.length > 1
-          ? `Ambiguous: showing candidate 1 of ${candidates.length}.`
-          : "Not confirmed: shown as the only candidate.",
-      lost: [r.errors[0] ?? first.note],
-    };
-  return null;
+  if (!p.sidc) return null;
+  const defaults = p.filled
+    // Only identity and status change the drawing; the other defaults mean "none".
+    .filter(
+      (f) =>
+        f.from === "default" &&
+        (f.field === "standardIdentity" || f.field === "status"),
+    )
+    .map((f) => `${f.field} "${f.value}" assumed (no value given)`);
+  return {
+    code: p.sidc,
+    note: `Not returned in strict mode; drawn via toRenderableSidc (${p.matchQuality}).`,
+    lost: [...defaults, ...p.dropped],
+  };
 }
 
 function ResultCard({
@@ -237,6 +238,15 @@ function App() {
 
   const validation = numeric ? null : validateSidc(input);
   const reverse = numeric ? convertNumericTo2525C(trimmed) : null;
+  const drawn = numeric
+    ? null
+    : toRenderableSidc(input, {
+        fallback: {
+          ...(affiliation && { affiliation: affiliation as AffiliationLetter }),
+          ...(status && { status: status as StatusLetter }),
+          ...(isSymbolModifier(mod) && { symbolModifier: mod }),
+        },
+      });
   // A numeric code reaches the other editions through its 2525C equivalent.
   const letter = reverse
     ? (reverse.output ?? reverse.candidates?.[0]?.output ?? null)
@@ -365,7 +375,11 @@ function App() {
 
       {validation && (
         <section className="panel input">
-          <Symbol sidc={validation.valid ? shown : null} std="2525" />
+          <Symbol
+            sidc={drawn?.sidc ?? null}
+            std="2525"
+            faded={drawn?.matchQuality !== "exact" || drawn.filled.length > 0}
+          />
           <div>
             <h2>
               {validation.catalogEntry?.description ??
@@ -375,6 +389,15 @@ function App() {
               <code>{shown}</code>
               {validation.isTemplate && " · template"}
             </p>
+            {drawn?.sidc && drawn.sidc !== shown && (
+              <p className="muted">
+                Drawn as <code>{drawn.sidc}</code> (
+                <code>toRenderableSidc</code>
+                {drawn.filled.length > 0 &&
+                  `: filled ${drawn.filled.map((f) => `${f.field} ${f.value} (${f.from})`).join(", ")}`}
+                {drawn.dropped.length > 0 && `; ${drawn.dropped.join(" ")}`})
+              </p>
+            )}
             <Diagnostics items={validation.diagnostics} />
           </div>
         </section>
@@ -424,7 +447,7 @@ function App() {
         milsymbol. Install:{" "}
         <code>
           npm install
-          https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.5.1/mil-symbol-converter-0.5.1.tgz
+          https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v0.6.0/mil-symbol-converter-0.6.0.tgz
         </code>
       </footer>
     </main>

@@ -1,10 +1,12 @@
 // Renders the README example tables: 2525C inputs, their converted codes, and milsymbol SVGs.
 // Every code, quality and name in the tables comes from running the converter.
-// Run: npx tsx scripts/render-readme-examples.ts  (writes docs/images/*.svg, prints both tables)
+// Run: npx tsx scripts/render-readme-examples.ts  (writes docs/images/*.svg, prints the tables)
 import fs from "node:fs";
 import ms from "milsymbol";
 import {
   convertSidc,
+  toRenderableSidc,
+  type RenderOptions,
   type ConversionOptions,
   type CountryCode,
   type OrderOfBattle,
@@ -199,6 +201,45 @@ CASES.forEach((c, i) => {
   );
 });
 
+// Table 3: codes with missing fields, drawn as is and via toRenderableSidc.
+const RENDER_CASES: { input: string; options: RenderOptions }[] = [
+  { input: "S*G*UCMT--*****", options: {} },
+  {
+    input: "S*GPUCI---*****",
+    options: { fallback: { affiliation: "Hostile" } },
+  },
+  {
+    input: "SPG*UCMT\u2014*****",
+    options: { fallback: { status: "Present" } },
+  },
+  { input: "SFGPUCIZE------", options: {} },
+  {
+    input: "SFGPUCVRW-*****",
+    options: { targetStandard: "MIL-STD-2525D" },
+  },
+];
+const t3: string[] = [];
+t3.push(
+  "| Input | milsymbol as is | Options | Result | Symbol | Filled / dropped |",
+);
+t3.push("| --- | --- | --- | --- | --- | --- |");
+RENDER_CASES.forEach((c, i) => {
+  const r = toRenderableSidc(c.input, c.options);
+  if (!r.sidc) throw new Error(`no renderable SIDC for ${c.input}`);
+  const asIs = drawable(c.input, "2525")
+    ? svg(c.input, "2525", `render${i + 1}-input`)
+    : "not drawn";
+  const filled = r.filled
+    .filter((f) => f.field !== "countryCode" && f.field !== "orderOfBattle")
+    .map((f) => `${f.field} \`${f.value}\` (${f.from})`);
+  const notes = [...filled, ...r.dropped].join("<br>") || "—";
+  t3.push(
+    `| \`${c.input}\` | ${asIs} | ${optText(c.options as ConversionOptions)} | \`${r.sidc}\`<br>${r.matchQuality} | ${svg(r.sidc, "2525", `render${i + 1}-output`)} | ${notes} |`,
+  );
+});
+
 console.log(t1.join("\n"));
 console.log("\n<!-- table 2 -->\n");
 console.log(t2.join("\n"));
+console.log("\n<!-- table 3 -->\n");
+console.log(t3.join("\n"));
