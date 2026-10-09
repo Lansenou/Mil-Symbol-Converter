@@ -40,17 +40,17 @@ describe("fuzzy mode is opt-in", () => {
     expect(r.output).toBe("10004500001302020000"); // Icing : Rime Icing : Moderate
   });
 
-  it("ancestor fallback is lossy and needs allowLossy", () => {
-    const blocked = convertSidc15To2525D("SFAPMFFI-------", { fuzzy: true });
+  it("fuzzy accepts the lossy ancestor fallback unless allowLossy is false", () => {
+    const r = convertSidc15To2525D("SFAPMFFI-------", { fuzzy: true });
+    expect(r.output).toBe("10030100001101040000"); // FIGHTER, parent of INTERCEPTOR
+    expect(r.fuzzy).toMatchObject({ method: "ancestor", certainty: 1 });
+    const blocked = convertSidc15To2525D("SFAPMFFI-------", {
+      fuzzy: true,
+      allowLossy: false,
+    });
     expect(blocked.success).toBe(false);
     expect(blocked.matchQuality).toBe("lossy");
     expect(blocked.candidates?.[0]?.output).toBe("10030100001101040000");
-    const r = convertSidc15To2525D("SFAPMFFI-------", {
-      fuzzy: true,
-      allowLossy: true,
-    });
-    expect(r.output).toBe("10030100001101040000"); // FIGHTER, parent of INTERCEPTOR
-    expect(r.fuzzy).toMatchObject({ method: "ancestor", certainty: 1 });
   });
 
   it("minCertainty can exclude name matches", () => {

@@ -396,6 +396,10 @@ export function convertToNumeric(
   options: ConversionOptions = {},
   adapters: readonly MappingAdapter[] = defaultAdapters,
 ): ConversionResult {
+  // An approximate result promises less than a lossy one, so asking for fuzzy matching accepts
+  // lossy results too, unless allowLossy: false is set explicitly.
+  if (options.fuzzy && options.allowLossy === undefined)
+    options = { ...options, allowLossy: true };
   const strict = convertStrict(input, target, options, adapters);
   if (strict.success || !options.fuzzy) return strict;
   return fuzzyFallback(strict, target, options, adapters) ?? strict;

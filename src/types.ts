@@ -96,7 +96,8 @@ export interface ConversionOptions {
   /**
    * When the strict mapping fails, try approximate matching: choose between disagreeing sources by
    * name, search the target catalog by the 2525C description, or fall back to the nearest mapped
-   * 2525C ancestor (lossy). Defaults to `false`.
+   * 2525C ancestor (lossy). Defaults to `false`. Implies `allowLossy: true` unless that is set to
+   * `false`: an approximate result promises less than a lossy one.
    */
   fuzzy?: boolean;
   /** Minimum calibrated certainty (0-1) for `approximate` results. Defaults to 0.7. */
