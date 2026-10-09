@@ -5,3 +5,4 @@ coverage
 *.log
 *.tgz
 site-dist
+dist-cjs

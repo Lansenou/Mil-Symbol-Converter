@@ -6,3 +6,4 @@ src/data/*.json
 package-lock.json
 site-dist
 src/sidc-literal-tables.ts
+dist-cjs

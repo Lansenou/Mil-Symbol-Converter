@@ -1,10 +1,9 @@
 # Releases each new version automatically. Runs when package.json changes on main (a version bump
 # merged), or manually (Actions > Release > Run workflow). For the version in package.json it:
-#   1. creates the GitHub release v<version> (and its tag) with the prebuilt tarball, so
-#        npm install https://github.com/Lansenou/Mil-Symbol-Converter/releases/download/v<version>/mil-symbol-converter-<version>.tgz
-#      works without npm;
-#   2. publishes to npm, via Trusted Publishing (OIDC) once it is set up on npmjs.com, or via the
-#      NPM_TOKEN secret for the very first publish. Before either exists, this step is skipped.
+#   1. creates the GitHub release v<version> (and its tag) with the prebuilt tarballs;
+#   2. publishes mil-symbol-converter (ESM) and mil-symbol-converter-cjs (CommonJS, built into
+#      dist-cjs/) to npm, via Trusted Publishing (OIDC) once it is set up on npmjs.com for each
+#      package, or via the NPM_TOKEN secret for a package's very first publish.
 # Each step is skipped when already done, so re-runs and unrelated package.json edits are no-ops.
 # See docs/development.md, "Publishing".
 name: Release
@@ -40,28 +39,38 @@ jobs:
           version=$(node -p 'require("./package.json").version')
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
           gh release view "v$version" >/dev/null 2>&1 && echo "github=done" >> "$GITHUB_OUTPUT"
-          [ -n "$(npm view "$name@$version" version 2>/dev/null)" ] && echo "npm=done" >> "$GITHUB_OUTPUT"
-          [ -n "$(npm view "$name" name 2>/dev/null)" ] && echo "npm_exists=yes" >> "$GITHUB_OUTPUT"
+          # Both packages (main and -cjs) carry the same version.
+          if [ -n "$(npm view "$name@$version" version 2>/dev/null)" ] &&
+             [ -n "$(npm view "$name-cjs@$version" version 2>/dev/null)" ]; then
+            echo "npm=done" >> "$GITHUB_OUTPUT"
+          fi
           true
       - if: steps.state.outputs.github != 'done' || steps.state.outputs.npm != 'done'
         run: npm ci && npm run check
-      - name: GitHub release with tarball
+      - name: GitHub release with tarballs
         if: steps.state.outputs.github != 'done'
         env:
           TAG: ${{ steps.state.outputs.tag }}
         run: |
           npm pack
+          npm pack ./dist-cjs
           gh release create "$TAG" --target "$GITHUB_SHA" --generate-notes mil-symbol-converter-*.tgz
       - name: Publish to npm
         if: steps.state.outputs.npm != 'done'
         env:
           # Empty when the secret is not set; npm then uses Trusted Publishing (OIDC).
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_EXISTS: ${{ steps.state.outputs.npm_exists }}
         run: |
-          # The first publish needs a token: a trusted publisher can only be added to an existing package.
-          if [ "$NPM_EXISTS" != yes ] && [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "::notice::Not on npm yet and no NPM_TOKEN secret: skipped (see docs/development.md, Publishing)."
-            exit 0
-          fi
-          npm publish --access public
+          # mil-symbol-converter from the repository root, mil-symbol-converter-cjs from dist-cjs/.
+          for dir in . dist-cjs; do
+            name=$(node -p "require('./$dir/package.json').name")
+            version=$(node -p "require('./$dir/package.json').version")
+            if [ -n "$(npm view "$name@$version" version 2>/dev/null)" ]; then
+              echo "$name@$version is already on npm."
+            elif [ -z "$(npm view "$name" name 2>/dev/null)" ] && [ -z "$NODE_AUTH_TOKEN" ]; then
+              # A trusted publisher can only be added to a package that exists: the first publish needs a token.
+              echo "::warning::$name is not on npm yet and there is no NPM_TOKEN secret: skipped (see docs/development.md, Publishing)."
+            else
+              npm publish "./$dir" --access public
+            fi
+          done

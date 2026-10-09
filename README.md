@@ -22,8 +22,10 @@ It helps with two jobs:
 npm install mil-symbol-converter
 ```
 
-Node.js 22+, no runtime dependencies. ESM and CommonJS; React hook and component in
-`mil-symbol-converter/react`.
+No runtime dependencies. ES modules for Node.js 22.12+ (which can also `require()` it) and every
+modern bundler; React hook and component in `mil-symbol-converter/react`. For Jest and other
+tooling that cannot load ES modules, install the CommonJS build under the same name:
+`npm install mil-symbol-converter@npm:mil-symbol-converter-cjs`.
 
 ## Reading codes: draw what the data gives
 

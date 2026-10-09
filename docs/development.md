@@ -38,8 +38,12 @@ Releases are automatic: merging a change to `version` in `package.json` into `ma
 prebuilt tarball, and publishes to npm with provenance. Steps already done are skipped, so the
 workflow can be re-run safely (Actions → Release → _Run workflow_).
 
-npm only lets a trusted publisher be added to a package that exists, so the first npm publish uses
-a token. Everything happens in the browser:
+Two packages are published from the same build at the same version: `mil-symbol-converter`
+(ES modules, `dist/`) and `mil-symbol-converter-cjs` (CommonJS for Jest and older tooling,
+`dist-cjs/`, written by `scripts/cjs-package.mjs`). Each needs its own trusted publisher.
+
+npm only lets a trusted publisher be added to a package that exists, so a package's first npm
+publish uses a token. Everything happens in the browser:
 
 1. On npmjs.com → avatar → _Access Tokens_ → _Generate New Token_ → _Granular Access Token_:
    _Read and write_ for _All packages_, _Bypass two-factor authentication_ ticked (CI cannot type a
