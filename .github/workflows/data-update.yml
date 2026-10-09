@@ -60,7 +60,7 @@ jobs:
         if: steps.pins.outputs.moved == 'yes'
         id: data
         run: |
-          sudo apt-get install -y -qq poppler-utils >/dev/null
+          sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null
           npm ci
           bash scripts/fetch-sources.sh
           npm run build-data

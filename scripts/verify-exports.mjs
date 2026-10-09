@@ -1,12 +1,16 @@
-// Smoke-tests the built package (dist/) through its public entry points in ESM and CJS.
+// Smoke-tests the built packages through their public entry points: the ESM package (imported, and
+// required, which Node.js 22.12+ supports for ES modules) and the CommonJS package in dist-cjs/.
 import { createRequire } from "node:module";
 import assert from "node:assert/strict";
 
+const require = createRequire(import.meta.url);
 const esm = await import("../dist/index.js");
-const cjs = createRequire(import.meta.url)("../dist/index.cjs");
+const requiredEsm = require("../dist/index.js");
+const cjs = require("../dist-cjs/index.cjs");
 for (const [name, mod] of [
   ["esm", esm],
-  ["cjs", cjs],
+  ["require(esm)", requiredEsm],
+  ["cjs package", cjs],
 ]) {
   for (const fn of [
     "convertSidc",
@@ -18,6 +22,7 @@ for (const [name, mod] of [
     "convertSidcToAll",
     "validateSidc",
     "analyzeSidc",
+    "toRenderableSidc",
   ])
     assert.equal(typeof mod[fn], "function", `${name}: ${fn}`);
   assert.equal(
@@ -31,7 +36,14 @@ for (const [name, mod] of [
     name,
   );
 }
-const react = await import("../dist/react/index.js");
-assert.equal(typeof react.useSidcConverter, "function");
-assert.equal(typeof react.SidcConverter, "function");
-console.log("exports OK (esm, cjs, react)");
+for (const react of [
+  await import("../dist/react/index.js"),
+  require("../dist-cjs/react/index.cjs"),
+]) {
+  assert.equal(typeof react.useSidcConverter, "function");
+  assert.equal(typeof react.SidcConverter, "function");
+}
+const cjsPkg = require("../dist-cjs/package.json");
+const mainPkg = require("../package.json");
+assert.equal(cjsPkg.version, mainPkg.version, "cjs package version");
+console.log("exports OK (esm, require(esm), cjs package, react)");

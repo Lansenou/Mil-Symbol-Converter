@@ -1,8 +1,9 @@
 import { defineConfig } from "tsup";
 
-// The mapping data is most of the package, so every output shares one copy per module format:
-// ESM entries (library, React, CLI) share chunks, and so do the CJS ones. No source maps are
-// shipped: they doubled the package size and the sources are on GitHub.
+// The package is ESM only (Node 22.12+ can also require() it). The CommonJS build goes to
+// dist-cjs/, which scripts/cjs-package.mjs turns into the separate package
+// mil-symbol-converter-cjs for Jest and other require()-only tooling.
+// Each build shares one copy of the mapping data between its entries; no source maps are shipped.
 const library = {
   index: "src/index.ts",
   "react/index": "src/react/index.ts",
@@ -22,11 +23,13 @@ export default defineConfig([
   },
   {
     entry: library,
+    outDir: "dist-cjs",
     format: ["cjs"],
     platform: "node",
     target: "es2020",
     splitting: true,
     dts: { entry: library },
+    clean: true,
     minify: true,
     external: ["react", "react/jsx-runtime"],
   },

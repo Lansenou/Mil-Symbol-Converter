@@ -1,6 +1,6 @@
 {
   "name": "mil-symbol-converter",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Convert MIL-STD-2525C letter SIDCs to MIL-STD-2525D/E and APP-6D/E numeric SIDCs and back; draw incomplete codes from real data, catch typos in codes you write.",
   "type": "module",
   "license": "MIT",
@@ -9,29 +9,16 @@
     "dist",
     "NOTICE"
   ],
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      }
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./react": {
-      "import": {
-        "types": "./dist/react/index.d.ts",
-        "default": "./dist/react/index.js"
-      },
-      "require": {
-        "types": "./dist/react/index.d.cts",
-        "default": "./dist/react/index.cjs"
-      }
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -46,10 +33,10 @@
     "mil-symbol-converter": "./dist/cli.js"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && node scripts/cjs-package.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -59,7 +46,7 @@
     "verify-exports": "node scripts/verify-exports.mjs",
     "build-data": "node scripts/build-data.mjs",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run verify-exports",
-    "prepare": "tsup",
+    "prepare": "npm run build",
     "site": "vite site",
     "build:site": "vite build site --base ./ --outDir ../site-dist --emptyOutDir"
   },
