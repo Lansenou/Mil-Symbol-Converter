@@ -15,8 +15,9 @@ import { parse2525cCatalog } from "./lib/standard-2525c.mjs";
 
 const SRC = ".sources";
 const OUT = "src/data";
-const JMSML_SHA = "094e7647f0bdd001e42fd2a73ba802c995af20aa";
-const MILSYM_SHA = "9f3c5512ecc8b9458da32328991b899910dafe7b";
+const PINS = JSON.parse(fs.readFileSync("scripts/sources.json", "utf8"));
+const JMSML_SHA = PINS.jmsml.commit;
+const MILSYM_SHA = PINS["mil-sym-ts"].commit;
 
 const write = (name, data) => {
   fs.writeFileSync(`${OUT}/${name}`, JSON.stringify(data) + "\n");
