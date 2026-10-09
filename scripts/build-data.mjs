@@ -218,8 +218,46 @@ write(
   "mil-std-2525c-catalog.json",
   c2525.map((r) => [r.template, r.description, r.hierarchy]),
 );
-write("legacy-mappings.json", { jmsml: jmsmlRows, milsym: milsymRows });
-write("edition-catalogs.json", { names, catalogs });
+// Compact encodings (about 35% smaller than plain JSON); src/data/index.ts decodes them on load.
+// Rows: one "a|b|c" line per row.
+const encodeRows = (rows) => rows.map((r) => r.join("|")).join("\n");
+// Names: "<parent index>|<last part>" when the name extends another one ("A : B" after "A").
+const nameAt = new Map(names.map((n, i) => [n, i]));
+const encodedNames = names.map((n) => {
+  const cut = n.lastIndexOf(" : ");
+  const parent = cut > 0 ? nameAt.get(n.slice(0, cut)) : undefined;
+  return parent === undefined ? n : `${parent}|${n.slice(cut + 3)}`;
+});
+// Catalogs: per symbol set, the codes (comma-separated, without "|") and the name indices as
+// differences from the previous one.
+const encodeTable = (table) => {
+  const bySet = {};
+  for (const [key, i] of Object.entries(table)) {
+    const [set, ...rest] = key.split("|");
+    (bySet[set] ??= [[], []])[0].push(rest.join("|"));
+    bySet[set][1].push(i);
+  }
+  for (const [set, [codes, ids]] of Object.entries(bySet))
+    bySet[set] = [
+      codes.join(","),
+      ids.map((x, j) => (j ? x - ids[j - 1] : x)).join(","),
+    ];
+  return bySet;
+};
+const encodedCatalogs = Object.fromEntries(
+  Object.entries(catalogs).map(([edition, c]) => [
+    edition,
+    { entities: encodeTable(c.entities), modifiers: encodeTable(c.modifiers) },
+  ]),
+);
+write("legacy-mappings.json", {
+  jmsml: encodeRows(jmsmlRows),
+  milsym: encodeRows(milsymRows),
+});
+write("edition-catalogs.json", {
+  names: encodedNames,
+  catalogs: encodedCatalogs,
+});
 write("field-codes.json", fields);
 write("provenance.json", provenance);
 console.log(

@@ -51,6 +51,10 @@ export function legacyKey(sidc: string): string {
   return `${sidc[0]}*${sidc[2]}*${sidc.slice(4, 10)}`;
 }
 
+/** Rows stored as "a|b|c" lines (see scripts/build-data.mjs). */
+const decodeRows = (text: string): string[][] =>
+  text.split("\n").map((line) => line.split("|"));
+
 function group<T>(items: T[], key: (t: T) => string): Map<string, T[]> {
   const m = new Map<string, T[]>();
   for (const it of items) {
@@ -71,7 +75,7 @@ export const catalog: CatalogEntry[] = (catalogRows as string[][]).map(
 );
 export const catalogByKey = group(catalog, (c) => legacyKey(c.template));
 
-export const jmsmlRows: JmsmlRow[] = (legacyMappings.jmsml as string[][]).map(
+export const jmsmlRows: JmsmlRow[] = decodeRows(legacyMappings.jmsml).map(
   ([
     template = "",
     symbolSet = "",
@@ -91,9 +95,7 @@ export const jmsmlRows: JmsmlRow[] = (legacyMappings.jmsml as string[][]).map(
 );
 export const jmsmlByKey = group(jmsmlRows, (r) => legacyKey(r.template));
 
-export const milsymRows: MilsymRow[] = (
-  legacyMappings.milsym as string[][]
-).map(
+export const milsymRows: MilsymRow[] = decodeRows(legacyMappings.milsym).map(
   ([
     basic = "",
     version = "",
@@ -112,11 +114,50 @@ export const milsymRows: MilsymRow[] = (
 );
 export const milsymByKey = group(milsymRows, (r) => legacyKey(r.basic));
 
-const names: string[] = editionCatalogs.names;
-const catalogs = editionCatalogs.catalogs as Record<
-  EditionKey,
-  { entities: Record<string, number>; modifiers: Record<string, number> }
->;
+type Table = Record<string, number>;
+/** Per symbol set: [codes, name indices as differences], both comma-separated. */
+type EncodedTable = Record<string, string[]>;
+
+/** Names stored as "<parent index>|<last part>" when they extend another name. */
+const names: string[] = (() => {
+  const encoded = editionCatalogs.names;
+  const out: string[] = [];
+  const at = (i: number): string => {
+    const cached = out[i];
+    if (cached !== undefined) return cached;
+    const e = encoded[i]!;
+    const bar = e.indexOf("|");
+    return (out[i] =
+      bar < 0 ? e : `${at(Number(e.slice(0, bar)))} : ${e.slice(bar + 1)}`);
+  };
+  for (let i = 0; i < encoded.length; i++) at(i);
+  return out;
+})();
+
+/** Back to { "symbolSet|code": nameIndex } from per-set code lists and index differences. */
+function decodeTable(encoded: EncodedTable): Table {
+  const table: Table = {};
+  for (const [set, [codes = "", ids = ""]] of Object.entries(encoded)) {
+    const idList = ids.split(",");
+    let id = 0;
+    codes.split(",").forEach((code, j) => {
+      id = j === 0 ? Number(idList[0]) : id + Number(idList[j]);
+      table[`${set}|${code}`] = id;
+    });
+  }
+  return table;
+}
+const catalogs = Object.fromEntries(
+  Object.entries(
+    editionCatalogs.catalogs as Record<
+      string,
+      { entities: EncodedTable; modifiers: EncodedTable }
+    >,
+  ).map(([edition, c]) => [
+    edition,
+    { entities: decodeTable(c.entities), modifiers: decodeTable(c.modifiers) },
+  ]),
+) as Record<EditionKey, { entities: Table; modifiers: Table }>;
 
 /** Name of an entity code ("10|121100") in an edition, or undefined if absent. */
 export function entityName(

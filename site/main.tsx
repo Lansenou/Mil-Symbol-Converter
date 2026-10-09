@@ -29,6 +29,8 @@ const EXAMPLES: { sidc: string; note: string }[] = [
   { sidc: "SPGPUCI--------", note: "Pending infantry" },
   { sidc: "SFGPIXH---H----", note: "Hospital (installation)" },
   { sidc: "SFGPUCVRW------", note: "Contested between editions" },
+  { sidc: "SFGPUCIC---EUS-", note: "Country code: needs lossy" },
+  { sidc: "SFGPUUL--------", note: "No mapping: needs fuzzy" },
   { sidc: "S*GPUCI---*****", note: "Template with wildcards" },
   { sidc: "SFAPMFF—*****", note: "Pasted from a web list" },
   { sidc: "10031000151211000002", note: "Numeric, back to 2525C" },
