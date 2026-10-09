@@ -238,7 +238,10 @@ const encodeTable = (table) => {
     bySet[set][1].push(i);
   }
   for (const [set, [codes, ids]] of Object.entries(bySet))
-    bySet[set] = [codes.join(","), ids.map((x, j) => (j ? x - ids[j - 1] : x)).join(",")];
+    bySet[set] = [
+      codes.join(","),
+      ids.map((x, j) => (j ? x - ids[j - 1] : x)).join(","),
+    ];
   return bySet;
 };
 const encodedCatalogs = Object.fromEntries(
@@ -251,7 +254,10 @@ write("legacy-mappings.json", {
   jmsml: encodeRows(jmsmlRows),
   milsym: encodeRows(milsymRows),
 });
-write("edition-catalogs.json", { names: encodedNames, catalogs: encodedCatalogs });
+write("edition-catalogs.json", {
+  names: encodedNames,
+  catalogs: encodedCatalogs,
+});
 write("field-codes.json", fields);
 write("provenance.json", provenance);
 console.log(
