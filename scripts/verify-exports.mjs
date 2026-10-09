@@ -1,5 +1,5 @@
 // Smoke-tests the built packages through their public entry points: the ESM package (imported, and
-// required, which Node.js 22.12+ supports for ES modules) and the CommonJS package in dist-cjs/.
+// required, which Node.js 22.12+ supports for ES modules) and the CommonJS build in dist-cjs/.
 import { createRequire } from "node:module";
 import assert from "node:assert/strict";
 
@@ -10,7 +10,7 @@ const cjs = require("../dist-cjs/index.cjs");
 for (const [name, mod] of [
   ["esm", esm],
   ["require(esm)", requiredEsm],
-  ["cjs package", cjs],
+  ["cjs build", cjs],
 ]) {
   for (const fn of [
     "convertSidc",
@@ -45,5 +45,6 @@ for (const react of [
 }
 const cjsPkg = require("../dist-cjs/package.json");
 const mainPkg = require("../package.json");
-assert.equal(cjsPkg.version, mainPkg.version, "cjs package version");
-console.log("exports OK (esm, require(esm), cjs package, react)");
+assert.equal(cjsPkg.name, mainPkg.name, "cjs build name");
+assert.equal(cjsPkg.version, `${mainPkg.version}-cjs`, "cjs build version");
+console.log("exports OK (esm, require(esm), cjs build, react)");

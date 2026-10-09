@@ -1,8 +1,8 @@
 import { defineConfig } from "tsup";
 
-// The package is ESM only (Node 22.12+ can also require() it). The CommonJS build goes to
-// dist-cjs/, which scripts/cjs-package.mjs turns into the separate package
-// mil-symbol-converter-cjs for Jest and other require()-only tooling.
+// The default release is ES modules only (Node 22.12+ can also require() it). The CommonJS build
+// goes to dist-cjs/, which scripts/cjs-package.mjs turns into the "<version>-cjs" release
+// (npm dist-tag "cjs") for Jest and other require()-only tooling.
 // Each build shares one copy of the mapping data between its entries; no source maps are shipped.
 const library = {
   index: "src/index.ts",

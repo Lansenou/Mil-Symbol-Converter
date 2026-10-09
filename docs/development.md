@@ -38,9 +38,9 @@ Releases are automatic: merging a change to `version` in `package.json` into `ma
 prebuilt tarball, and publishes to npm with provenance. Steps already done are skipped, so the
 workflow can be re-run safely (Actions → Release → _Run workflow_).
 
-Two packages are published from the same build at the same version: `mil-symbol-converter`
-(ES modules, `dist/`) and `mil-symbol-converter-cjs` (CommonJS for Jest and older tooling,
-`dist-cjs/`, written by `scripts/cjs-package.mjs`). Each needs its own trusted publisher.
+Each release publishes two builds of the one package: `<version>` (ES modules, `dist/`, dist-tag
+`latest`) and `<version>-cjs` (CommonJS for Jest and older tooling, `dist-cjs/`, written by
+`scripts/cjs-package.mjs`, dist-tag `cjs`).
 
 npm only lets a trusted publisher be added to a package that exists, so a package's first npm
 publish uses a token. Everything happens in the browser:
