@@ -48,10 +48,21 @@ function symbolSvg(sidc: string, standard: "2525" | "APP6"): string | null {
   }
 }
 
-function Symbol({ sidc, std }: { sidc: string | null; std: "2525" | "APP6" }) {
+function Symbol({
+  sidc,
+  std,
+  faded = false,
+}: {
+  sidc: string | null;
+  std: "2525" | "APP6";
+  faded?: boolean;
+}) {
   const svg = useMemo(() => (sidc ? symbolSvg(sidc, std) : null), [sidc, std]);
   return svg ? (
-    <div className="symbol" dangerouslySetInnerHTML={{ __html: svg }} />
+    <div
+      className={faded ? "symbol faded" : "symbol"}
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
   ) : (
     <div className="symbol empty" aria-hidden="true">
       —
@@ -90,14 +101,51 @@ function Copy({ text }: { text: string }) {
   );
 }
 
+/**
+ * What a strict conversion would give with loss allowed, so the card can still show the code and
+ * symbol and say what is missing. Never returned by the library unless the caller opts in.
+ */
+function previewOf(
+  input: string,
+  r: ConversionResult,
+  options: ConversionOptions,
+): { code: string; note: string; lost: string[] } | null {
+  if (r.output) return null;
+  const lossy = convertSidc(input, {
+    ...options,
+    targetStandard: r.targetStandard,
+    allowLossy: true,
+  });
+  if (lossy.output)
+    return {
+      code: lossy.output,
+      note: "Lossy: only returned with “Allow lossy”.",
+      lost: lossy.warnings,
+    };
+  const candidates = lossy.candidates ?? r.candidates ?? [];
+  const first = candidates[0];
+  if (first)
+    return {
+      code: first.output,
+      note:
+        candidates.length > 1
+          ? `Ambiguous: showing candidate 1 of ${candidates.length}.`
+          : "Not confirmed: shown as the only candidate.",
+      lost: [r.errors[0] ?? first.note],
+    };
+  return null;
+}
+
 function ResultCard({
   label,
   std,
   r,
+  preview,
 }: {
   label: string;
   std: "2525" | "APP6";
   r: ConversionResult;
+  preview?: ReturnType<typeof previewOf>;
 }) {
   const name =
     [r.metadata?.entity, ...(r.metadata?.modifiers ?? [])]
@@ -113,12 +161,28 @@ function ResultCard({
         </span>
       </header>
       <div className="row">
-        <Symbol sidc={r.output} std={std} />
+        <Symbol
+          sidc={r.output ?? preview?.code ?? null}
+          std={std}
+          faded={!r.output}
+        />
         <div className="code">
           {r.output ? (
             <>
               <code>{r.output}</code>
               <Copy text={r.output} />
+            </>
+          ) : preview ? (
+            <>
+              <code className="preview">{preview.code}</code>
+              <p className="reason">{preview.note}</p>
+              {preview.lost.length > 0 && (
+                <ul className="lost">
+                  {preview.lost.map((w, i) => (
+                    <li key={i}>{w}</li>
+                  ))}
+                </ul>
+              )}
             </>
           ) : (
             <>
@@ -172,13 +236,17 @@ function App() {
   const numeric = /^\d{20}(\d{10})?$/.test(trimmed);
 
   const validation = numeric ? null : validateSidc(input);
-  const results = numeric
-    ? []
-    : TARGETS.map((t) => ({
-        ...t,
-        r: convertSidc(input, { ...options, targetStandard: t.id }),
-      }));
   const reverse = numeric ? convertNumericTo2525C(trimmed) : null;
+  // A numeric code reaches the other editions through its 2525C equivalent.
+  const letter = reverse
+    ? (reverse.output ?? reverse.candidates?.[0]?.output ?? null)
+    : input;
+  const results = letter
+    ? TARGETS.map((t) => {
+        const r = convertSidc(letter, { ...options, targetStandard: t.id });
+        return { ...t, r, preview: previewOf(letter, r, options) };
+      })
+    : [];
   const shown = validation?.normalized ?? input;
 
   return (
@@ -219,77 +287,80 @@ function App() {
             </button>
           ))}
         </div>
-        {!numeric && (
-          <div className="options">
-            <label>
-              <span>
-                Affiliation for <code>*</code>
-              </span>
-              <select
-                value={affiliation}
-                onChange={(e) => setAffiliation(e.target.value)}
-              >
-                <option value="">from SIDC</option>
-                {NAMES(AffiliationLetter).map((a) => (
-                  <option key={a.code} value={a.code}>
-                    {a.code} {a.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>
-                Status for <code>*</code>
-              </span>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                <option value="">from SIDC</option>
-                {NAMES(StatusLetter).map((a) => (
-                  <option key={a.code} value={a.code}>
-                    {a.code} {a.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>
-                Modifier for <code>**</code>
-              </span>
-              <input
-                value={modifier}
-                maxLength={2}
-                placeholder="--"
-                onChange={(e) => setModifier(e.target.value)}
-              />
-            </label>
-            <label className="check">
-              <input
-                type="checkbox"
-                checked={allowLossy}
-                onChange={(e) => setAllowLossy(e.target.checked)}
-              />
-              Allow lossy
-            </label>
-            <label className="check">
-              <input
-                type="checkbox"
-                checked={fuzzy}
-                onChange={(e) => setFuzzy(e.target.checked)}
-              />
-              Fuzzy (with certainty)
-            </label>
-            <label className="check">
-              <input
-                type="checkbox"
-                checked={extendedSidc}
-                onChange={(e) => setExtendedSidc(e.target.checked)}
-              />
-              30-digit 2525E/APP-6E
-            </label>
-          </div>
-        )}
+        <div className="options">
+          {!numeric && (
+            <>
+              {" "}
+              <label>
+                <span>
+                  Affiliation for <code>*</code>
+                </span>
+                <select
+                  value={affiliation}
+                  onChange={(e) => setAffiliation(e.target.value)}
+                >
+                  <option value="">from SIDC</option>
+                  {NAMES(AffiliationLetter).map((a) => (
+                    <option key={a.code} value={a.code}>
+                      {a.code} {a.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>
+                  Status for <code>*</code>
+                </span>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                >
+                  <option value="">from SIDC</option>
+                  {NAMES(StatusLetter).map((a) => (
+                    <option key={a.code} value={a.code}>
+                      {a.code} {a.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>
+                  Modifier for <code>**</code>
+                </span>
+                <input
+                  value={modifier}
+                  maxLength={2}
+                  placeholder="--"
+                  onChange={(e) => setModifier(e.target.value)}
+                />
+              </label>
+            </>
+          )}{" "}
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={allowLossy}
+              onChange={(e) => setAllowLossy(e.target.checked)}
+            />
+            Allow lossy
+          </label>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={fuzzy}
+              onChange={(e) => setFuzzy(e.target.checked)}
+            />
+            Fuzzy (with certainty)
+          </label>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={extendedSidc}
+              onChange={(e) => setExtendedSidc(e.target.checked)}
+            />
+            30-digit 2525E/APP-6E
+          </label>
+        </div>
       </section>
 
       {validation && (
@@ -315,10 +386,15 @@ function App() {
           <div>
             <h2>Numeric SIDC</h2>
             <p className="muted">
-              <code>{trimmed}</code> · converted back to the 2525C letter code
-              below; a result is only given if converting it forward reproduces
-              this code.
+              <code>{trimmed}</code> · converted back to 2525C (a result is only
+              given if converting it forward reproduces this code), then from
+              2525C to every other edition.
             </p>
+            {reverse && !letter && (
+              <p className="reason">
+                No 2525C equivalent, so there is no path to the other editions.
+              </p>
+            )}
           </div>
         </section>
       )}
@@ -331,8 +407,14 @@ function App() {
 
       {results.length > 0 && (
         <section className="grid">
-          {results.map(({ id, label, std, r }) => (
-            <ResultCard key={id} label={label} std={std} r={r} />
+          {results.map(({ id, label, std, r, preview }) => (
+            <ResultCard
+              key={id}
+              label={label}
+              std={std}
+              r={r}
+              preview={preview}
+            />
           ))}
         </section>
       )}
