@@ -329,7 +329,11 @@ export function readMsdl(xml: string, options: MsdlOptions = {}): MsdlScenario {
       const aff = fixedAffiliation ?? affiliationOf(side);
       sidc = set(sidc, 2, aff ?? "*");
       if (aff)
-        notes.push(`affiliation ${aff} from the force side relationships`);
+        notes.push(
+          fixedAffiliation
+            ? `affiliation ${aff} from its Affiliation element`
+            : `affiliation ${aff} from the force side relationships`,
+        );
       else
         notes.push(
           viewpoint

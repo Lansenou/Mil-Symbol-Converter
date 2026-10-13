@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Small hand-written MSDL scenario for tests (not taken from the standard). -->
+<!-- Small hand-written MSDL scenario, used as the demo template and in tests (not taken from the standard). -->
 <MilitaryScenario xmlns="urn:sisostds:scenario:military:data:draft:msdl:1">
   <ForceSides>
     <ForceSide>
@@ -77,6 +77,29 @@
           <ForceRelation>
             <ForceRelationChoice>FORCE_SIDE</ForceRelationChoice>
             <ForceRelationData><ForceSideHandle>side-green</ForceSideHandle></ForceRelationData>
+          </ForceRelation>
+        </Relations>
+      </Unit>
+      <Unit>
+        <ObjectHandle>u-air</ObjectHandle>
+        <SymbolIdentifier>S-A-MFF--------</SymbolIdentifier>
+        <Name>Blue Fighter Squadron</Name>
+        <UnitSymbolModifiers><Echelon>SQUADRON</Echelon></UnitSymbolModifiers>
+        <Relations>
+          <ForceRelation>
+            <ForceRelationChoice>FORCE_SIDE</ForceRelationChoice>
+            <ForceRelationData><ForceSideHandle>side-blue</ForceSideHandle></ForceRelationData>
+          </ForceRelation>
+        </Relations>
+      </Unit>
+      <Unit>
+        <ObjectHandle>u-ship</ObjectHandle>
+        <SymbolIdentifier>S-S-CLFF-------</SymbolIdentifier>
+        <Name>Red Frigate</Name>
+        <Relations>
+          <ForceRelation>
+            <ForceRelationChoice>FORCE_SIDE</ForceRelationChoice>
+            <ForceRelationData><ForceSideHandle>side-red</ForceSideHandle></ForceRelationData>
           </ForceRelation>
         </Relations>
       </Unit>

@@ -1,12 +1,14 @@
 import { StrictMode, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import ms from "milsymbol";
+import sampleMsdl from "../tests/fixtures/sample.msdl.xml?raw";
 import {
   AffiliationLetter,
   StatusLetter,
   convertNumericTo2525C,
   convertSidc,
   isSymbolModifier,
+  readMsdl,
   toRenderableSidc,
   validateSidc,
   type ConversionOptions,
@@ -201,6 +203,131 @@ function ResultCard({
 
 /** How much a Strict result may differ from the input; fuzzy implies lossy. */
 type Accept = "exact" | "lossy" | "fuzzy";
+
+/**
+ * An MSDL scenario as a table of symbols. The file is read in the browser only. Drawings use the
+ * toRenderableSidc result, so text from the file never reaches the SVG markup.
+ */
+function MsdlPanel({ onPick }: { onPick: (sidc: string) => void }) {
+  // Starts with a template scenario (Blue, Red and Green sides) to edit or replace.
+  const [xml, setXml] = useState(sampleMsdl);
+  const [viewpoint, setViewpoint] = useState("side-blue");
+  const parsed = useMemo(() => {
+    if (!xml.trim()) return null;
+    try {
+      return { scenario: readMsdl(xml, viewpoint ? { viewpoint } : {}) };
+    } catch (e) {
+      return { error: (e as Error).message };
+    }
+  }, [xml, viewpoint]);
+  const scenario = parsed && "scenario" in parsed ? parsed.scenario : null;
+  return (
+    <details className="panel msdl">
+      <summary>
+        <h2>MSDL scenario</h2>
+        <span className="muted">
+          The units, equipment and installations of an MSDL file. Starts with a
+          template scenario: edit it, paste your own or open a file (read in
+          your browser, not uploaded). Click a row to convert it.
+        </span>
+      </summary>
+      <div className="msdl-controls">
+        <button
+          type="button"
+          className="chip"
+          onClick={() => {
+            setXml(sampleMsdl);
+            setViewpoint("side-blue");
+          }}
+        >
+          Reset to template
+        </button>
+        <label className="chip file">
+          Open file
+          <input
+            type="file"
+            accept=".xml,.msdl,text/xml"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f)
+                void f.text().then((t) => {
+                  setXml(t);
+                  setViewpoint("");
+                });
+            }}
+          />
+        </label>
+        {scenario && (
+          <label>
+            <span>Point of view </span>
+            <select
+              value={viewpoint}
+              onChange={(e) => setViewpoint(e.target.value)}
+            >
+              <option value="">none (affiliation stays *)</option>
+              {scenario.forceSides.map((f) => (
+                <option key={f.handle} value={f.handle}>
+                  {f.name || f.handle}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
+      <textarea
+        value={xml}
+        onChange={(e) => setXml(e.target.value)}
+        placeholder="…or paste MSDL XML here"
+        spellCheck={false}
+        rows={4}
+      />
+      {parsed && "error" in parsed && <p className="reason">{parsed.error}</p>}
+      {scenario && (
+        <table className="msdl-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Name</th>
+              <th>In the file</th>
+              <th>Completed</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {scenario.symbols.map((s) => {
+              const drawn = toRenderableSidc(s.sidc);
+              return (
+                <tr
+                  key={`${s.kind}-${s.handle}-${s.name}`}
+                  onClick={() => onPick(s.sidc)}
+                  title="Open in the converter"
+                >
+                  <td>
+                    <Symbol sidc={drawn.sidc} std="2525" />
+                  </td>
+                  <td>
+                    {s.name || s.handle}
+                    <div className="muted">{s.kind}</div>
+                  </td>
+                  <td>
+                    <code>{s.symbolIdentifier}</code>
+                  </td>
+                  <td>
+                    <code>{s.sidc}</code>
+                  </td>
+                  <td className="muted">{s.notes.join("; ")}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+      {scenario && scenario.symbols.length === 0 && (
+        <p className="muted">No units, equipment or installations found.</p>
+      )}
+    </details>
+  );
+}
 
 function readHash(): string {
   const v = new URLSearchParams(location.hash.slice(1)).get("sidc");
@@ -456,6 +583,13 @@ function App() {
           ))}
         </section>
       )}
+
+      <MsdlPanel
+        onPick={(sidc) => {
+          setInput(sidc);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+      />
 
       <footer>
         Mappings from Esri JMSML and US Army mil-sym-ts; symbols drawn by
