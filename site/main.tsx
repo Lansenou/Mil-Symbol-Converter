@@ -221,14 +221,43 @@ function MsdlPanel({ onPick }: { onPick: (sidc: string) => void }) {
     }
   }, [xml, viewpoint]);
   const scenario = parsed && "scenario" in parsed ? parsed.scenario : null;
+  const [dragging, setDragging] = useState(false);
+  const [pasteNote, setPasteNote] = useState("");
+  // A new scenario replaces the current one; its sides differ, so the point of view resets.
+  const load = (text: string) => {
+    setXml(text);
+    setViewpoint("");
+    setPasteNote("");
+  };
+  const loadFile = (f: File | undefined) => {
+    if (f) void f.text().then(load);
+  };
   return (
-    <details className="panel msdl">
+    <details
+      className={dragging ? "panel msdl dragging" : "panel msdl"}
+      onDragOver={(e) => {
+        if (!e.dataTransfer.types.includes("Files")) return;
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null))
+          setDragging(false);
+      }}
+      onDrop={(e) => {
+        if (!e.dataTransfer.files.length) return;
+        e.preventDefault();
+        e.currentTarget.open = true;
+        setDragging(false);
+        loadFile(e.dataTransfer.files[0]);
+      }}
+    >
       <summary>
         <h2>MSDL scenario</h2>
         <span className="muted">
           The units, equipment and installations of an MSDL file. Starts with a
-          template scenario: edit it, paste your own or open a file (read in
-          your browser, not uploaded). Click a row to convert it.
+          template scenario: edit it, paste your own, or open or drop a file
+          (read in your browser, not uploaded). Click a row to convert it.
         </span>
       </summary>
       <div className="msdl-controls">
@@ -242,18 +271,34 @@ function MsdlPanel({ onPick }: { onPick: (sidc: string) => void }) {
         >
           Reset to template
         </button>
+        <button
+          type="button"
+          className="chip"
+          onClick={() => {
+            // Clipboard reads can be refused (permissions, older browsers): then the
+            // empty box takes a normal paste.
+            navigator.clipboard
+              ?.readText()
+              .then((t) => {
+                if (t.trim()) load(t);
+                else throw new Error("empty");
+              })
+              .catch(() => {
+                load("");
+                setPasteNote("Paste your MSDL XML into the box (Ctrl+V / ⌘V).");
+              });
+          }}
+        >
+          Paste
+        </button>
         <label className="chip file">
           Open file
           <input
             type="file"
             accept=".xml,.msdl,text/xml"
             onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f)
-                void f.text().then((t) => {
-                  setXml(t);
-                  setViewpoint("");
-                });
+              loadFile(e.target.files?.[0]);
+              e.target.value = "";
             }}
           />
         </label>
@@ -277,10 +322,20 @@ function MsdlPanel({ onPick }: { onPick: (sidc: string) => void }) {
       <textarea
         value={xml}
         onChange={(e) => setXml(e.target.value)}
-        placeholder="…or paste MSDL XML here"
+        onPaste={(e) => {
+          // A whole scenario pasted anywhere in the box replaces it, rather than
+          // landing in the middle of the template.
+          const t = e.clipboardData.getData("text");
+          if (/<MilitaryScenario[\s>]/.test(t)) {
+            e.preventDefault();
+            load(t);
+          }
+        }}
+        placeholder="Paste MSDL XML here, or drop a file"
         spellCheck={false}
         rows={4}
       />
+      {pasteNote && <p className="muted">{pasteNote}</p>}
       {parsed && "error" in parsed && <p className="reason">{parsed.error}</p>}
       {scenario && (
         <table className="msdl-table">
