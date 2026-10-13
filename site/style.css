@@ -329,6 +329,10 @@ footer code {
 .msdl summary h2 {
   display: inline;
 }
+.msdl.dragging {
+  outline: 2px dashed var(--accent);
+  outline-offset: -6px;
+}
 .msdl-controls {
   display: flex;
   flex-wrap: wrap;
