@@ -142,10 +142,16 @@ describe("input validation", () => {
     expect(codes(r)).toContain("NONSTANDARD_ORDER_OF_BATTLE");
   });
 
-  it("warns (does not fail) for a well-formed code missing from the 2525C tables", () => {
+  it("rejects a well-formed code missing from the 2525C tables unless allowUnlisted", () => {
     const r = validateSidc("SFGPUCQQQQ-----");
-    expect(r.valid).toBe(true);
+    expect(r.valid).toBe(false);
     expect(codes(r)).toContain("NOT_IN_2525C_TABLES");
+    expect(r.errors[0]).toMatch(/allowUnlisted/);
+    const allowed = validateSidc("SFGPUCQQQQ-----", { allowUnlisted: true });
+    expect(allowed.valid).toBe(true);
+    expect(allowed.warnings.join()).toMatch(/No row of the MIL-STD-2525C/);
+    // Fuzzy matching falls back to a listed parent, so it accepts unlisted codes.
+    expect(validateSidc("SFGPUCQQQQ-----", { fuzzy: true }).valid).toBe(true);
   });
 
   describe("wildcard templates", () => {

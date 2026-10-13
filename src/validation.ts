@@ -256,6 +256,21 @@ export function findCatalogEntry(sidc: string): CatalogEntry | undefined {
  * Validates a MIL-STD-2525C SIDC: characters, length, per-scheme field values, wildcard
  * placement and field combinations that the 2525C tables rule out.
  */
+/**
+ * "-" is not a status, but some sources write it where the 2525C tables have "*" (any status):
+ * read it as "*" when a dimension is given. (The scheme headings "S---------*****" keep their "-",
+ * and METOC codes use position 4 differently.)
+ */
+function dashStatusAsWildcard(sidc: string, d: DiagnosticList): string {
+  if (sidc[0] === "W" || sidc[3] !== "-" || sidc[2] === "-") return sidc;
+  d.warn(
+    "STATUS_DASH_AS_WILDCARD",
+    `Position 4 (status) "-" was read as "*" (any status), as the 2525C tables write it; supply status to fix it.`,
+    [4],
+  );
+  return `${sidc.slice(0, 3)}*${sidc.slice(4)}`;
+}
+
 export function validateSidc(
   input: unknown,
   options: ConversionOptions = {},
@@ -274,7 +289,10 @@ export function validateSidc(
     diagnostics: [],
   };
   if (normalized === null) return finish(base, d);
-  if (!options.strictInput) normalized = fillFixedPositions(normalized, d);
+  if (!options.strictInput) {
+    normalized = dashStatusAsWildcard(normalized, d);
+    normalized = fillFixedPositions(normalized, d);
+  }
 
   const fields = parseLegacyFields(normalized);
   const scheme = fields.codingScheme as CodingScheme;
@@ -400,9 +418,13 @@ export function validateSidc(
       functionIdsFor(scheme, fields.battleDimension),
       5,
     );
-    d.warn(
+    // An error unless asked for: the code names no 2525C symbol. Fuzzy matching handles it by
+    // falling back to the nearest listed parent, so it implies allowUnlisted.
+    const allow = options.allowUnlisted ?? options.fuzzy === true;
+    d.add(
+      allow ? "warning" : "error",
       "NOT_IN_2525C_TABLES",
-      `No row of the MIL-STD-2525C SIDC tables has function ID "${fields.functionId}" for coding scheme ${scheme}, dimension/category "${fields.battleDimension}"${badFn.length > 0 ? `; the closest listed function IDs differ at ${listPositions(badFn)}` : " together with the other fields given"}.`,
+      `No row of the MIL-STD-2525C SIDC tables has function ID "${fields.functionId}" for coding scheme ${scheme}, dimension/category "${fields.battleDimension}"${badFn.length > 0 ? `; the closest listed function IDs differ at ${listPositions(badFn)}` : " together with the other fields given"}.${allow ? "" : " Pass allowUnlisted: true to accept it."}`,
       badFn,
     );
   }

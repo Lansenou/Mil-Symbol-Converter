@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Small hand-written MSDL scenario for tests (not taken from the standard). -->
+<MilitaryScenario xmlns="urn:sisostds:scenario:military:data:draft:msdl:1">
+  <ForceSides>
+    <ForceSide>
+      <ObjectHandle>side-blue</ObjectHandle>
+      <ForceSideName>Blue</ForceSideName>
+      <Associations>
+        <Association><AffiliateHandle>side-red</AffiliateHandle><Relationship>HO</Relationship></Association>
+        <Association><AffiliateHandle>side-green</AffiliateHandle><Relationship>NEUTRL</Relationship></Association>
+      </Associations>
+    </ForceSide>
+    <ForceSide>
+      <ObjectHandle>force-blue-1</ObjectHandle>
+      <ForceSideName>1st Blue Force</ForceSideName>
+      <AllegianceHandle>side-blue</AllegianceHandle>
+    </ForceSide>
+    <ForceSide>
+      <ObjectHandle>side-red</ObjectHandle>
+      <ForceSideName>Red &amp; Allies</ForceSideName>
+      <Associations>
+        <Association><AffiliateHandle>side-blue</AffiliateHandle><Relationship>HO</Relationship></Association>
+      </Associations>
+    </ForceSide>
+    <ForceSide>
+      <ObjectHandle>side-green</ObjectHandle>
+      <ForceSideName>Green</ForceSideName>
+    </ForceSide>
+  </ForceSides>
+  <Organizations>
+    <Units>
+      <Unit>
+        <ObjectHandle>u-bn</ObjectHandle>
+        <SymbolIdentifier>S-G-UCI--------</SymbolIdentifier>
+        <Name>1-1 Infantry</Name>
+        <UnitSymbolModifiers><Echelon>BATTALION</Echelon></UnitSymbolModifiers>
+        <Relations>
+          <ForceRelation>
+            <ForceRelationChoice>FORCE_SIDE</ForceRelationChoice>
+            <ForceRelationData><ForceSideHandle>force-blue-1</ForceSideHandle></ForceRelationData>
+          </ForceRelation>
+        </Relations>
+      </Unit>
+      <Unit>
+        <ObjectHandle>u-coy</ObjectHandle>
+        <SymbolIdentifier>S-G-UCR--------</SymbolIdentifier>
+        <Name>A Company</Name>
+        <UnitSymbolModifiers><Echelon>COMPANY</Echelon></UnitSymbolModifiers>
+        <Relations>
+          <ForceRelation>
+            <ForceRelationChoice>UNIT</ForceRelationChoice>
+            <ForceRelationData>
+              <CommandRelation>
+                <CommandingSuperiorHandle>u-bn</CommandingSuperiorHandle>
+                <CommandRelationshipType>ORGANIC</CommandRelationshipType>
+              </CommandRelation>
+            </ForceRelationData>
+          </ForceRelation>
+        </Relations>
+      </Unit>
+      <Unit>
+        <ObjectHandle>u-red</ObjectHandle>
+        <SymbolIdentifier>S-G-UCA--------</SymbolIdentifier>
+        <Name>Red Armor</Name>
+        <Relations>
+          <ForceRelation>
+            <ForceRelationChoice>FORCE_SIDE</ForceRelationChoice>
+            <ForceRelationData><ForceSideHandle>side-red</ForceSideHandle></ForceRelationData>
+          </ForceRelation>
+        </Relations>
+      </Unit>
+      <Unit>
+        <ObjectHandle>u-green</ObjectHandle>
+        <SymbolIdentifier>S-G-UUM--------</SymbolIdentifier>
+        <Name>Green Police</Name>
+        <Relations>
+          <ForceRelation>
+            <ForceRelationChoice>FORCE_SIDE</ForceRelationChoice>
+            <ForceRelationData><ForceSideHandle>side-green</ForceSideHandle></ForceRelationData>
+          </ForceRelation>
+        </Relations>
+      </Unit>
+    </Units>
+    <Equipment>
+      <EquipmentItem>
+        <ObjectHandle>e-tank</ObjectHandle>
+        <SymbolIdentifier>S-G-EVAT-------</SymbolIdentifier>
+        <Name>Tank 1</Name>
+        <Relations>
+          <OrganicSuperiorHandle>u-red</OrganicSuperiorHandle>
+          <HoldingOrganization>
+            <OwnerChoice>UNIT</OwnerChoice>
+            <OwnerData><UnitOwnerHandle>u-red</UnitOwnerHandle></OwnerData>
+          </HoldingOrganization>
+        </Relations>
+      </EquipmentItem>
+    </Equipment>
+  </Organizations>
+  <Installations>
+    <Installation>
+      <ObjectHandle>i-hospital</ObjectHandle>
+      <SymbolIdentifier>S-G-IXH---H----</SymbolIdentifier>
+      <Affiliation>NEUTRAL</Affiliation>
+      <Name>Field Hospital</Name>
+    </Installation>
+  </Installations>
+</MilitaryScenario>

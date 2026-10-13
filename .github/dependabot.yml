@@ -1,0 +1,18 @@
+# Keeps the pinned GitHub Actions and the npm (dev) dependencies current. Pull requests run CI;
+# merge them like any other change.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      dev-dependencies:
+        dependency-type: development

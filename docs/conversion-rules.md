@@ -23,8 +23,12 @@ Every rule below is implemented in `src/` and covered by tests in `tests/`.
 5. Combinations ruled out by the tables are errors: an installation row requires `H` in position
    11; `H` is invalid for non-installations; SIGINT positions 11-12 must be `--`; tactical graphics
    only take echelons; emergency-management symbols take no echelons.
-6. A well-formed code missing from the 2525C SIDC tables is a warning (`NOT_IN_2525C_TABLES`), not an
-   error; it will normally fail later for lack of a mapping.
+6. A well-formed code missing from the 2525C SIDC tables is an error (`NOT_IN_2525C_TABLES`) that
+   names the wrong characters; `allowUnlisted: true` (implied by `fuzzy: true`) makes it a warning.
+   `toRenderableSidc` draws such a code as its nearest listed parent.
+7. A `-` in position 4 (status) is read as `*` with a warning (`STATUS_DASH_AS_WILDCARD`), since some
+   sources write it where the 2525C tables have `*`; not in strict input, scheme headings
+   (`S---------*****`) or METOC codes.
 
 ## 2. Wildcards (`src/wildcard.ts`, `src/converters/prepare.ts`)
 
@@ -89,6 +93,11 @@ or the fixed `X` of tactical graphics); `lossy` when they hold a country code, a
 5. `allowLossy` defaults to `false`: a lossy result has `success: false`, `output: null`, and the
    rejected code in `candidates`.
 6. The output is assembled as a string and must match `/^\d{20}$/`.
+7. The SIGINT "track" headings (`I*P*------`, space, air, ground, sea surface, subsurface) have no
+   mapping in either source. They become the bare frame of SIGINT symbol set 50-54 with entity
+   `000000`, by analogy with the warfighting track headings (`SHGP-----------` →
+   `10061000000000000000`): `lossy` with a `FRAME_ONLY` warning, and only for editions whose catalog
+   has that symbol set (not APP-6D/E; 2525E only has set 50).
 
 ### Targets
 

@@ -24,6 +24,14 @@ export {
 } from "./converters/numeric";
 export { validateSidc, parseLegacyFields, normalizeInput } from "./validation";
 export {
+  readMsdl,
+  MSDL_HOSTILITY_TO_AFFILIATION,
+  type MsdlForceSide,
+  type MsdlOptions,
+  type MsdlScenario,
+  type MsdlSymbol,
+} from "./msdl";
+export {
   toRenderableSidc,
   type RenderOptions,
   type RenderableSidc,

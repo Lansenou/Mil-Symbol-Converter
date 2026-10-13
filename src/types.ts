@@ -104,6 +104,11 @@ export interface ConversionOptions {
   minCertainty?: number;
   /** Reject lowercase letters and surrounding whitespace instead of normalizing them. */
   strictInput?: boolean;
+  /**
+   * Accept a well-formed code whose function ID is not in the MIL-STD-2525C SIDC tables (a
+   * warning instead of an error). Defaults to `false`, or to `true` with `fuzzy`.
+   */
+  allowUnlisted?: boolean;
 }
 
 export interface Diagnostic {

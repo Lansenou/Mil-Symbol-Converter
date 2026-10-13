@@ -5,6 +5,11 @@
 #      latest) and the CommonJS build in dist-cjs/ as <version>-cjs (dist-tag cjs, for Jest).
 #      NPM_TOKEN is only needed if the package itself is ever new on npm.
 # Each step is skipped when already done, so re-runs and unrelated package.json edits are no-ops.
+#
+# Supply chain: only the "build" job installs dependencies and runs project code, and it has no
+# write permissions. The jobs that can publish ("github-release", "publish") never run npm ci or
+# any package script: they only upload the tarballs "build" produced. Actions are pinned to
+# commit hashes (Dependabot keeps them current).
 # See docs/development.md, "Publishing".
 name: Release
 
@@ -14,26 +19,27 @@ on:
     paths: [package.json]
   workflow_dispatch:
 
-permissions:
-  contents: write # create the release and its tag
-  id-token: write # lets npm verify this workflow via OIDC
+permissions: {}
 
 concurrency: release
 
 jobs:
-  release:
+  state:
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ github.token }}
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.state.outputs.tag }}
+      github: ${{ steps.state.outputs.github }}
+      npm: ${{ steps.state.outputs.npm }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
-      - run: npm install -g npm@^11.5.1 # trusted publishing needs npm >= 11.5.1
+          persist-credentials: false
       - name: What is already released
         id: state
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           name=$(node -p 'require("./package.json").name')
           version=$(node -p 'require("./package.json").version')
@@ -45,34 +51,87 @@ jobs:
             echo "npm=done" >> "$GITHUB_OUTPUT"
           fi
           true
-      - if: steps.state.outputs.github != 'done' || steps.state.outputs.npm != 'done'
-        run: npm ci && npm run check
-      - name: GitHub release with tarballs
-        if: steps.state.outputs.github != 'done'
-        env:
-          TAG: ${{ steps.state.outputs.tag }}
+
+  build:
+    needs: state
+    if: needs.state.outputs.github != 'done' || needs.state.outputs.npm != 'done'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run check
+      - name: Pack both builds
         run: |
-          npm pack
-          npm pack ./dist-cjs
-          gh release create "$TAG" --target "$GITHUB_SHA" --generate-notes mil-symbol-converter-*.tgz
+          mkdir tarballs
+          npm pack --pack-destination tarballs
+          npm pack ./dist-cjs --pack-destination tarballs
+          ls -l tarballs
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: tarballs
+          path: tarballs/*.tgz
+          if-no-files-found: error
+
+  github-release:
+    needs: [state, build]
+    if: needs.state.outputs.github != 'done'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release and its tag
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: tarballs
+          path: tarballs
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.state.outputs.tag }}
+        run: |
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --generate-notes tarballs/*.tgz
+
+  publish:
+    needs: [state, build]
+    if: needs.state.outputs.npm != 'done'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # lets npm verify this workflow via OIDC
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@^11.5.1 # trusted publishing needs npm >= 11.5.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: tarballs
+          path: tarballs
       - name: Publish to npm
-        if: steps.state.outputs.npm != 'done'
         env:
           # Empty when the secret is not set; npm then uses Trusted Publishing (OIDC).
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # The ES module build from the repository root (tag latest), the CommonJS build from
-          # dist-cjs/ (version <version>-cjs, tag cjs).
-          for build in ".:latest" "dist-cjs:cjs"; do
-            dir=${build%%:*} tag=${build##*:}
-            name=$(node -p "require('./$dir/package.json').name")
-            version=$(node -p "require('./$dir/package.json').version")
+          # Publishing a tarball runs no package scripts.
+          for tgz in tarballs/*.tgz; do
+            meta=$(tar -xOzf "$tgz" package/package.json)
+            name=$(node -p "JSON.parse(process.argv[1]).name" "$meta")
+            version=$(node -p "JSON.parse(process.argv[1]).version" "$meta")
+            case "$version" in *-cjs) tag=cjs ;; *) tag=latest ;; esac
             if [ -n "$(npm view "$name@$version" version 2>/dev/null)" ]; then
               echo "$name@$version is already on npm."
             elif [ -z "$(npm view "$name" name 2>/dev/null)" ] && [ -z "$NODE_AUTH_TOKEN" ]; then
               # A trusted publisher can only be added to a package that exists: the first publish needs a token.
               echo "::warning::$name is not on npm yet and there is no NPM_TOKEN secret: skipped (see docs/development.md, Publishing)."
             else
-              npm publish "./$dir" --access public --tag "$tag"
+              npm publish "$tgz" --access public --tag "$tag"
             fi
           done

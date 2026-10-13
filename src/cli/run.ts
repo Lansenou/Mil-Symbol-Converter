@@ -80,8 +80,10 @@ class UsageError extends Error {}
 function targetsOf(value: string | undefined): SidcStandard[] {
   if (!value) return ["MIL-STD-2525D"];
   if (value.toLowerCase() === "all") return ALL;
+  const key = value.toLowerCase();
+  // Own keys only: "constructor" or "__proto__" must not resolve to Object.prototype members.
   const t =
-    TARGET_ALIASES[value.toLowerCase()] ??
+    (Object.hasOwn(TARGET_ALIASES, key) ? TARGET_ALIASES[key] : undefined) ??
     [...ALL, "MIL-STD-2525C"].find(
       (s) => s.toLowerCase() === value.toLowerCase(),
     );

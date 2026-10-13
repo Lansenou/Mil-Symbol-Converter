@@ -550,6 +550,97 @@ function fuzzyFallback(
   return undefined;
 }
 
+/**
+ * SIGINT symbol set per 2525C dimension for the five SIGINT "track" headings (I*P*------ space
+ * track, ...). No source maps them; the warfighting track headings map to their symbol set with
+ * entity 000000 (a bare frame, e.g. SHGP----------- -> 10061000000000000000), and the SIGINT
+ * headings follow the same pattern by analogy.
+ */
+const SIGINT_TRACK_SETS: Record<string, string> = {
+  P: "50",
+  A: "51",
+  G: "52",
+  S: "53",
+  U: "54",
+};
+
+function sigintTrackSet(
+  sidc: string,
+  target: NumericTarget,
+): string | undefined {
+  if (sidc[0] !== "I" || sidc.slice(4, 10) !== "------") return undefined;
+  const set = SIGINT_TRACK_SETS[sidc[2] ?? ""];
+  // Only where the target edition has that SIGINT symbol set at all.
+  return set && entitiesOf(target.edition, set).length > 0 ? set : undefined;
+}
+
+/** The bare frame of a SIGINT symbol set for a SIGINT track heading (lossy: inferred, not mapped). */
+function sigintTrackFrame(
+  input: unknown,
+  sidc: string,
+  symbolSet: string,
+  fieldDigits: NonNullable<ReturnType<typeof mapFields>>,
+  target: NumericTarget,
+  options: ConversionOptions,
+  metadata: NonNullable<ConversionResult["metadata"]>,
+  d: DiagnosticList,
+): ConversionResult {
+  const output =
+    target.version +
+    fieldDigits.standardIdentity +
+    symbolSet +
+    fieldDigits.status +
+    fieldDigits.hqtfd +
+    fieldDigits.amplifier +
+    "000000" +
+    "0000";
+  const setName = SYMBOL_SET_NAMES[symbolSet] ?? symbolSet;
+  d.warn(
+    "FRAME_ONLY",
+    `No source maps the SIGINT heading ${metadata.legacyDescription ?? sidc}; drawn as the bare "${setName}" frame (symbol set ${symbolSet}, entity 000000), by analogy with the warfighting track headings (SHGP----------- is 10061000000000000000). Inferred, not documented.`,
+    [5, 6, 7, 8, 9, 10],
+  );
+  metadata.symbolSet = symbolSet;
+  metadata.symbolSetName = setName;
+  metadata.entityCode = "000000";
+  metadata.entity = "Unspecified";
+  metadata.modifiers = [];
+  const lossyBlocked = !options.allowLossy;
+  if (lossyBlocked)
+    d.error(
+      "LOSSY_NOT_ALLOWED",
+      "The conversion loses information (see warnings); pass allowLossy: true to accept it.",
+    );
+  return finalize(
+    {
+      input: inputAsString(input),
+      normalizedInput: sidc,
+      output: lossyBlocked ? null : output,
+      sourceStandard: "MIL-STD-2525C",
+      targetStandard: target.standard,
+      matchQuality: "lossy",
+      success: !lossyBlocked,
+      warnings: [],
+      errors: [],
+      diagnostics: [],
+      ...(lossyBlocked
+        ? {
+            candidates: [
+              {
+                output,
+                matchQuality: "lossy" as const,
+                sources: [],
+                note: "Bare SIGINT frame; rejected because allowLossy is false.",
+              },
+            ],
+          }
+        : {}),
+      metadata,
+    },
+    d,
+  );
+}
+
 function convertStrict(
   input: unknown,
   target: NumericTarget,
@@ -617,6 +708,19 @@ function convertStrict(
 
   // --- Entity evidence
   const evidence = adapters.flatMap((a) => a.lookup(sidc));
+  const trackSet = sigintTrackSet(sidc, target);
+  if (evidence.length === 0 && trackSet && fieldDigits) {
+    return sigintTrackFrame(
+      input,
+      sidc,
+      trackSet,
+      fieldDigits,
+      target,
+      options,
+      metadata,
+      d,
+    );
+  }
   if (evidence.length === 0) {
     d.error(
       "NO_MAPPING",
