@@ -81,6 +81,8 @@ describe("cli", () => {
 
   it.each([
     [["--to", "nope", "X"], /Unknown target/],
+    [["--to", "constructor", "X"], /Unknown target/],
+    [["--to", "__proto__", "X"], /Unknown target/],
     [["--affiliation", "Q", "X"], /Invalid --affiliation/],
     [["--bogus"], /Unknown option/],
     [["--csv", "missing"], /No column/],

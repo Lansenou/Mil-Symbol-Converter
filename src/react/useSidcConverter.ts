@@ -28,6 +28,7 @@ export function useSidcConverter<const S extends string>(
     extendedSidc,
     fuzzy,
     minCertainty,
+    allowUnlisted,
   } = options;
   return useMemo(() => {
     const o: ConversionOptions = {};
@@ -46,6 +47,7 @@ export function useSidcConverter<const S extends string>(
     if (extendedSidc !== undefined) o.extendedSidc = extendedSidc;
     if (fuzzy !== undefined) o.fuzzy = fuzzy;
     if (minCertainty !== undefined) o.minCertainty = minCertainty;
+    if (allowUnlisted !== undefined) o.allowUnlisted = allowUnlisted;
     return convertSidc(input, o);
   }, [
     input,
@@ -64,5 +66,6 @@ export function useSidcConverter<const S extends string>(
     extendedSidc,
     fuzzy,
     minCertainty,
+    allowUnlisted,
   ]);
 }

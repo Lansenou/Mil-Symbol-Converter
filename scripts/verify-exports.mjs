@@ -23,6 +23,7 @@ for (const [name, mod] of [
     "validateSidc",
     "analyzeSidc",
     "toRenderableSidc",
+    "readMsdl",
   ])
     assert.equal(typeof mod[fn], "function", `${name}: ${fn}`);
   assert.equal(
@@ -42,6 +43,7 @@ for (const react of [
 ]) {
   assert.equal(typeof react.useSidcConverter, "function");
   assert.equal(typeof react.SidcConverter, "function");
+  assert.equal(typeof react.useRenderableSidc, "function");
 }
 const cjsPkg = require("../dist-cjs/package.json");
 const mainPkg = require("../package.json");

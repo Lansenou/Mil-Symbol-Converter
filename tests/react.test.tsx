@@ -7,7 +7,11 @@ import {
   renderHook,
   screen,
 } from "@testing-library/react";
-import { SidcConverter, useSidcConverter } from "../src/react";
+import {
+  SidcConverter,
+  useRenderableSidc,
+  useSidcConverter,
+} from "../src/react";
 
 describe("useSidcConverter", () => {
   it("converts and memoizes on unchanged inputs", () => {
@@ -30,6 +34,25 @@ describe("useSidcConverter", () => {
     const { result } = renderHook(() => useSidcConverter("nonsense" as string));
     expect(result.current.success).toBe(false);
     expect(result.current.diagnostics[0]?.code).toBeDefined();
+  });
+});
+
+describe("useRenderableSidc", () => {
+  it("fills wildcards from fallbacks and memoizes on unchanged values", () => {
+    const { result, rerender } = renderHook(
+      ({ s, aff }) => useRenderableSidc(s, { fallback: { affiliation: aff } }),
+      { initialProps: { s: "S*GPUCI---*****", aff: "Hostile" as const } },
+    );
+    const first = result.current;
+    expect(first.sidc).toBe("SHGPUCI--------");
+    // A new options object with the same values keeps the result.
+    rerender({ s: "S*GPUCI---*****", aff: "Hostile" });
+    expect(result.current).toBe(first);
+  });
+
+  it("returns null for input that is not a SIDC", () => {
+    const { result } = renderHook(() => useRenderableSidc(undefined));
+    expect(result.current.sidc).toBeNull();
   });
 });
 

@@ -216,16 +216,17 @@ analyzeSidc("S*GPUCI---*****").wildcards; // which option resolves each "*" and 
 
 ### Options
 
-| Option                                                                    | Default         | Meaning                                                                                                        |
-| ------------------------------------------------------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------- |
-| `targetStandard`                                                          | `MIL-STD-2525D` | for `convertSidc`                                                                                              |
-| `affiliation`, `status`, `symbolModifier`, `countryCode`, `orderOfBattle` | —               | values for `*` positions only                                                                                  |
-| `wildcardPolicy`                                                          | `resolve`       | `resolve` / `preserve` / `reject`                                                                              |
-| `allowLossy`                                                              | `false`         | accept lossy results                                                                                           |
-| `mil2525dVersion`                                                         | `"10"`          | `"11"` = 2525D Change 1                                                                                        |
-| `preferredSource`                                                         | —               | `"JMSML"` or `"mil-sym-ts"` when sources disagree                                                              |
-| `legacy12Profile`                                                         | `prefix-12`     | only profile defined                                                                                           |
-| `strictInput`                                                             | `false`         | reject lowercase, surrounding whitespace, typographic dashes and `*` in fixed positions instead of normalizing |
+| Option                                                                    | Default                       | Meaning                                                                                                        |
+| ------------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `targetStandard`                                                          | `MIL-STD-2525D`               | for `convertSidc`                                                                                              |
+| `affiliation`, `status`, `symbolModifier`, `countryCode`, `orderOfBattle` | —                             | values for `*` positions only                                                                                  |
+| `wildcardPolicy`                                                          | `resolve`                     | `resolve` / `preserve` / `reject`                                                                              |
+| `allowLossy`                                                              | `false`                       | accept lossy results                                                                                           |
+| `mil2525dVersion`                                                         | `"10"`                        | `"11"` = 2525D Change 1                                                                                        |
+| `preferredSource`                                                         | —                             | `"JMSML"` or `"mil-sym-ts"` when sources disagree                                                              |
+| `legacy12Profile`                                                         | `prefix-12`                   | only profile defined                                                                                           |
+| `allowUnlisted`                                                           | `false` (`true` with `fuzzy`) | accept a function ID that is not in the 2525C tables (warning instead of error)                                |
+| `strictInput`                                                             | `false`                       | reject lowercase, surrounding whitespace, typographic dashes and `*` in fixed positions instead of normalizing |
 
 ### Compile-time checks for SIDC literals
 
@@ -269,6 +270,28 @@ convertSidc("SFAPMFF—*****", {
 }).output; // "10030100001101040000"
 ```
 
+## MSDL scenarios
+
+MSDL (SISO-STD-007-2008) stores symbols as 2525B codes with `-` in the affiliation, status and
+country positions; affiliation follows from the relationships between force sides, so it depends on
+whose point of view you take. `readMsdl` puts the fields back:
+
+```ts
+import { readMsdl, toRenderableSidc } from "mil-symbol-converter";
+
+const { forceSides, symbols } = readMsdl(xml, { viewpoint: "Blue" }); // force side name or handle
+for (const s of symbols) {
+  s.kind; // "unit" | "equipment" | "installation"
+  s.sidc; // e.g. "SHGPUCA--------": hostile from Blue's point of view, present, echelon from <Echelon>
+  s.notes; // what was filled in, or why affiliation stayed "*"
+  toRenderableSidc(s.sidc).sidc; // ready to draw
+}
+```
+
+Units find their side through the command chain, equipment through its holding organization,
+installations use their own `Affiliation`. JC3IEDM hostility codes map to 2525C identities
+(`MSDL_HOSTILITY_TO_AFFILIATION`); involved and antagonist have no 2525C identity and stay `*`.
+
 ## Command line
 
 ```bash
@@ -298,6 +321,28 @@ function Badge({ sidc }: { sidc: string }) {
 }
 
 export const App = () => <SidcConverter initialSidc="SFGPUCIC---E---" />;
+```
+
+Drawing codes read from data: `useRenderableSidc` is the memoized `toRenderableSidc`.
+
+```tsx
+import ms from "milsymbol";
+import { useMemo } from "react";
+import { useRenderableSidc } from "mil-symbol-converter/react";
+
+function UnitIcon({ sidc }: { sidc: string }) {
+  const r = useRenderableSidc(sidc, { fallback: { affiliation: "Unknown" } });
+  const svg = useMemo(
+    () => (r.sidc ? new ms.Symbol(r.sidc).asSVG() : ""),
+    [r.sidc],
+  );
+  return (
+    <span
+      title={r.dropped.join("\n")}
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  );
+}
 ```
 
 `SidcConverter` is a dependency-free form with SIDC input, target selector, affiliation/status/modifier

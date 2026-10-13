@@ -70,7 +70,7 @@ There is also a command line: `npx mil-symbol-converter SFGPUCIC---E---`.
 ## Documentation
 
 - [Usage](docs/usage.md): drawing, conversion options, wildcards, lossy and fuzzy modes, numeric
-  back to 2525C, compile-time checks, command line, React
+  back to 2525C, MSDL scenarios, compile-time checks, command line, React
 - [Examples](docs/examples.md): codes side by side in every edition, with symbols
 - [Conversion rules](docs/conversion-rules.md) and [limitations and coverage](docs/limitations.md)
 - [Standards research](docs/standards-research.md): field layouts, APP-6D vs 2525D, existing converters
