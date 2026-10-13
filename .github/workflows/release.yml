@@ -132,6 +132,6 @@ jobs:
               # A trusted publisher can only be added to a package that exists: the first publish needs a token.
               echo "::warning::$name is not on npm yet and there is no NPM_TOKEN secret: skipped (see docs/development.md, Publishing)."
             else
-              npm publish "$tgz" --access public --tag "$tag"
+              npm publish "./$tgz" --access public --tag "$tag"
             fi
           done
