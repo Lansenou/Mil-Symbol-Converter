@@ -19,9 +19,8 @@
  * SISO Inc. (see NOTICE).
  */
 import dis from "./data/dis.json";
-import { convertNumericTo2525C } from "./converters/reverse";
-import { DiagnosticList } from "./diagnostics";
-import { toRenderableSidc } from "./render";
+import { DiagnosticList, lostMessages } from "./diagnostics";
+import { complete2525C } from "./input";
 import type { Diagnostic, MatchQuality } from "./types";
 
 export interface DisEntityType {
@@ -40,8 +39,16 @@ export interface SidcToDisResult {
   entityType: DisEntityType | null;
   /** True for units: `entityType` is an aggregate type, for the Aggregate State PDU. */
   aggregate: boolean;
-  /** The entity type as "kind.domain.country.category.subcategory.specific.extra". */
+  /**
+   * The entity type as "kind.domain.country.category.subcategory.specific.extra".
+   * @deprecated Use `output`; removed in 1.0.
+   */
   text: string | null;
+  /** Same as `text`. Every converter's result has `output` and `lost`. */
+  output: string | null;
+  /** What the input said that the output leaves out. */
+  lost: string[];
+
   /** DIS Force ID for the affiliation (1 friendly, 2 opposing, 3 neutral, 0 other). */
   forceId: number | null;
   /** The 2525C code the result is based on (wildcards filled, numeric codes converted). */
@@ -58,8 +65,16 @@ export interface SidcToDisResult {
 
 export interface DisToSidcResult {
   input: unknown;
-  /** 2525C SIDC; affiliation is "*" unless `forceId` is given. */
+  /**
+   * 2525C SIDC; affiliation is "*" unless `forceId` is given.
+   * @deprecated Use `output`; removed in 1.0.
+   */
   sidc: string | null;
+  /** Same as `sidc`. Every converter's result has `output` and `lost`. */
+  output: string | null;
+  /** What the input said that the output leaves out. */
+  lost: string[];
+
   matchQuality: MatchQuality;
   notes: string[];
   diagnostics: Diagnostic[];
@@ -328,6 +343,8 @@ export function sidcToDis(input: unknown): SidcToDisResult {
     entityType: null,
     aggregate: false,
     text: null,
+    output: null,
+    lost: [],
     forceId: null,
     source2525C,
     matchQuality: "unsupported",
@@ -335,19 +352,9 @@ export function sidcToDis(input: unknown): SidcToDisResult {
     diagnostics: d.items,
   });
 
-  let letters = input;
-  if (typeof input === "string" && /^\s*\d{20}(\d{10})?\s*$/.test(input)) {
-    const r = convertNumericTo2525C(input.trim());
-    if (!r.output) {
-      d.extend(r.diagnostics);
-      return fail();
-    }
-    letters = r.output;
-  }
-  const r = toRenderableSidc(letters);
-  d.extend(r.diagnostics);
-  const code = r.sidc;
-  if (!code) return fail();
+  const r = complete2525C(input, d);
+  if (!r) return fail();
+  const code = r.sidc!;
 
   const scheme = code[0]!;
   const dim = code[2]!;
@@ -378,6 +385,8 @@ export function sidcToDis(input: unknown): SidcToDisResult {
     entityType: t,
     aggregate,
     text: text(t),
+    output: text(t),
+    lost: lostMessages(d.items),
     forceId,
     source2525C: code,
     matchQuality: quality,
@@ -566,6 +575,8 @@ export function disToSidc(
   ): DisToSidcResult => ({
     input: entityType,
     sidc,
+    output: sidc,
+    lost: lostMessages(d.items),
     matchQuality,
     notes,
     diagnostics: d.items,
@@ -691,6 +702,11 @@ export function disToSidc(
     return out(null, "unsupported", notes);
   }
   const more = t.subcategory || t.specific || t.extra;
+  if (more)
+    d.info(
+      "FIELDS_DROPPED",
+      `Subcategory, specific and extra (${t.subcategory}.${t.specific}.${t.extra}: the model) have no place in a SIDC.`,
+    );
   return out(
     build(dim, fn),
     !exact ? "approximate" : more ? "lossy" : "equivalent",

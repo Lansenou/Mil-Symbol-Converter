@@ -153,6 +153,11 @@ export interface ConversionResult {
   matchQuality: MatchQuality;
   success: boolean;
   warnings: string[];
+  /**
+   * What the input said that the output leaves out: the warnings of a lossy or approximate result.
+   * Every converter's result has `output` and `lost`.
+   */
+  lost: string[];
   errors: string[];
   diagnostics: Diagnostic[];
   mappingSource?: string;

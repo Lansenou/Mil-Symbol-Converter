@@ -8,6 +8,7 @@ import {
   convertNumericTo2525C,
   convertSidc,
   cotToSidc,
+  detectInput,
   disToSidc,
   isSymbolModifier,
   readMsdl,
@@ -491,18 +492,19 @@ function App() {
   const raw = input.trim();
   // A DIS entity type ("1.1.225.1.1.3") or CoT type ("a-f-G-U-C-I") goes through the 2525C code
   // it becomes.
-  const isDis = /^\d{1,5}(\.\d{1,5}){1,6}$/.test(raw);
-  const fromDis = isDis
-    ? disToSidc(raw, {
-        ...(forceId !== "" && { forceId: Number(forceId) }),
-        aggregate,
-      })
-    : null;
-  const fromCot = /^a-/.test(raw) ? cotToSidc(raw) : null;
+  const kind = detectInput(raw);
+  const fromDis =
+    kind === "dis"
+      ? disToSidc(raw, {
+          ...(forceId !== "" && { forceId: Number(forceId) }),
+          aggregate,
+        })
+      : null;
+  const fromCot = kind === "cot" ? cotToSidc(raw) : null;
   const foreign = fromDis ?? fromCot;
   const code = foreign ? (foreign.sidc ?? "") : input;
   const trimmed = code.trim();
-  const numeric = /^\d{20}(\d{10})?$/.test(trimmed);
+  const numeric = detectInput(trimmed) === "numeric";
   const toDis = foreign || !trimmed ? null : sidcToDis(trimmed);
   const toCot = foreign || !trimmed ? null : sidcToCot(trimmed);
 

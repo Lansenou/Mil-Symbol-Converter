@@ -105,6 +105,7 @@ export function convertSidc15To12(
       matchQuality: quality,
       success: !lossyBlocked,
       warnings: [],
+      lost: [],
       errors: [],
       diagnostics: [],
       mappingSource: `profile:${profile.name}`,
