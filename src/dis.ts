@@ -8,6 +8,9 @@
  *   specific and extra stay 0.
  * - `disToSidc` reads kind, domain, category and country, and ignores the rest: every M1 variant
  *   is a tank symbol.
+ * Units are aggregates in DIS. For them `sidcToDis` gives an aggregate type (for the Aggregate
+ * State PDU): kind 1 (military hierarchy), domain, country, echelon as category, unit type as
+ * subcategory, headquarters as specific. `disToSidc` reads one with `{ aggregate: true }`.
  * Affiliation is not part of the entity type. DIS carries it as the Force ID of the entity state;
  * `forceId` in the results and options is that value.
  *
@@ -33,7 +36,10 @@ export interface DisEntityType {
 
 export interface SidcToDisResult {
   input: unknown;
+  /** Entity type, or for units an aggregate type (same seven fields; see `aggregate`). */
   entityType: DisEntityType | null;
+  /** True for units: `entityType` is an aggregate type, for the Aggregate State PDU. */
+  aggregate: boolean;
   /** The entity type as "kind.domain.country.category.subcategory.specific.extra". */
   text: string | null;
   /** DIS Force ID for the affiliation (1 friendly, 2 opposing, 3 neutral, 0 other). */
@@ -64,6 +70,8 @@ export interface DisToSidcOptions {
   forceId?: number;
   /** Status for position 4. Default "P" (present): DIS entities are where they are. */
   status?: "P" | "A";
+  /** Read the input as an aggregate type (Aggregate State PDU): the result is a unit symbol. */
+  aggregate?: boolean;
 }
 
 type Names = Record<string, string>;
@@ -194,6 +202,70 @@ const MUNITION: [string, string, number, number][] = [
   ["G", "EXMC", 8, 3], // claymore: anti-personnel
 ];
 
+/**
+ * Units (aggregate subcategory): [function ID prefix, subcategory]. Longest prefix wins; for the
+ * way back, the first row with a subcategory is the symbol it becomes.
+ */
+const UNIT: [string, number][] = [
+  ["UCA", 2], // armor
+  ["UCAT", 2],
+  ["UCAW", 2],
+  ["UCI", 3], // infantry
+  ["UCIZ", 4], // mechanized infantry
+  ["UCII", 4],
+  ["UCRV", 5], // cavalry
+  ["UCRVA", 6], // armored cavalry
+  ["UCF", 7], // artillery
+  ["UCFHE", 8], // self-propelled artillery
+  ["UCFMS", 8],
+  ["UCFMW", 8],
+  ["UCE", 10], // engineer
+  ["UCD", 11], // air defense artillery
+  ["UCAA", 12], // anti-tank
+  ["UCVF", 13], // army aviation fixed-wing
+  ["UCVR", 14], // army aviation rotary-wing
+  ["UCVRA", 15], // attack helicopter
+  ["UCRVO", 16], // air cavalry
+  ["UCIM", 18], // motorized rifle
+  ["UH", 20], // command post
+  ["UUM", 21], // CEWI (military intelligence)
+];
+/** Subcategories with no symbol of their own: [subcategory, function ID, position 11]. */
+const UNIT_EXTRA: Record<number, [string, string]> = {
+  1: ["UCRV", "-"], // cavalry troop
+  17: ["UCA", "E"], // armor heavy task force
+  19: ["UCIZ", "E"], // mechanized heavy task force
+  22: ["UCA", "-"], // tank only
+};
+/** 2525C echelon (position 12) <-> aggregate category. */
+const ECHELON_CATEGORY: Record<string, number> = {
+  A: 2,
+  B: 2,
+  C: 2,
+  D: 3,
+  E: 5,
+  F: 6,
+  G: 7,
+  H: 8,
+  I: 9,
+  J: 10,
+};
+const CATEGORY_ECHELON = [
+  "-",
+  "-",
+  "A",
+  "D",
+  "E",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+];
+/** Artillery and air defense companies are batteries. */
+const BATTERY = new Set([7, 8, 11]);
+
 const AFFILIATION_FORCE: Record<string, number> = {
   F: 1,
   A: 1,
@@ -254,6 +326,7 @@ export function sidcToDis(input: unknown): SidcToDisResult {
   const fail = (source2525C: string | null = null): SidcToDisResult => ({
     input,
     entityType: null,
+    aggregate: false,
     text: null,
     forceId: null,
     source2525C,
@@ -296,9 +369,14 @@ export function sidcToDis(input: unknown): SidcToDisResult {
     ? null
     : affiliationToForceId(code[1]!);
 
-  const done = (t: DisEntityType, quality: MatchQuality): SidcToDisResult => ({
+  const done = (
+    t: DisEntityType,
+    quality: MatchQuality,
+    aggregate = false,
+  ): SidcToDisResult => ({
     input,
     entityType: t,
+    aggregate,
     text: text(t),
     forceId,
     source2525C: code,
@@ -316,13 +394,63 @@ export function sidcToDis(input: unknown): SidcToDisResult {
     );
     return fail(code);
   }
-  if (dim === "G" && fn.startsWith("U")) {
-    d.error(
-      "NO_MAPPING",
-      "Units are aggregates in DIS, not entities; there is no entity type for them.",
-      [5, 6, 7, 8, 9, 10],
+  if (
+    (dim === "G" && fn.startsWith("U")) ||
+    dim === "F" ||
+    (dim === "S" && fn.startsWith("G"))
+  ) {
+    // Units: an aggregate type. Naval groups are surface aggregates, SOF units land ones.
+    const domain = dim === "S" ? 3 : 1;
+    const u =
+      dim === "G"
+        ? longest(
+            UNIT.map((r) => ["G", ...r] as [string, string, number]),
+            "G",
+            fn,
+          )
+        : undefined;
+    const subcategory = u?.[2] ?? 0;
+    const echelon = code[11]!;
+    let category = ECHELON_CATEGORY[echelon] ?? 0;
+    if (category === 5 && BATTERY.has(subcategory)) category = 4;
+    const specific = "ABCD".includes(code[10]!) ? 1 : 0;
+    notes.unshift(
+      "aggregate kind 1 (military hierarchy)",
+      `domain ${domain} (${name("platformDomain", domain)})`,
     );
-    return fail(code);
+    if (category)
+      notes.push(
+        `category ${category} (${name("aggregateCategory", category)}) from echelon "${echelon}"`,
+      );
+    if (u)
+      notes.push(
+        `subcategory ${subcategory} (${name("aggregateSubcategory", subcategory)}) from "${u[1]}"`,
+      );
+    if (specific) notes.push("specific 1: has a headquarters");
+    const lost =
+      (u ? fn !== u[1] : fn !== "U" && dim === "G") ||
+      (echelon !== "-" && !category) ||
+      !"-ABCD".includes(code[10]!);
+    if (!u && dim === "G" && fn !== "U")
+      d.warn(
+        "NO_MAPPING",
+        `DIS has no aggregate subcategory for "${fn}"; subcategory 0 (other) was used.`,
+        [5, 6, 7, 8, 9, 10],
+      );
+    else if (lost)
+      d.info(
+        "FIELDS_DROPPED",
+        `The aggregate type has no field for the rest of the symbol (${code.slice(4, 12)}).`,
+      );
+    return done(
+      { kind: 1, domain, country, category, subcategory, specific, extra: 0 },
+      !u && dim === "G" && fn !== "U"
+        ? "approximate"
+        : lost
+          ? "lossy"
+          : "equivalent",
+      true,
+    );
   }
   if (dim === "G" && fn.startsWith("I")) {
     notes.unshift("kind 5 (cultural feature): an installation");
@@ -467,8 +595,56 @@ export function disToSidc(
       "NO_MAPPING",
       `DIS country ${t.country} has no ISO 3166 code; the country is left out.`,
     );
-  const build = (dim: string, fn: string) =>
-    `S${affiliation}${dim}${status}${fn.padEnd(6, "-")}--${iso ?? "--"}-`;
+  const build = (dim: string, fn: string, mod = "--") =>
+    `S${affiliation}${dim}${status}${fn.padEnd(6, "-")}${mod}${iso ?? "--"}-`;
+
+  if (options.aggregate) {
+    if (t.kind !== 1 || (t.domain !== 1 && t.domain !== 3)) {
+      d.error(
+        "NO_MAPPING",
+        `No 2525C unit symbol for aggregate kind ${t.kind} (${name("aggregateKind", t.kind) ?? "unknown"}) in domain ${t.domain}; only military hierarchies on land or at sea have one.`,
+      );
+      return out(null, "unsupported", notes);
+    }
+    const echelon = CATEGORY_ECHELON[t.category] ?? "-";
+    if (t.category > 10)
+      d.warn(
+        "NO_MAPPING",
+        `No 2525C echelon for aggregate category ${t.category}.`,
+      );
+    if (t.domain === 3) {
+      notes.unshift("naval group");
+      return out(
+        build("S", "G", "-" + echelon),
+        t.subcategory ? "lossy" : "equivalent",
+        notes,
+      );
+    }
+    const row = UNIT.find((r) => r[1] === t.subcategory);
+    const extra = UNIT_EXTRA[t.subcategory];
+    const fn = row?.[0] ?? extra?.[0] ?? "U";
+    const hq = t.specific === 1;
+    const tf = extra?.[1] === "E";
+    const pos11 = tf ? (hq ? "B" : "E") : hq ? "A" : "-";
+    notes.unshift(
+      `unit${t.subcategory ? `, ${name("aggregateSubcategory", t.subcategory) ?? `subcategory ${t.subcategory}`}` : ""}`,
+    );
+    if (t.category)
+      notes.push(
+        `echelon "${echelon}" from ${name("aggregateCategory", t.category) ?? t.category}`,
+      );
+    const known = !t.subcategory || row || extra;
+    if (!known)
+      d.warn(
+        "NO_MAPPING",
+        `No 2525C symbol for aggregate subcategory ${t.subcategory}; the unit frame was used.`,
+      );
+    return out(
+      build("G", fn, pos11 + echelon),
+      !known ? "approximate" : extra && !row ? "lossy" : "equivalent",
+      notes,
+    );
+  }
 
   let dim: string;
   let fn: string;

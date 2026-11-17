@@ -1,5 +1,6 @@
 // Reads the DIS enumerations (SISO-REF-010, XML) that src/dis.ts needs: Force ID, entity kind,
-// platform domain and categories, munition domain and category, and the country codes.
+// platform domain and categories, munition domain and category, aggregate types, and the country
+// codes.
 // Country codes are keyed by ISO 3166-1 alpha-2 (as in MIL-STD-2525C positions 13-14), joined
 // through the alpha-3 code SISO-REF-010 gives in each country's name, with CLDR's code mappings.
 import fs from "node:fs";
@@ -24,6 +25,19 @@ function enumRows(xml, uid) {
   return rows;
 }
 
+/** Aggregate categories (echelons) are listed once, under the US land entry of cet 207. */
+function aggregateCategories(xml) {
+  const start = xml.indexOf('<cet uid="207" ');
+  if (start < 0) throw new Error("SISO-REF-010: cet 207 not found");
+  const body = xml.slice(start, xml.indexOf("</cet>", start));
+  const rows = {};
+  for (const m of body.matchAll(
+    /<category value="(\d+)" description="([^"]*)"/g,
+  ))
+    rows[m[1]] = decode(m[2]);
+  return rows;
+}
+
 export function parseSisoRef010(xmlFile, codeMappingsFile) {
   const xml = fs.readFileSync(xmlFile, "utf8");
   const title = /<ebv [^>]*title="([^"]*)"/.exec(xml)?.[1] ?? "";
@@ -39,6 +53,10 @@ export function parseSisoRef010(xmlFile, codeMappingsFile) {
     1.5: enumRows(xml, 13),
     munitionDomain: enumRows(xml, 14),
     munitionCategory: enumRows(xml, 15),
+    aggregateKind: enumRows(xml, 206),
+    aggregateCategory: aggregateCategories(xml),
+    aggregateSubcategory: enumRows(xml, 208),
+    aggregateSpecific: enumRows(xml, 209),
   };
   const alpha3to2 = new Map();
   const cm = JSON.parse(fs.readFileSync(codeMappingsFile, "utf8")).supplemental
