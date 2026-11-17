@@ -7,9 +7,11 @@ import {
   StatusLetter,
   convertNumericTo2525C,
   convertSidc,
+  cotToSidc,
   disToSidc,
   isSymbolModifier,
   readMsdl,
+  sidcToCot,
   sidcToDis,
   toRenderableSidc,
   validateSidc,
@@ -39,10 +41,15 @@ const EXAMPLES: { sidc: string; note: string }[] = [
   { sidc: "SFAPMFF—*****", note: "Pasted from a web list" },
   { sidc: "10031000151211000002", note: "Numeric, back to 2525C" },
   { sidc: "1.1.225.1.1.3", note: "DIS entity type (M1A2)" },
+  { sidc: "a-h-G-U-C-A", note: "Cursor on Target type" },
 ];
 
-/** DIS entity type for the code, or (for a DIS input) the 2525C code it becomes. */
-function DisCard({
+/**
+ * A DIS or CoT identifier for the code, or (for a DIS or CoT input) the 2525C code it becomes
+ * (`sidc`: drawn too).
+ */
+function IdCard({
+  title,
   text,
   forceId,
   quality,
@@ -50,6 +57,7 @@ function DisCard({
   diagnostics,
   sidc,
 }: {
+  title: string;
   text: string | null;
   forceId?: number | null;
   quality: string;
@@ -61,7 +69,7 @@ function DisCard({
   return (
     <article className="card">
       <header>
-        <h3>{sidc ? "From DIS entity type" : "DIS entity type"}</h3>
+        <h3>{title}</h3>
         <span className={`badge ${quality}`}>{quality}</span>
       </header>
       <div className="row">
@@ -396,12 +404,15 @@ function MsdlPanel({ onPick }: { onPick: (sidc: string) => void }) {
               <th>Name</th>
               <th>In the file</th>
               <th>Completed</th>
+              <th>DIS · CoT</th>
               <th>Notes</th>
             </tr>
           </thead>
           <tbody>
             {scenario.symbols.map((s) => {
               const drawn = toRenderableSidc(s.sidc);
+              const asDis = sidcToDis(s.sidc);
+              const asCot = sidcToCot(s.sidc);
               return (
                 <tr
                   key={`${s.kind}-${s.handle}-${s.name}`}
@@ -420,6 +431,16 @@ function MsdlPanel({ onPick }: { onPick: (sidc: string) => void }) {
                   </td>
                   <td>
                     <code>{s.sidc}</code>
+                  </td>
+                  <td>
+                    <code
+                      title={asDis.aggregate ? "aggregate type" : "entity type"}
+                    >
+                      {asDis.text ?? "-"}
+                    </code>
+                    <div>
+                      <code>{asCot.cot ?? "-"}</code>
+                    </div>
                   </td>
                   <td className="muted">{s.notes.join("; ")}</td>
                 </tr>
@@ -448,6 +469,8 @@ function App() {
   const [accept, setAccept] = useState<Accept>("exact");
   const [strict, setStrict] = useState(false);
   const [extendedSidc, setExtendedSidc] = useState(false);
+  const [forceId, setForceId] = useState("");
+  const [aggregate, setAggregate] = useState(false);
 
   useEffect(() => {
     history.replaceState(null, "", `#sidc=${encodeURIComponent(input)}`);
@@ -466,12 +489,22 @@ function App() {
     ...(isSymbolModifier(mod) && { symbolModifier: mod }),
   };
   const raw = input.trim();
-  // A DIS entity type ("1.1.225.1.1.3") goes through the 2525C code it becomes.
-  const fromDis = /^\d{1,5}(\.\d{1,5}){1,6}$/.test(raw) ? disToSidc(raw) : null;
-  const code = fromDis ? (fromDis.sidc ?? "") : input;
+  // A DIS entity type ("1.1.225.1.1.3") or CoT type ("a-f-G-U-C-I") goes through the 2525C code
+  // it becomes.
+  const isDis = /^\d{1,5}(\.\d{1,5}){1,6}$/.test(raw);
+  const fromDis = isDis
+    ? disToSidc(raw, {
+        ...(forceId !== "" && { forceId: Number(forceId) }),
+        aggregate,
+      })
+    : null;
+  const fromCot = /^a-/.test(raw) ? cotToSidc(raw) : null;
+  const foreign = fromDis ?? fromCot;
+  const code = foreign ? (foreign.sidc ?? "") : input;
   const trimmed = code.trim();
   const numeric = /^\d{20}(\d{10})?$/.test(trimmed);
-  const toDis = fromDis || !trimmed ? null : sidcToDis(trimmed);
+  const toDis = foreign || !trimmed ? null : sidcToDis(trimmed);
+  const toCot = foreign || !trimmed ? null : sidcToCot(trimmed);
 
   const validation = numeric || !trimmed ? null : validateSidc(code);
   const reverse = numeric ? convertNumericTo2525C(trimmed) : null;
@@ -519,8 +552,8 @@ function App() {
       <section className="panel">
         <label className="field">
           <span>
-            SIDC (15-character 2525C, or 20/30-digit numeric), or a DIS entity
-            type
+            SIDC (15-character 2525C, or 20/30-digit numeric), DIS entity type
+            or Cursor on Target type
           </span>
           <input
             value={input}
@@ -544,6 +577,31 @@ function App() {
           ))}
         </div>
         <div className="options">
+          {fromDis && (
+            <>
+              <label>
+                <span>DIS Force ID</span>
+                <select
+                  value={forceId}
+                  onChange={(e) => setForceId(e.target.value)}
+                >
+                  <option value="">none (affiliation stays *)</option>
+                  <option value="1">1 Friendly</option>
+                  <option value="2">2 Opposing</option>
+                  <option value="3">3 Neutral</option>
+                  <option value="0">0 Other</option>
+                </select>
+              </label>
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={aggregate}
+                  onChange={(e) => setAggregate(e.target.checked)}
+                />
+                Aggregate type (unit)
+              </label>
+            </>
+          )}
           {!numeric && (
             <>
               {" "}
@@ -684,15 +742,22 @@ function App() {
         </section>
       )}
 
-      {(results.length > 0 || fromDis || toDis) && (
+      {(results.length > 0 || foreign || toDis) && (
         <section className="grid">
-          {fromDis && (
-            <DisCard
+          {foreign && (
+            <IdCard
               sidc
-              text={fromDis.sidc}
-              quality={fromDis.matchQuality}
-              notes={fromDis.notes}
-              diagnostics={fromDis.diagnostics}
+              title={
+                fromDis
+                  ? aggregate
+                    ? "From DIS aggregate type"
+                    : "From DIS entity type"
+                  : "From CoT type"
+              }
+              text={foreign.sidc}
+              quality={foreign.matchQuality}
+              notes={foreign.notes}
+              diagnostics={foreign.diagnostics}
             />
           )}
           {results.map(({ id, label, std, r, preview }) => (
@@ -704,8 +769,18 @@ function App() {
               preview={preview}
             />
           ))}
+          {toCot && (
+            <IdCard
+              title="Cursor on Target type"
+              text={toCot.cot}
+              quality={toCot.matchQuality}
+              notes={toCot.dropped}
+              diagnostics={toCot.diagnostics}
+            />
+          )}
           {toDis && (
-            <DisCard
+            <IdCard
+              title={toDis.aggregate ? "DIS aggregate type" : "DIS entity type"}
               text={toDis.text}
               forceId={toDis.forceId}
               quality={toDis.matchQuality}

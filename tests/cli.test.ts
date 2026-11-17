@@ -27,6 +27,36 @@ describe("cli", () => {
     expect(r.err).toBe("2/2 converted (exact 2)\n");
   });
 
+  it("--to dis and --to cot; DIS and CoT inputs go back to 2525C", async () => {
+    const dis = await cli([
+      "-q",
+      "--to",
+      "dis",
+      "SHGPEVAT----RU-",
+      "SFGPUCI----E---",
+    ]);
+    expect(dis.lines.map((l) => l.split("\t")[2])).toEqual([
+      "1.1.222.1.0.0.0",
+      "aggregate 1.1.0.5.3.0.0",
+    ]);
+    const cot = await cli(["-q", "--to", "cot", "SFGPUCI----E---"]);
+    expect(cot.lines[0]!.split("\t")[2]).toBe("a-f-G-U-C-I");
+    const back = await cli([
+      "-q",
+      "--force-id",
+      "2",
+      "1.1.225.1.1.3",
+      "a-n-G-I-X-H",
+    ]);
+    expect(back.lines.map((l) => l.split("\t")[2])).toEqual([
+      "SHGPEVAT----US-",
+      "SNGPIXH---H----",
+    ]);
+    const unit = await cli(["-q", "--aggregate", "1.1.225.6.3"]);
+    expect(unit.lines[0]!.split("\t")[2]).toBe("S*GPUCI----FUS-");
+    expect((await cli(["--force-id", "x", "1.1.1"])).code).toBe(2);
+  });
+
   it("--to all gives one line per target", async () => {
     const r = await cli(["-t", "all", "-q", "SFGPUCI--------"]);
     expect(r.lines.map((l) => l.split("\t")[1])).toEqual([

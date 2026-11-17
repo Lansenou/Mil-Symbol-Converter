@@ -47,8 +47,19 @@ describe("sidcToDis", () => {
     expect(r.matchQuality).toBe("approximate");
   });
 
-  it("refuses units and non-warfighting symbols", () => {
-    expect(sidcToDis("SFGPUCI----E---").entityType).toBeNull();
+  it("gives units an aggregate type: echelon, unit type, headquarters", () => {
+    const r = sidcToDis("SFGPUCA---AH---");
+    expect(r.aggregate).toBe(true);
+    expect(r.text).toBe("1.1.0.8.2.1.0");
+    expect(r.matchQuality).toBe("equivalent");
+    // An artillery company is a battery.
+    expect(sidcToDis("SHGPUCFHE--E---").text).toBe("1.1.0.4.8.0.0");
+    expect(sidcToDis("SFSPGT---------").text).toBe("1.3.0.0.0.0.0");
+    expect(sidcToDis("SFGPUSS----E---").matchQuality).toBe("approximate");
+    expect(sidcToDis("SFGPEVAT-------").aggregate).toBe(false);
+  });
+
+  it("refuses non-warfighting symbols", () => {
     expect(sidcToDis("GFGPGPP-------X").entityType).toBeNull();
     expect(sidcToDis("nonsense").entityType).toBeNull();
   });
@@ -99,6 +110,42 @@ describe("disToSidc", () => {
         if (r.matchQuality === "equivalent")
           expect(sidcToDis(r.sidc).entityType?.category).toBe(Number(cat));
       }
+  });
+});
+
+describe("disToSidc with aggregate types", () => {
+  it("draws units with echelon and headquarters", () => {
+    expect(
+      disToSidc("1.1.225.5.3.0.0", { aggregate: true, forceId: 1 }).sidc,
+    ).toBe("SFGPUCI----EUS-");
+    expect(disToSidc("1.1.225.4.7.1", { aggregate: true }).sidc).toBe(
+      "S*GPUCF---AEUS-",
+    );
+    expect(disToSidc("1.3.225.8", { aggregate: true }).sidc).toBe(
+      "S*SPG------HUS-",
+    );
+  });
+
+  it("round-trips every aggregate subcategory to a valid code", () => {
+    const names = (dis.names as Record<string, Record<string, string>>)
+      .aggregateSubcategory!;
+    for (const sub of Object.keys(names)) {
+      const r = disToSidc([1, 1, 225, 6, Number(sub), 1], {
+        aggregate: true,
+        forceId: 2,
+      });
+      expect(validateSidc(r.sidc).valid, `${sub} ${r.sidc}`).toBe(true);
+      if (r.matchQuality === "equivalent")
+        expect(sidcToDis(r.sidc).entityType).toMatchObject({
+          category: 6,
+          subcategory: Number(sub),
+          specific: 1,
+        });
+    }
+  });
+
+  it("refuses aggregate kinds without a unit symbol", () => {
+    expect(disToSidc("2.1.225.6", { aggregate: true }).sidc).toBeNull();
   });
 });
 
