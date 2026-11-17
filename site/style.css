@@ -401,7 +401,9 @@ footer code {
   .msdl-table th:nth-child(3),
   .msdl-table td:nth-child(3),
   .msdl-table th:nth-child(5),
-  .msdl-table td:nth-child(5) {
+  .msdl-table td:nth-child(5),
+  .msdl-table th:nth-child(6),
+  .msdl-table td:nth-child(6) {
     display: none;
   }
 }

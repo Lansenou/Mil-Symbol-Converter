@@ -33,7 +33,7 @@ describe("readMsdl", () => {
       forceSideHandle: "force-blue-1",
     });
     expect(byName(s, "Red Armor").sidc).toBe("SHGPUCA--------");
-    expect(byName(s, "Green Police").sidc).toBe("SNGPUUM--------");
+    expect(byName(s, "Green Intelligence").sidc).toBe("SNGPUUM--------");
     expect(byName(s, "Tank 1")).toMatchObject({
       kind: "equipment",
       sidc: "SHGPEVAT-------",
@@ -46,7 +46,7 @@ describe("readMsdl", () => {
     expect(byName(red, "1-1 Infantry").sidc[1]).toBe("H");
     expect(byName(red, "Red Armor").sidc[1]).toBe("F");
     // Red has no association with Green: unknown, left as "*".
-    expect(byName(red, "Green Police").sidc[1]).toBe("*");
+    expect(byName(red, "Green Intelligence").sidc[1]).toBe("*");
   });
 
   it("leaves affiliation as * without a viewpoint, ready for toRenderableSidc", () => {

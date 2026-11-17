@@ -72,7 +72,7 @@
       <Unit>
         <ObjectHandle>u-green</ObjectHandle>
         <SymbolIdentifier>S-G-UUM--------</SymbolIdentifier>
-        <Name>Green Police</Name>
+        <Name>Green Intelligence</Name>
         <Relations>
           <ForceRelation>
             <ForceRelationChoice>FORCE_SIDE</ForceRelationChoice>

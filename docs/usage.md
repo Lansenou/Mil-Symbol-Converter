@@ -310,10 +310,39 @@ disToSidc([1, 3, 224, 50]).sidc; // "S*SPCLFF----GB-": no Force ID, affiliation 
 ```
 
 Covered: land, air, surface, subsurface and space platforms (kind 1), munitions (kind 2) and
-installations as cultural features (kind 5). Units have no entity type (DIS treats them as
-aggregates); life forms, sensors, radios and other kinds have no 2525C symbol. The category table is
+installations as cultural features (kind 5). Life forms, sensors, radios and other kinds have no
+2525C symbol.
+
+Units are aggregates in DIS. For them `sidcToDis` returns an aggregate type (for the Aggregate State
+PDU) with `aggregate: true`: kind 1 (military hierarchy), domain, country, echelon as category
+(an artillery or air defense company is a battery), unit type as subcategory, headquarters as
+specific:
+
+```ts
+sidcToDis("SFGPUCA---AH---").text; // "1.1.0.8.2.1.0": armor brigade with its headquarters
+disToSidc("1.1.225.6.3", { aggregate: true }).sidc; // "S*GPUCI----FUS-": infantry battalion
+```
+
+The category table is
 this library's own reading of the 2525C function IDs; categories without a 2525C symbol fall back to
 the domain's frame. `forceIdToAffiliation` and `affiliationToForceId` convert the Force ID.
+
+## Cursor on Target types
+
+CoT atom types (used by TAK) are built from the SIDC: `a`, the identity in lower case, the battle
+dimension, then each function ID character, joined with `-`. No table is involved.
+
+```ts
+import { sidcToCot, cotToSidc } from "mil-symbol-converter";
+
+sidcToCot("SHGPEVAT-------").cot; // "a-h-G-E-V-A-T"
+sidcToCot("SFGPUCI----E---").dropped; // the echelon: CoT types carry no status, modifiers or country
+cotToSidc("a-f-G-U-C-I").sidc; // "SFGPUCI--------"
+```
+
+Only warfighting symbols (scheme S) have CoT atom types. Exercise identities become their
+real-world counterparts; CoT's "none specified" (`o`) and "other" (`x`) become unknown. A function
+ID 2525C does not list is drawn as its nearest listed parent.
 
 ## Command line
 
@@ -327,10 +356,14 @@ npx mil-symbol-converter --to all SFGPUCI--------             # every target
 npx mil-symbol-converter 'S*GPUCI---*****' --affiliation H --modifier -E
 npx mil-symbol-converter -f codes.txt --to app-6d --lossy     # one code per line
 cat units.csv | npx mil-symbol-converter --csv sidc > out.csv # appends 2525D, 2525D_quality, 2525D_note
+npx mil-symbol-converter --to dis SHGPEVAT----RU-             # 1.1.222.1.0.0.0
+npx mil-symbol-converter --to cot SFGPUCI----E---             # a-f-G-U-C-I
+npx mil-symbol-converter --force-id 2 1.1.225.1.1.3 a-f-G-U-C-I # back to 2525C
+npx mil-symbol-converter --aggregate 1.1.225.6.3              # DIS aggregate type: a unit
 ```
 
 Output is tab-separated (input, target, output, quality, note), or one JSON result per line with
-`--json`. Numeric codes convert back to 2525C. The exit status is 1 if any code did not convert, so
+`--json`. Numeric codes, DIS entity types and CoT types convert back to 2525C. The exit status is 1 if any code did not convert, so
 it can gate a script. `--help` lists all options (`--fuzzy`, `--extended`, `--source`, ...).
 
 ## React
