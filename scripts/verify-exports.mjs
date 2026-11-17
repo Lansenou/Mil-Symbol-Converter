@@ -49,4 +49,26 @@ const cjsPkg = require("../dist-cjs/package.json");
 const mainPkg = require("../package.json");
 assert.equal(cjsPkg.name, mainPkg.name, "cjs build name");
 assert.equal(cjsPkg.version, `${mainPkg.version}-cjs`, "cjs build version");
-console.log("exports OK (esm, require(esm), cjs build, react)");
+// Tree shaking: an app that only converts must not carry the DIS, CoT or MSDL code and data.
+// (esbuild comes with tsup.)
+const { build } = await import("esbuild");
+const shaken = await build({
+  stdin: {
+    contents:
+      'import { convertSidc } from "./dist/index.js"; console.log(convertSidc);',
+    resolveDir: new URL("..", import.meta.url).pathname,
+  },
+  bundle: true,
+  minify: true,
+  format: "esm",
+  write: false,
+  logLevel: "error",
+});
+const bundled = shaken.outputFiles[0].text;
+for (const [what, marker] of [
+  ["DIS data", "Opposing 10"],
+  ["CoT", "CoT atom"],
+  ["MSDL", "ForceSide"],
+])
+  assert.ok(!bundled.includes(marker), `convertSidc bundle includes ${what}`);
+console.log("exports OK (esm, require(esm), cjs build, react, tree shaking)");

@@ -90,11 +90,16 @@ export interface DisToSidcOptions {
 }
 
 type Names = Record<string, string>;
-const NAMES = dis.names as unknown as Record<string, Names>;
-const COUNTRY_BY_ISO = dis.countries as Record<string, number>;
-const ISO_BY_COUNTRY = new Map(
-  Object.entries(COUNTRY_BY_ISO).map(([iso, n]) => [n, iso]),
-);
+// Read through functions, not module-level constants: a property read at load time keeps the
+// data in every bundle, even ones that never convert DIS.
+const names = () => dis.names as unknown as Record<string, Names>;
+const countryByIso = () => dis.countries as Record<string, number>;
+// Built on first use, so bundles that never convert DIS drop this module entirely.
+let isoByCountry: Map<number, string> | undefined;
+const isoOf = (country: number) =>
+  (isoByCountry ??= new Map(
+    Object.entries(countryByIso()).map(([iso, n]) => [n, iso]),
+  )).get(country);
 
 /** Platform domain per 2525C battle dimension (position 3). */
 const DOMAIN: Record<string, number> = { G: 1, A: 2, S: 3, U: 4, P: 5 };
@@ -279,7 +284,7 @@ const CATEGORY_ECHELON = [
   "J",
 ];
 /** Artillery and air defense companies are batteries. */
-const BATTERY = new Set([7, 8, 11]);
+const BATTERY = [7, 8, 11];
 
 const AFFILIATION_FORCE: Record<string, number> = {
   F: 1,
@@ -320,7 +325,7 @@ function longest<T extends [string, string, ...unknown[]]>(
   return best;
 }
 
-const name = (table: string, v: number) => NAMES[table]?.[String(v)];
+const name = (table: string, v: number) => names()[table]?.[String(v)];
 const text = (t: DisEntityType) =>
   [
     t.kind,
@@ -360,7 +365,7 @@ export function sidcToDis(input: unknown): SidcToDisResult {
   const dim = code[2]!;
   const fn = code.slice(4, 10).replace(/-+$/, "");
   const iso = code.slice(12, 14);
-  const country = COUNTRY_BY_ISO[iso] ?? 0;
+  const country = countryByIso()[iso] ?? 0;
   const notes: string[] = [];
   if (country) notes.push(`country ${country} from "${iso}"`);
   else if (/^[A-Z]{2}$/.test(iso))
@@ -421,7 +426,7 @@ export function sidcToDis(input: unknown): SidcToDisResult {
     const subcategory = u?.[2] ?? 0;
     const echelon = code[11]!;
     let category = ECHELON_CATEGORY[echelon] ?? 0;
-    if (category === 5 && BATTERY.has(subcategory)) category = 4;
+    if (category === 5 && BATTERY.includes(subcategory)) category = 4;
     const specific = "ABCD".includes(code[10]!) ? 1 : 0;
     notes.unshift(
       "aggregate kind 1 (military hierarchy)",
@@ -599,7 +604,7 @@ export function disToSidc(
     );
   }
   const status = options.status ?? "P";
-  const iso = ISO_BY_COUNTRY.get(t.country);
+  const iso = isoOf(t.country);
   if (iso) notes.push(`country "${iso}" from ${t.country}`);
   else if (t.country)
     d.warn(
