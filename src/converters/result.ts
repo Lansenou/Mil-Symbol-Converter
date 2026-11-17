@@ -41,6 +41,7 @@ export function failure(
       matchQuality: "unsupported",
       success: false,
       warnings: [],
+      lost: [],
       errors: [],
       diagnostics: [],
       ...extra,
@@ -57,6 +58,10 @@ export function finalize(
   r.diagnostics = [...d.items];
   r.errors = d.messages("error");
   r.warnings = d.messages("warning");
+  r.lost =
+    r.matchQuality === "lossy" || r.matchQuality === "approximate"
+      ? r.warnings
+      : [];
   if (r.errors.length > 0 || r.output === null) {
     r.success = false;
     r.output = null;

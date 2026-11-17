@@ -1,5 +1,23 @@
 # Usage
 
+## Any identifier in
+
+`readSidc` takes whatever your data has (a 2525C letter code, a numeric 2525D/E or APP-6D/E code,
+a DIS entity or aggregate type, or a Cursor on Target type) and gives the 2525C code;
+`detectInput` only says which kind it is:
+
+```ts
+import { readSidc, detectInput } from "mil-symbol-converter";
+
+detectInput("a-h-G-E-V-A-T"); // "cot"
+readSidc("10031000151211000000").output; // "SFGPUCI----E---"
+readSidc("1.1.225.1.1.3", { forceId: 2 }).output; // "SHGPEVAT----US-"
+```
+
+Every converter's result has `output` (the result, or null), `matchQuality`, `lost` (what the input
+said that the output leaves out) and `diagnostics`. Older names (`sidc`, `text`, `cot`, `dropped`)
+still work and are removed in 1.0.
+
 ## Drawing codes with missing fields
 
 Codes from real data often leave fields as `*` or arrive mangled by copy and paste, and milsymbol

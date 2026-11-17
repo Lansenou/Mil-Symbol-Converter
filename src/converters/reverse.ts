@@ -403,6 +403,7 @@ export function convertNumericTo2525C(
       matchQuality: bestQuality,
       success: true,
       warnings: [],
+      lost: [],
       errors: [],
       diagnostics: [],
       mappingSource: "forward-verified",

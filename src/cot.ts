@@ -7,29 +7,48 @@
  * headquarters), country and order of battle have no place in the type; CoT carries some of them
  * elsewhere in the event.
  */
-import { convertNumericTo2525C } from "./converters/reverse";
-import { DiagnosticList } from "./diagnostics";
+import { DiagnosticList, lostMessages } from "./diagnostics";
+import { complete2525C } from "./input";
 import { toRenderableSidc } from "./render";
 import { findCatalogEntry } from "./validation";
 import type { Diagnostic, MatchQuality } from "./types";
 
 export interface SidcToCotResult {
   input: unknown;
-  /** CoT type, e.g. "a-f-G-U-C-I", or null. */
+  /**
+   * CoT type, e.g. "a-f-G-U-C-I", or null.
+   * @deprecated Use `output`; removed in 1.0.
+   */
   cot: string | null;
+  /** Same as `cot`. Every converter's result has `output` and `lost`. */
+  output: string | null;
+  /** What the input said that the output leaves out. */
+  lost: string[];
+
   /** The 2525C code the result is based on (wildcards filled, numeric codes converted). */
   source2525C: string | null;
   /** equivalent: nothing lost; lossy: see `dropped`. */
   matchQuality: MatchQuality;
-  /** What the code said that the CoT type leaves out. */
+  /**
+   * What the code said that the CoT type leaves out.
+   * @deprecated Use `lost`; removed in 1.0.
+   */
   dropped: string[];
   diagnostics: Diagnostic[];
 }
 
 export interface CotToSidcResult {
   input: unknown;
-  /** 2525C SIDC, or null. */
+  /**
+   * 2525C SIDC, or null.
+   * @deprecated Use `output`; removed in 1.0.
+   */
   sidc: string | null;
+  /** Same as `sidc`. Every converter's result has `output` and `lost`. */
+  output: string | null;
+  /** What the input said that the output leaves out. */
+  lost: string[];
+
   /** equivalent; approximate when a parent symbol or a stand-in identity was used. */
   matchQuality: MatchQuality;
   notes: string[];
@@ -61,25 +80,17 @@ export function sidcToCot(input: unknown): SidcToCotResult {
   ): SidcToCotResult => ({
     input,
     cot,
+    output: cot,
+    lost: dropped,
     source2525C,
     matchQuality,
     dropped,
     diagnostics: d.items,
   });
 
-  let letters = input;
-  if (typeof input === "string" && /^\s*\d{20}(\d{10})?\s*$/.test(input)) {
-    const r = convertNumericTo2525C(input.trim());
-    if (!r.output) {
-      d.extend(r.diagnostics);
-      return out(null, null, "unsupported");
-    }
-    letters = r.output;
-  }
-  const r = toRenderableSidc(letters);
-  d.extend(r.diagnostics);
-  const code = r.sidc;
-  if (!code) return out(null, null, "unsupported");
+  const r = complete2525C(input, d);
+  if (!r) return out(null, null, "unsupported");
+  const code = r.sidc!;
   if (code[0] !== "S") {
     d.error(
       "NO_MAPPING",
@@ -144,6 +155,8 @@ export function cotToSidc(
   ): CotToSidcResult => ({
     input: type,
     sidc,
+    output: sidc,
+    lost: lostMessages(d.items),
     matchQuality,
     notes,
     diagnostics: d.items,

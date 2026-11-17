@@ -132,6 +132,7 @@ export function convertSidc<const S>(
           matchQuality: "exact",
           success: true,
           warnings: [],
+          lost: [],
           errors: [],
           diagnostics: [],
           mappingSource: "identity",

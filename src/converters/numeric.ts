@@ -459,6 +459,7 @@ function fuzzyFallback(
         confidence: "single-source",
         fuzzy,
         warnings: [],
+        lost: [],
         errors: [],
         diagnostics: [],
         ...(lossyBlocked
@@ -621,6 +622,7 @@ function sigintTrackFrame(
       matchQuality: "lossy",
       success: !lossyBlocked,
       warnings: [],
+      lost: [],
       errors: [],
       diagnostics: [],
       ...(lossyBlocked
@@ -996,6 +998,7 @@ function convertStrict(
       matchQuality: quality,
       success: !lossyBlocked,
       warnings: [],
+      lost: [],
       errors: [],
       diagnostics: [],
       mappingSource: sources.join(" + "),

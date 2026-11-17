@@ -7,6 +7,7 @@ import { convertSidc } from "../converters/converter";
 import { convertNumericTo2525C } from "../converters/reverse";
 import { cotToSidc, sidcToCot } from "../cot";
 import { disToSidc, sidcToDis } from "../dis";
+import { detectInput } from "../input";
 import {
   isAffiliation,
   isCountryCode,
@@ -146,9 +147,9 @@ function optionsOf(
   return o;
 }
 
-const isNumeric = (s: string) => /^\s*\d{20}(\d{10})?\s*$/.test(s);
-const isDis = (s: string) => /^\s*\d{1,5}(\.\d{1,5}){1,6}\s*$/.test(s);
-const isCot = (s: string) => /^\s*a-/.test(s);
+const isNumeric = (s: string) => detectInput(s) === "numeric";
+const isDis = (s: string) => detectInput(s) === "dis";
+const isCot = (s: string) => detectInput(s) === "cot";
 /** Inputs that only convert to 2525C. */
 const isForeign = (s: string) => isNumeric(s) || isDis(s) || isCot(s);
 

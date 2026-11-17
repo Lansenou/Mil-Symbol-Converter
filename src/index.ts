@@ -101,6 +101,8 @@ export {
   WILDCARD_POSITIONS,
 } from "./legacy/fields";
 export { SYMBOL_SET_NAMES } from "./data/index";
+export { readSidc, type ReadSidcOptions, type ReadSidcResult } from "./read";
+export { detectInput, type InputKind } from "./input";
 export {
   sidcToCot,
   cotToSidc,
