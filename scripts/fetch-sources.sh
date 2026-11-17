@@ -27,6 +27,12 @@ fetch mil-sym-ts "$(pin mil-sym-ts url)" "$(pin mil-sym-ts commit)" \
   '/src/main/ts/armyc2/c5isr/data/mse.json' '/src/main/ts/armyc2/c5isr/data/smd.json' \
   '/src/main/ts/armyc2/c5isr/data/sme.json' '/LICENSE'
 
+# DIS enumerations, SISO-REF-010 (SISO schema and API licence, attribution required), as the XML
+# that Open-DIS keeps; and Unicode CLDR code mappings (Unicode-3.0) for ISO alpha-3 to alpha-2.
+fetch siso-ref-010 "$(pin siso-ref-010 url)" "$(pin siso-ref-010 commit)" '/xml/SISO/SISO-REF-010.xml'
+fetch cldr-json "$(pin cldr-json url)" "$(pin cldr-json commit)" \
+  '/cldr-json/cldr-core/supplemental/codeMappings.json' '/LICENSE'
+
 # MIL-STD-2525C (17 Nov 2008, Distribution A: approved for public release) and MIL-STD-2525D
 # (10 Jun 2014). Used to extract the normative 2525C SIDC catalog and for manual fixture review.
 mkdir -p .sources/standards

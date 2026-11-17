@@ -12,12 +12,15 @@ import {
   parseModifierCatalog,
 } from "./lib/milsym.mjs";
 import { parse2525cCatalog } from "./lib/standard-2525c.mjs";
+import { parseSisoRef010 } from "./lib/siso-ref-010.mjs";
 
 const SRC = ".sources";
 const OUT = "src/data";
 const PINS = JSON.parse(fs.readFileSync("scripts/sources.json", "utf8"));
 const JMSML_SHA = PINS.jmsml.commit;
 const MILSYM_SHA = PINS["mil-sym-ts"].commit;
+const SISO_SHA = PINS["siso-ref-010"].commit;
+const CLDR_SHA = PINS["cldr-json"].commit;
 
 const write = (name, data) => {
   fs.writeFileSync(`${OUT}/${name}`, JSON.stringify(data) + "\n");
@@ -184,6 +187,13 @@ const fields = {
 };
 
 // ---------------------------------------------------------------------------------------------
+// DIS enumerations (SISO-REF-010) for src/dis.ts.
+const dis = parseSisoRef010(
+  `${SRC}/siso-ref-010/xml/SISO/SISO-REF-010.xml`,
+  `${SRC}/cldr-json/cldr-json/cldr-core/supplemental/codeMappings.json`,
+);
+
+// ---------------------------------------------------------------------------------------------
 const provenance = {
   generatedBy: "scripts/build-data.mjs",
   sources: {
@@ -209,8 +219,27 @@ const provenance = {
       url: "https://github.com/missioncommand/mil-sym-ts",
       commit: MILSYM_SHA,
     },
+    "SISO-REF-010": {
+      title: `${dis.title} (${dis.date}), Enumerations for Simulation Interoperability`,
+      license:
+        'SISO schema and API licence: royalty-free, all purposes, with the attribution "Reprinted with permission from SISO Inc."',
+      url: "https://github.com/open-dis/opendis7-source-generator (xml/SISO/SISO-REF-010.xml)",
+      commit: SISO_SHA,
+    },
+    "CLDR code mappings": {
+      title:
+        "Unicode CLDR supplemental codeMappings.json (ISO 3166 alpha-2 to alpha-3)",
+      license: "Unicode-3.0",
+      url: "https://github.com/unicode-org/cldr-json",
+      commit: CLDR_SHA,
+    },
   },
-  issues: { jmsml: jmsmlIssues, milsym: milsymIssues, base: base.conflicts },
+  issues: {
+    jmsml: jmsmlIssues,
+    milsym: milsymIssues,
+    base: base.conflicts,
+    dis: dis.issues,
+  },
 };
 
 fs.mkdirSync(OUT, { recursive: true });
@@ -259,6 +288,11 @@ write("edition-catalogs.json", {
   catalogs: encodedCatalogs,
 });
 write("field-codes.json", fields);
+write("dis.json", {
+  source: dis.title,
+  names: dis.names,
+  countries: dis.countries,
+});
 write("provenance.json", provenance);
 console.log(
   `2525C rows ${c2525.length}; JMSML rows ${jmsmlRows.length}; mil-sym rows ${milsymRows.length};`,

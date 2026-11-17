@@ -101,6 +101,16 @@ export {
   WILDCARD_POSITIONS,
 } from "./legacy/fields";
 export { SYMBOL_SET_NAMES } from "./data/index";
+export {
+  sidcToDis,
+  disToSidc,
+  forceIdToAffiliation,
+  affiliationToForceId,
+  type DisEntityType,
+  type SidcToDisResult,
+  type DisToSidcResult,
+  type DisToSidcOptions,
+} from "./dis";
 export type { WildcardFieldName, WildcardField } from "./wildcard";
 export type { LegacySidcFields } from "./types";
 export {
