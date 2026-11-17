@@ -102,6 +102,13 @@ export {
 } from "./legacy/fields";
 export { SYMBOL_SET_NAMES } from "./data/index";
 export {
+  sidcToCot,
+  cotToSidc,
+  type SidcToCotResult,
+  type CotToSidcResult,
+  type CotToSidcOptions,
+} from "./cot";
+export {
   sidcToDis,
   disToSidc,
   forceIdToAffiliation,
