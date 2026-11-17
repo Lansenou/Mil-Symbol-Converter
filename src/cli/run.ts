@@ -5,6 +5,8 @@
 import { parseArgs } from "node:util";
 import { convertSidc } from "../converters/converter";
 import { convertNumericTo2525C } from "../converters/reverse";
+import { cotToSidc, sidcToCot } from "../cot";
+import { disToSidc, sidcToDis } from "../dis";
 import {
   isAffiliation,
   isCountryCode,
@@ -26,7 +28,21 @@ export interface CliIo {
   readFile: (path: string) => Promise<string>;
 }
 
-const TARGET_ALIASES: Record<string, SidcStandard> = {
+/** A SIDC standard, or one of the other identifiers this tool converts to. */
+type Target = SidcStandard | "DIS" | "CoT";
+
+/** What the output needs from any conversion. */
+type Row = Pick<
+  ConversionResult,
+  "output" | "matchQuality" | "success" | "errors"
+> & {
+  fuzzy?: ConversionResult["fuzzy"];
+  full: unknown;
+};
+
+const TARGET_ALIASES: Record<string, Target> = {
+  dis: "DIS",
+  cot: "CoT",
   "2525d": "MIL-STD-2525D",
   "2525e": "MIL-STD-2525E",
   "app-6d": "APP-6D",
@@ -51,10 +67,14 @@ Converts MIL-STD-2525C letter SIDCs to numeric 2525D/E and APP-6D/E codes, and
 numeric codes back to 2525C. Without SIDC arguments, reads one code per line
 from --file or standard input (or a CSV column with --csv).
 
+Numeric codes, DIS entity types (1.1.225.1.1.3) and CoT types (a-f-G-U-C-I)
+convert back to 2525C.
+
 Options:
-  -t, --to <target>       2525D (default), APP-6D, 2525E, APP-6E, 12, all;
-                          numeric codes always convert to 2525C (in CSV mode
-                          only with --to 2525C)
+  -t, --to <target>       2525D (default), APP-6D, 2525E, APP-6E, 12, all,
+                          DIS (entity type; aggregate type for units), CoT;
+                          numeric, DIS and CoT inputs always convert to 2525C
+                          (in CSV mode only with --to 2525C)
   -f, --file <path>       read codes from a file
       --csv <column>      input is CSV with a header row; convert this column and
                           append result columns
@@ -69,6 +89,8 @@ Options:
       --country <cc>      value for ** in positions 13-14 (e.g. US or --)
       --ob <c>            value for a * in position 15
       --strict            reject lowercase, whitespace and typographic dashes
+      --force-id <n>      DIS Force ID of DIS inputs (sets the affiliation)
+      --aggregate         read DIS inputs as aggregate types (units)
   -q, --quiet             no summary on stderr
   -h, --help              show this help
 
@@ -77,7 +99,7 @@ Exit status: 0 if every code converted, 1 if any did not, 2 on bad usage.
 
 class UsageError extends Error {}
 
-function targetsOf(value: string | undefined): SidcStandard[] {
+function targetsOf(value: string | undefined): Target[] {
   if (!value) return ["MIL-STD-2525D"];
   if (value.toLowerCase() === "all") return ALL;
   const key = value.toLowerCase();
@@ -88,7 +110,7 @@ function targetsOf(value: string | undefined): SidcStandard[] {
       (s) => s.toLowerCase() === value.toLowerCase(),
     );
   if (!t) throw new UsageError(`Unknown target "${value}".`);
-  return [t as SidcStandard];
+  return [t as Target];
 }
 
 function optionsOf(
@@ -125,8 +147,66 @@ function optionsOf(
 }
 
 const isNumeric = (s: string) => /^\s*\d{20}(\d{10})?\s*$/.test(s);
+const isDis = (s: string) => /^\s*\d{1,5}(\.\d{1,5}){1,6}\s*$/.test(s);
+const isCot = (s: string) => /^\s*a-/.test(s);
+/** Inputs that only convert to 2525C. */
+const isForeign = (s: string) => isNumeric(s) || isDis(s) || isCot(s);
+
+interface ExtraOptions {
+  forceId?: number;
+  aggregate?: boolean;
+}
+
+/** The fields the output uses, from any of the converters. */
+function row(
+  full: {
+    matchQuality: ConversionResult["matchQuality"];
+    diagnostics: { severity: string; message: string }[];
+  },
+  output: string | null,
+): Row {
+  return {
+    output,
+    matchQuality: full.matchQuality,
+    success: output !== null,
+    errors: full.diagnostics
+      .filter((d) => d.severity === "error")
+      .map((d) => d.message),
+    full,
+  };
+}
 
 function convertOne(
+  code: string,
+  target: Target,
+  options: ConversionOptions,
+  extra: ExtraOptions = {},
+): Row {
+  if (target === "DIS") {
+    const r = sidcToDis(code);
+    return row(r, r.text && (r.aggregate ? `aggregate ${r.text}` : r.text));
+  }
+  if (target === "CoT") {
+    const r = sidcToCot(code);
+    return row(r, r.cot);
+  }
+  if (isDis(code) && target === "MIL-STD-2525C") {
+    const r = disToSidc(code.trim(), {
+      ...(extra.forceId !== undefined && { forceId: extra.forceId }),
+      ...(extra.aggregate && { aggregate: true }),
+    });
+    return row(r, r.sidc);
+  }
+  if (isCot(code) && target === "MIL-STD-2525C") {
+    const r = cotToSidc(code.trim());
+    return row(r, r.sidc);
+  }
+  return withFull(convertSidcOrNumeric(code, target, options));
+}
+
+const withFull = (r: ConversionResult): Row => ({ ...r, full: r });
+
+function convertSidcOrNumeric(
   code: string,
   target: SidcStandard,
   options: ConversionOptions,
@@ -142,7 +222,7 @@ function convertOne(
   return convertSidc(code, { ...options, targetStandard: target });
 }
 
-const why = (r: ConversionResult) =>
+const why = (r: Row) =>
   r.errors[0] ??
   (r.fuzzy ? `${r.fuzzy.method}, certainty ${r.fuzzy.certainty}` : "");
 
@@ -181,7 +261,7 @@ export function parseCsv(text: string): string[][] {
 const csvField = (s: string) =>
   /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 const csvLine = (fields: string[]) => fields.map(csvField).join(",");
-const short = (t: SidcStandard) => t.replace("MIL-STD-", "");
+const short = (t: Target) => t.replace("MIL-STD-", "");
 
 const VALUE_OPTIONS = new Set([
   "--to",
@@ -195,6 +275,7 @@ const VALUE_OPTIONS = new Set([
   "--modifier",
   "--country",
   "--ob",
+  "--force-id",
 ]);
 
 /** Lets option values start with "-" (modifier "-E", country "--"): "--modifier -E" -> "--modifier=-E". */
@@ -234,6 +315,8 @@ export async function run(argv: string[], io: CliIo): Promise<number> {
         country: { type: "string" },
         ob: { type: "string" },
         strict: { type: "boolean" },
+        "force-id": { type: "string" },
+        aggregate: { type: "boolean" },
         quiet: { type: "boolean", short: "q" },
         help: { type: "boolean", short: "h" },
       },
@@ -248,11 +331,19 @@ export async function run(argv: string[], io: CliIo): Promise<number> {
     return 0;
   }
 
-  let targets: SidcStandard[];
+  let targets: Target[];
   let options: ConversionOptions;
+  const extra: ExtraOptions = {};
   try {
     targets = targetsOf(v.to);
     options = optionsOf(v);
+    if (v["force-id"] !== undefined) {
+      const n = Number(v["force-id"]);
+      if (!Number.isInteger(n) || n < 0 || n > 255)
+        throw new UsageError(`Invalid --force-id "${v["force-id"]}".`);
+      extra.forceId = n;
+    }
+    if (v.aggregate) extra.aggregate = true;
     if (positionals.length > 0 && (v.file || v.csv))
       throw new UsageError(
         "Give SIDCs as arguments or via --file/stdin, not both.",
@@ -275,7 +366,7 @@ export async function run(argv: string[], io: CliIo): Promise<number> {
   const tally = new Map<string, number>();
   let failed = 0;
   let total = 0;
-  const record = (r: ConversionResult) => {
+  const record = (r: Row) => {
     total++;
     if (!r.success) failed++;
     tally.set(r.matchQuality, (tally.get(r.matchQuality) ?? 0) + 1);
@@ -291,17 +382,17 @@ export async function run(argv: string[], io: CliIo): Promise<number> {
       );
       return 2;
     }
-    const extra = targets.flatMap((t) => [
+    const added = targets.flatMap((t) => [
       short(t),
       `${short(t)}_quality`,
       `${short(t)}_note`,
     ]);
-    io.stdout(`${csvLine([...header, ...extra])}\n`);
+    io.stdout(`${csvLine([...header, ...added])}\n`);
     for (const row of rows) {
       if (row.length === 1 && row[0] === "") continue;
       const code = row[col] ?? "";
       const cells = targets.flatMap((t) => {
-        const r = convertOne(code, t, options);
+        const r = convertOne(code, t, options, extra);
         record(r);
         return [r.output ?? "", r.matchQuality, why(r)];
       });
@@ -313,12 +404,12 @@ export async function run(argv: string[], io: CliIo): Promise<number> {
         ? positionals
         : (text ?? "").split(/\r?\n/).filter((l) => l.trim() !== "");
     for (const code of codes) {
-      // A numeric code has one destination: 2525C.
-      const ts: SidcStandard[] = isNumeric(code) ? ["MIL-STD-2525C"] : targets;
+      // Numeric codes, DIS and CoT types have one destination: 2525C.
+      const ts: Target[] = isForeign(code) ? ["MIL-STD-2525C"] : targets;
       for (const t of ts) {
-        const r = convertOne(code, t, options);
+        const r = convertOne(code, t, options, extra);
         record(r);
-        if (v.json) io.stdout(`${JSON.stringify(r)}\n`);
+        if (v.json) io.stdout(`${JSON.stringify(r.full)}\n`);
         else {
           const cols = [
             code,
