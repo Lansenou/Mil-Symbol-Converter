@@ -65,7 +65,7 @@ export function readSidc(
     case "2525C": {
       const r = validateSidc(input);
       return result(
-        r.normalized && r.fields ? r.normalized : null,
+        r.valid ? r.normalized : null,
         r.valid ? "exact" : "unsupported",
         [],
         r.diagnostics,

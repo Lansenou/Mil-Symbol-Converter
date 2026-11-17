@@ -41,6 +41,8 @@ describe("readSidc", () => {
     expect(r.lost.length).toBeGreaterThan(0);
     expect(readSidc(null).output).toBeNull();
     expect(readSidc("nonsense").output).toBeNull();
+    // Found by the fuzz tests: an invalid letter code is no output.
+    expect(readSidc("SSSS–SSSSSSSSS").output).toBeNull();
   });
 });
 
