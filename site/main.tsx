@@ -7,8 +7,10 @@ import {
   StatusLetter,
   convertNumericTo2525C,
   convertSidc,
+  disToSidc,
   isSymbolModifier,
   readMsdl,
+  sidcToDis,
   toRenderableSidc,
   validateSidc,
   type ConversionOptions,
@@ -36,7 +38,56 @@ const EXAMPLES: { sidc: string; note: string }[] = [
   { sidc: "S*GPUCI---*****", note: "Template with wildcards" },
   { sidc: "SFAPMFF—*****", note: "Pasted from a web list" },
   { sidc: "10031000151211000002", note: "Numeric, back to 2525C" },
+  { sidc: "1.1.225.1.1.3", note: "DIS entity type (M1A2)" },
 ];
+
+/** DIS entity type for the code, or (for a DIS input) the 2525C code it becomes. */
+function DisCard({
+  text,
+  forceId,
+  quality,
+  notes,
+  diagnostics,
+  sidc,
+}: {
+  text: string | null;
+  forceId?: number | null;
+  quality: string;
+  notes: string[];
+  diagnostics: Diagnostic[];
+  sidc?: boolean;
+}) {
+  const problems = diagnostics.filter((d) => d.severity !== "info");
+  return (
+    <article className="card">
+      <header>
+        <h3>{sidc ? "From DIS entity type" : "DIS entity type"}</h3>
+        <span className={`badge ${quality}`}>{quality}</span>
+      </header>
+      <div className="row">
+        {sidc && (
+          <Symbol sidc={text && toRenderableSidc(text).sidc} std="2525" />
+        )}
+        <div className="code">
+          {text ? (
+            <>
+              <code>{text}</code>
+              <Copy text={text} />
+              {forceId != null && <p className="name">Force ID {forceId}</p>}
+              <p className="name">{notes.join("; ")}</p>
+            </>
+          ) : (
+            <>
+              <span className="muted">No output</span>
+              {problems[0] && <p className="reason">{problems[0].message}</p>}
+            </>
+          )}
+        </div>
+      </div>
+      {problems.length > 0 && text && <Diagnostics items={problems} />}
+    </article>
+  );
+}
 
 const NAMES = (o: Record<string, string>) =>
   Object.entries(o).map(([name, code]) => ({
@@ -414,14 +465,19 @@ function App() {
     ...(status && { status: status as StatusLetter }),
     ...(isSymbolModifier(mod) && { symbolModifier: mod }),
   };
-  const trimmed = input.trim();
+  const raw = input.trim();
+  // A DIS entity type ("1.1.225.1.1.3") goes through the 2525C code it becomes.
+  const fromDis = /^\d{1,5}(\.\d{1,5}){1,6}$/.test(raw) ? disToSidc(raw) : null;
+  const code = fromDis ? (fromDis.sidc ?? "") : input;
+  const trimmed = code.trim();
   const numeric = /^\d{20}(\d{10})?$/.test(trimmed);
+  const toDis = fromDis || !trimmed ? null : sidcToDis(trimmed);
 
-  const validation = numeric ? null : validateSidc(input);
+  const validation = numeric || !trimmed ? null : validateSidc(code);
   const reverse = numeric ? convertNumericTo2525C(trimmed) : null;
   const drawn = numeric
     ? null
-    : toRenderableSidc(input, {
+    : toRenderableSidc(code, {
         fallback: {
           ...(affiliation && { affiliation: affiliation as AffiliationLetter }),
           ...(status && { status: status as StatusLetter }),
@@ -431,7 +487,7 @@ function App() {
   // A numeric code reaches the other editions through its 2525C equivalent.
   const letter = reverse
     ? (reverse.output ?? reverse.candidates?.[0]?.output ?? null)
-    : input;
+    : code;
   const results = letter
     ? TARGETS.map((t) => {
         const r = convertSidc(letter, { ...options, targetStandard: t.id });
@@ -442,7 +498,7 @@ function App() {
         };
       })
     : [];
-  const shown = validation?.normalized ?? input;
+  const shown = validation?.normalized ?? code;
 
   return (
     <main>
@@ -462,7 +518,10 @@ function App() {
 
       <section className="panel">
         <label className="field">
-          <span>SIDC (15-character 2525C, or 20/30-digit numeric)</span>
+          <span>
+            SIDC (15-character 2525C, or 20/30-digit numeric), or a DIS entity
+            type
+          </span>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -625,8 +684,17 @@ function App() {
         </section>
       )}
 
-      {results.length > 0 && (
+      {(results.length > 0 || fromDis || toDis) && (
         <section className="grid">
+          {fromDis && (
+            <DisCard
+              sidc
+              text={fromDis.sidc}
+              quality={fromDis.matchQuality}
+              notes={fromDis.notes}
+              diagnostics={fromDis.diagnostics}
+            />
+          )}
           {results.map(({ id, label, std, r, preview }) => (
             <ResultCard
               key={id}
@@ -636,6 +704,15 @@ function App() {
               preview={preview}
             />
           ))}
+          {toDis && (
+            <DisCard
+              text={toDis.text}
+              forceId={toDis.forceId}
+              quality={toDis.matchQuality}
+              notes={toDis.notes}
+              diagnostics={toDis.diagnostics}
+            />
+          )}
         </section>
       )}
 
@@ -647,7 +724,8 @@ function App() {
       />
 
       <footer>
-        Mappings from Esri JMSML and US Army mil-sym-ts; symbols drawn by
+        Mappings from Esri JMSML and US Army mil-sym-ts; DIS enumerations from
+        SISO-REF-010, reprinted with permission from SISO Inc.; symbols drawn by
         milsymbol. Install: <code>npm install mil-symbol-converter</code>
       </footer>
     </main>

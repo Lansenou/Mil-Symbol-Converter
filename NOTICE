@@ -16,5 +16,17 @@ The generated tables in src/data/ are derived from the following works:
    Distribution A: approved for public release, distribution is unlimited.
    Used: SIDC catalog rows (Tables A-III, B-III, C-II, D-II, E-III, G-III).
 
+4. SISO-REF-010, Enumerations for Simulation Interoperability (v37, 2026-05-25), Simulation
+   Interoperability Standards Organization. Reprinted with permission from SISO Inc.
+   Used under SISO's schema and API licence (royalty-free, all purposes, with this attribution),
+   from the XML kept at https://github.com/open-dis/opendis7-source-generator
+   (commit 799ebae446888041f2e7d221594aac27cef79dbc).
+   Used: Force ID, entity kind, platform domains and categories, munition domains and
+   categories, country codes (src/data/dis.json).
+
+5. Unicode CLDR, https://github.com/unicode-org/cldr-json (commit
+   7d2b9cb11cec08f4d333ad73209deb3df0711c3b). Licensed under the Unicode License v3.
+   Used: ISO 3166 alpha-3 to alpha-2 code mappings, to key the DIS country codes.
+
 The derived tables were transformed (re-keyed and reduced) by scripts/build-data.mjs.
 A copy of the Apache License 2.0 is available at https://www.apache.org/licenses/LICENSE-2.0.

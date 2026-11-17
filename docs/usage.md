@@ -292,6 +292,29 @@ Units find their side through the command chain, equipment through its holding o
 installations use their own `Affiliation`. JC3IEDM hostility codes map to 2525C identities
 (`MSDL_HOSTILITY_TO_AFFILIATION`); involved and antagonist have no 2525C identity and stay `*`.
 
+## DIS entity types
+
+A DIS entity type (IEEE 1278.1, enumerations from SISO-REF-010) names a specific model:
+`1.1.225.1.1.3` is an M1A2. A SIDC says less ("tank"), so the two directions differ:
+
+```ts
+import { sidcToDis, disToSidc } from "mil-symbol-converter";
+
+const r = sidcToDis("SHGPEVAT----RU-"); // also numeric codes, and codes with "*"
+r.text; // "1.1.222.1.0.0.0": kind, domain, country, category; the rest is 0
+r.forceId; // 2 (opposing): affiliation travels as the Force ID, not in the entity type
+r.matchQuality; // "equivalent" | "lossy" (the symbol says more) | "approximate" (no category)
+
+disToSidc("1.1.225.1.1.3", { forceId: 2 }).sidc; // "SHGPEVAT----US-": every M1 is a tank
+disToSidc([1, 3, 224, 50]).sidc; // "S*SPCLFF----GB-": no Force ID, affiliation stays "*"
+```
+
+Covered: land, air, surface, subsurface and space platforms (kind 1), munitions (kind 2) and
+installations as cultural features (kind 5). Units have no entity type (DIS treats them as
+aggregates); life forms, sensors, radios and other kinds have no 2525C symbol. The category table is
+this library's own reading of the 2525C function IDs; categories without a 2525C symbol fall back to
+the domain's frame. `forceIdToAffiliation` and `affiliationToForceId` convert the Force ID.
+
 ## Command line
 
 ```bash

@@ -6,5 +6,13 @@
   "mil-sym-ts": {
     "url": "https://github.com/missioncommand/mil-sym-ts.git",
     "commit": "9f3c5512ecc8b9458da32328991b899910dafe7b"
+  },
+  "siso-ref-010": {
+    "url": "https://github.com/open-dis/opendis7-source-generator.git",
+    "commit": "799ebae446888041f2e7d221594aac27cef79dbc"
+  },
+  "cldr-json": {
+    "url": "https://github.com/unicode-org/cldr-json.git",
+    "commit": "7d2b9cb11cec08f4d333ad73209deb3df0711c3b"
   }
 }
