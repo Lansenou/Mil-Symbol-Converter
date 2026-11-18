@@ -1,6 +1,7 @@
 /**
  * Public conversion API.
  */
+import { cached } from "../cache";
 import type { CheckedSidc } from "../sidc-literal";
 import type {
   ConversionOptions,
@@ -76,7 +77,18 @@ function unsupportedTarget(
  */
 export function convertSidc<const S>(
   input: CheckedSidc<S>,
-  options: ConversionOptions = {},
+  options?: ConversionOptions,
+): ConversionResult {
+  return convertSidcCached(input, options);
+}
+const convertSidcCached = cached(
+  (input: unknown, options?: ConversionOptions) =>
+    convertSidcUncached(input, options ?? {}),
+);
+
+function convertSidcUncached(
+  input: unknown,
+  options: ConversionOptions,
 ): ConversionResult {
   const target = options.targetStandard ?? "MIL-STD-2525D";
   // Numeric input written in 2525D/E or APP-6D/E: convert back to 2525C.

@@ -37,13 +37,13 @@ import { toRenderableSidc } from "mil-symbol-converter";
 const r = toRenderableSidc("S*G*UCMT--*****", {
   fallback: { affiliation: "Hostile" }, // used only where the code has "*"
 });
-r.sidc; // "SHGPUCMT-------"
+r.output; // "SHGPUCMT-------"
 r.filled; // what was filled in, from your fallback or a neutral default
-r.dropped; // what the drawing leaves out
-new ms.Symbol(r.sidc!).asSVG();
+r.lost; // what the drawing leaves out
+new ms.Symbol(r.output!).asSVG();
 ```
 
-| Input             | milsymbol as is                                                             | Options                               | Result                          | Symbol                                                                            | Filled / dropped                                                                                                                                                                                                                       |
+| Input             | milsymbol as is                                                             | Options                               | Result                          | Symbol                                                                            | Filled / lost                                                                                                                                                                                                                          |
 | ----------------- | --------------------------------------------------------------------------- | ------------------------------------- | ------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `S*G*UCMT--*****` | not drawn                                                                   | default                               | `SUGPUCMT-------`<br>exact      | <img src="docs/images/render1-output.svg" alt="SUGPUCMT-------" height="40">      | standardIdentity `U` (default)<br>status `P` (default)<br>symbolModifier `--` (default)                                                                                                                                                |
 | `S*GPUCI---*****` | not drawn                                                                   | `fallback: {"affiliation":"Hostile"}` | `SHGPUCI--------`<br>exact      | <img src="docs/images/render2-output.svg" alt="SHGPUCI--------" height="40">      | standardIdentity `H` (fallback)<br>symbolModifier `--` (default)                                                                                                                                                                       |
@@ -71,10 +71,13 @@ There is also a command line: `npx mil-symbol-converter SFGPUCIC---E---`.
 
 - [Usage](docs/usage.md): drawing, conversion options, wildcards, lossy and fuzzy modes, numeric
   back to 2525C, MSDL scenarios, DIS entity types, Cursor on Target types, compile-time checks,
-  command line, React
+  command line, React, web component
 - [Examples](docs/examples.md): codes side by side in every edition, with symbols
 - [Conversion rules](docs/conversion-rules.md) and [limitations and coverage](docs/limitations.md)
 - [Standards research](docs/standards-research.md): field layouts, APP-6D vs 2525D, existing converters
+- [API reference](https://lansenou.github.io/Mil-Symbol-Converter/api/): every export, from the doc
+  comments
+- [Changelog](CHANGELOG.md)
 - [Development](docs/development.md): data sources, tests, publishing
 
 ## License

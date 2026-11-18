@@ -44,7 +44,7 @@ describe("useRenderableSidc", () => {
       { initialProps: { s: "S*GPUCI---*****", aff: "Hostile" as const } },
     );
     const first = result.current;
-    expect(first.sidc).toBe("SHGPUCI--------");
+    expect(first.output).toBe("SHGPUCI--------");
     // A new options object with the same values keeps the result.
     rerender({ s: "S*GPUCI---*****", aff: "Hostile" });
     expect(result.current).toBe(first);
@@ -52,7 +52,7 @@ describe("useRenderableSidc", () => {
 
   it("returns null for input that is not a SIDC", () => {
     const { result } = renderHook(() => useRenderableSidc(undefined));
-    expect(result.current.sidc).toBeNull();
+    expect(result.current.output).toBeNull();
   });
 });
 

@@ -11,8 +11,8 @@ import {
  * is safe in dependency arrays. Never throws; `sidc` is null when nothing usable can be made.
  *
  * ```tsx
- * const { sidc, filled } = useRenderableSidc(unit.sidc, { fallback: { affiliation: "Hostile" } });
- * const svg = useMemo(() => (sidc ? new ms.Symbol(sidc).asSVG() : null), [sidc]);
+ * const { output, filled } = useRenderableSidc(unit.sidc, { fallback: { affiliation: "Hostile" } });
+ * const svg = useMemo(() => (output ? new ms.Symbol(output).asSVG() : null), [output]);
  * ```
  */
 export function useRenderableSidc(

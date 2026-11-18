@@ -34,6 +34,18 @@ Expected values in `tests/fixtures/verified-sidcs.json` were written by hand fro
 2525D tables. `scripts/review-fixture.mjs` prints the cited table lines for review. The fixtures
 were not produced by the converter.
 
+## Public API
+
+`api/*.d.ts` is the published type declarations. `npm run check` fails when the build differs, so
+an API change has to be recorded: `npm run build && npm run api-report -- --update`. Under semantic
+versioning, removing or changing anything there needs a major version; adding is a minor one.
+
+## Changelog and API reference
+
+Add user-facing changes to "Unreleased" in [CHANGELOG.md](../CHANGELOG.md); the version bump PR
+renames that heading to the version. `npm run docs:api` builds the API reference (TypeDoc, from
+the doc comments) into `site-dist/api/`; the Pages workflow publishes it next to the demo.
+
 ## Publishing
 
 Releases are automatic: merging a change to `version` in `package.json` into `main` runs

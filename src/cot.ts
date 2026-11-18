@@ -15,12 +15,7 @@ import type { Diagnostic, MatchQuality } from "./types";
 
 export interface SidcToCotResult {
   input: unknown;
-  /**
-   * CoT type, e.g. "a-f-G-U-C-I", or null.
-   * @deprecated Use `output`; removed in 1.0.
-   */
-  cot: string | null;
-  /** Same as `cot`. Every converter's result has `output` and `lost`. */
+  /** CoT type, e.g. "a-f-G-U-C-I", or null. Every converter's result has `output` and `lost`. */
   output: string | null;
   /** What the input said that the output leaves out. */
   lost: string[];
@@ -29,22 +24,12 @@ export interface SidcToCotResult {
   source2525C: string | null;
   /** equivalent: nothing lost; lossy: see `dropped`. */
   matchQuality: MatchQuality;
-  /**
-   * What the code said that the CoT type leaves out.
-   * @deprecated Use `lost`; removed in 1.0.
-   */
-  dropped: string[];
   diagnostics: Diagnostic[];
 }
 
 export interface CotToSidcResult {
   input: unknown;
-  /**
-   * 2525C SIDC, or null.
-   * @deprecated Use `output`; removed in 1.0.
-   */
-  sidc: string | null;
-  /** Same as `sidc`. Every converter's result has `output` and `lost`. */
+  /** 2525C SIDC, or null. */
   output: string | null;
   /** What the input said that the output leaves out. */
   lost: string[];
@@ -79,18 +64,16 @@ export function sidcToCot(input: unknown): SidcToCotResult {
     dropped: string[] = [],
   ): SidcToCotResult => ({
     input,
-    cot,
     output: cot,
     lost: dropped,
     source2525C,
     matchQuality,
-    dropped,
     diagnostics: d.items,
   });
 
   const r = complete2525C(input, d);
   if (!r) return out(null, null, "unsupported");
-  const code = r.sidc!;
+  const code = r.output!;
   if (code[0] !== "S") {
     d.error(
       "NO_MAPPING",
@@ -100,7 +83,7 @@ export function sidcToCot(input: unknown): SidcToCotResult {
     return out(null, code, "unsupported");
   }
 
-  const dropped = [...r.dropped];
+  const dropped = [...r.lost];
   let identity = code[1]!;
   if (EXERCISE[identity]) {
     dropped.push(
@@ -154,7 +137,6 @@ export function cotToSidc(
     matchQuality: MatchQuality,
   ): CotToSidcResult => ({
     input: type,
-    sidc,
     output: sidc,
     lost: lostMessages(d.items),
     matchQuality,
@@ -200,15 +182,15 @@ export function cotToSidc(
   if (!findCatalogEntry(sidc)) {
     // Not a 2525C symbol: the nearest listed parent.
     const r = toRenderableSidc(sidc);
-    if (!r.sidc) {
+    if (!r.output) {
       d.extend(r.diagnostics);
       return out(null, "unsupported");
     }
     d.extend(r.diagnostics.filter((x) => x.code === "PARENT_SYMBOL_USED"));
-    if (r.sidc !== sidc) {
+    if (r.output !== sidc) {
       quality = "approximate";
     }
-    sidc = r.sidc.slice(0, 1) + identity + r.sidc.slice(2);
+    sidc = r.output.slice(0, 1) + identity + r.output.slice(2);
   }
   return out(sidc, quality);
 }

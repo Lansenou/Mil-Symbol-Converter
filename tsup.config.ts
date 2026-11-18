@@ -7,6 +7,7 @@ import { defineConfig } from "tsup";
 const library = {
   index: "src/index.ts",
   "react/index": "src/react/index.ts",
+  "element/index": "src/element/index.ts",
 };
 
 export default defineConfig([

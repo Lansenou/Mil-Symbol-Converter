@@ -7,6 +7,7 @@ import { convertSidc } from "../converters/converter";
 import { convertNumericTo2525C } from "../converters/reverse";
 import { cotToSidc, sidcToCot } from "../cot";
 import { disToSidc, sidcToDis } from "../dis";
+import { csvLine, parseCsv } from "../csv";
 import { detectInput } from "../input";
 import {
   isAffiliation,
@@ -185,22 +186,25 @@ function convertOne(
 ): Row {
   if (target === "DIS") {
     const r = sidcToDis(code);
-    return row(r, r.text && (r.aggregate ? `aggregate ${r.text}` : r.text));
+    return row(
+      r,
+      r.output && (r.aggregate ? `aggregate ${r.output}` : r.output),
+    );
   }
   if (target === "CoT") {
     const r = sidcToCot(code);
-    return row(r, r.cot);
+    return row(r, r.output);
   }
   if (isDis(code) && target === "MIL-STD-2525C") {
     const r = disToSidc(code.trim(), {
       ...(extra.forceId !== undefined && { forceId: extra.forceId }),
       ...(extra.aggregate && { aggregate: true }),
     });
-    return row(r, r.sidc);
+    return row(r, r.output);
   }
   if (isCot(code) && target === "MIL-STD-2525C") {
     const r = cotToSidc(code.trim());
-    return row(r, r.sidc);
+    return row(r, r.output);
   }
   return withFull(convertSidcOrNumeric(code, target, options));
 }
@@ -227,41 +231,7 @@ const why = (r: Row) =>
   r.errors[0] ??
   (r.fuzzy ? `${r.fuzzy.method}, certainty ${r.fuzzy.certainty}` : "");
 
-// ---- minimal CSV (RFC 4180: quotes, doubled quotes, embedded commas/newlines)
-export function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = "";
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i]!;
-    if (quoted) {
-      if (c === '"' && text[i + 1] === '"') {
-        field += '"';
-        i++;
-      } else if (c === '"') quoted = false;
-      else field += c;
-    } else if (c === '"') quoted = true;
-    else if (c === ",") {
-      row.push(field);
-      field = "";
-    } else if (c === "\n" || c === "\r") {
-      if (c === "\r" && text[i + 1] === "\n") i++;
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = "";
-    } else field += c;
-  }
-  if (field !== "" || row.length > 0) {
-    row.push(field);
-    rows.push(row);
-  }
-  return rows;
-}
-const csvField = (s: string) =>
-  /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-const csvLine = (fields: string[]) => fields.map(csvField).join(",");
+export { parseCsv };
 const short = (t: Target) => t.replace("MIL-STD-", "");
 
 const VALUE_OPTIONS = new Set([

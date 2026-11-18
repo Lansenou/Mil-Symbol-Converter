@@ -60,8 +60,9 @@ icons (symbol sets 45/46) and the Dummy Minefield / Bridge or Gap control measur
 
 ## Known limitations
 
-- **Input is MIL-STD-2525C only.** 2525B Change 2 codes that 2525C dropped, and APP-6(A)/(B) codes
-  that differ from 2525C, are not recognized. No numeric→letter conversion is provided.
+- **Letter input is read as MIL-STD-2525C.** The nine 2525B Change 2 symbols that 2525C retired
+  are recognized and drawn as their 2525C parent; other differences between 2525B, APP-6(A)/(B)
+  and 2525C are not tracked.
 - **APP-6(C) output is not supported.** It shares version `10` with 2525D/APP-6D and no APP-6(C)
   catalog was available.
 - **APP-6(D), APP-6(E), 2525E are checked against mil-sym-ts catalogs, not the standards.** Results

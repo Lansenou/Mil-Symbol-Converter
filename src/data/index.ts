@@ -114,6 +114,16 @@ export const milsymRows: MilsymRow[] = decodeRows(legacyMappings.milsym).map(
 );
 export const milsymByKey = group(milsymRows, (r) => legacyKey(r.basic));
 
+/** Name of a MIL-STD-2525B Change 2 symbol that 2525C retired (from JMSML), by code. */
+export function retired2525BName(sidc: string): string | undefined {
+  const key = legacyKey(sidc);
+  for (const line of legacyMappings.retired2525B.split("\n")) {
+    const [template = "", name = ""] = line.split("|");
+    if (legacyKey(template) === key) return name;
+  }
+  return undefined;
+}
+
 type Table = Record<string, number>;
 /** Per symbol set: [codes, name indices as differences], both comma-separated. */
 type EncodedTable = Record<string, string[]>;

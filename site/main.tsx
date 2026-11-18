@@ -15,6 +15,7 @@ import {
   validateSidc,
   type ConversionOptions,
 } from "../src";
+import { BatchPanel } from "./batch-panel";
 import { IdCard, ResultCard, previewOf } from "./cards";
 import { EXAMPLES, NAMES, TARGETS } from "./data";
 import { MsdlPanel } from "./msdl-panel";
@@ -68,7 +69,7 @@ function App() {
       : null;
   const fromCot = kind === "cot" ? cotToSidc(raw) : null;
   const foreign = fromDis ?? fromCot;
-  const code = foreign ? (foreign.sidc ?? "") : input;
+  const code = foreign ? (foreign.output ?? "") : input;
   const trimmed = code.trim();
   const numeric = detectInput(trimmed) === "numeric";
   const toDis = foreign || !trimmed ? null : sidcToDis(trimmed);
@@ -258,7 +259,7 @@ function App() {
                 ? validation.valid && !validation.isTemplate
                   ? shown
                   : null
-                : (drawn?.sidc ?? null)
+                : (drawn?.output ?? null)
             }
             std="2525"
           />
@@ -271,13 +272,13 @@ function App() {
               <code>{shown}</code>
               {validation.isTemplate && " · template"}
             </p>
-            {!strict && drawn?.sidc && drawn.sidc !== shown && (
+            {!strict && drawn?.output && drawn.output !== shown && (
               <p className="muted">
-                Drawn as <code>{drawn.sidc}</code> (
+                Drawn as <code>{drawn.output}</code> (
                 <code>toRenderableSidc</code>
                 {drawn.filled.length > 0 &&
                   `: filled ${drawn.filled.map((f) => `${f.field} ${f.value} (${f.from})`).join(", ")}`}
-                {drawn.dropped.length > 0 && `; ${drawn.dropped.join(" ")}`})
+                {drawn.lost.length > 0 && `; ${drawn.lost.join(" ")}`})
               </p>
             )}
             <Diagnostics items={validation.diagnostics} />
@@ -322,7 +323,7 @@ function App() {
                     : "From DIS entity type"
                   : "From CoT type"
               }
-              text={foreign.sidc}
+              text={foreign.output}
               quality={foreign.matchQuality}
               notes={foreign.notes}
               diagnostics={foreign.diagnostics}
@@ -340,16 +341,16 @@ function App() {
           {toCot && (
             <IdCard
               title="Cursor on Target type"
-              text={toCot.cot}
+              text={toCot.output}
               quality={toCot.matchQuality}
-              notes={toCot.dropped}
+              notes={toCot.lost}
               diagnostics={toCot.diagnostics}
             />
           )}
           {toDis && (
             <IdCard
               title={toDis.aggregate ? "DIS aggregate type" : "DIS entity type"}
-              text={toDis.text}
+              text={toDis.output}
               forceId={toDis.forceId}
               quality={toDis.matchQuality}
               notes={toDis.notes}
@@ -358,6 +359,8 @@ function App() {
           )}
         </section>
       )}
+
+      <BatchPanel />
 
       <MsdlPanel
         onPick={(sidc) => {
@@ -369,7 +372,8 @@ function App() {
       <footer>
         Mappings from Esri JMSML and US Army mil-sym-ts; DIS enumerations from
         SISO-REF-010, reprinted with permission from SISO Inc.; symbols drawn by
-        milsymbol. Install: <code>npm install mil-symbol-converter</code>
+        milsymbol. Install: <code>npm install mil-symbol-converter</code> ·{" "}
+        <a href="./api/">API reference</a>
       </footer>
     </main>
   );

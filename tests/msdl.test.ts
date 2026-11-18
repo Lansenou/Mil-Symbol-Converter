@@ -55,7 +55,8 @@ describe("readMsdl", () => {
     expect(inf.sidc).toBe("S*GPUCI----F---");
     expect(inf.notes.join()).toMatch(/viewpoint/);
     expect(
-      toRenderableSidc(inf.sidc, { fallback: { affiliation: "Friend" } }).sidc,
+      toRenderableSidc(inf.sidc, { fallback: { affiliation: "Friend" } })
+        .output,
     ).toBe("SFGPUCI----F---");
   });
 

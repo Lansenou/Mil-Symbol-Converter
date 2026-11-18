@@ -52,11 +52,9 @@ export interface SidcToDisResult {
   /** True for units: `entityType` is an aggregate type, for the Aggregate State PDU. */
   aggregate: boolean;
   /**
-   * The entity type as "kind.domain.country.category.subcategory.specific.extra".
-   * @deprecated Use `output`; removed in 1.0.
+   * The entity type as "kind.domain.country.category.subcategory.specific.extra", or null.
+   * Every converter's result has `output` and `lost`.
    */
-  text: string | null;
-  /** Same as `text`. Every converter's result has `output` and `lost`. */
   output: string | null;
   /** What the input said that the output leaves out. */
   lost: string[];
@@ -77,12 +75,7 @@ export interface SidcToDisResult {
 
 export interface DisToSidcResult {
   input: unknown;
-  /**
-   * 2525C SIDC; affiliation is "*" unless `forceId` is given.
-   * @deprecated Use `output`; removed in 1.0.
-   */
-  sidc: string | null;
-  /** Same as `sidc`. Every converter's result has `output` and `lost`. */
+  /** 2525C SIDC, or null; affiliation is "*" unless `forceId` is given. */
   output: string | null;
   /** What the input said that the output leaves out. */
   lost: string[];
@@ -161,7 +154,6 @@ export function sidcToDis(input: unknown): SidcToDisResult {
     input,
     entityType: null,
     aggregate: false,
-    text: null,
     output: null,
     lost: [],
     forceId: null,
@@ -173,7 +165,7 @@ export function sidcToDis(input: unknown): SidcToDisResult {
 
   const r = complete2525C(input, d);
   if (!r) return fail();
-  const code = r.sidc!;
+  const code = r.output!;
 
   const scheme = code[0]!;
   const dim = code[2]!;
@@ -203,7 +195,6 @@ export function sidcToDis(input: unknown): SidcToDisResult {
     input,
     entityType: t,
     aggregate,
-    text: text(t),
     output: text(t),
     lost: lostMessages(d.items),
     forceId,
@@ -393,7 +384,6 @@ export function disToSidc(
     notes: string[] = [],
   ): DisToSidcResult => ({
     input: entityType,
-    sidc,
     output: sidc,
     lost: lostMessages(d.items),
     matchQuality,

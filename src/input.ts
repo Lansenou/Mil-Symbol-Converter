@@ -46,5 +46,5 @@ export function complete2525C(
   }
   const r = toRenderableSidc(letters);
   d.extend(r.diagnostics);
-  return r.sidc ? r : null;
+  return r.output ? r : null;
 }

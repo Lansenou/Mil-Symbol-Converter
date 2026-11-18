@@ -220,21 +220,21 @@ const RENDER_CASES: { input: string; options: RenderOptions }[] = [
 ];
 const t3: string[] = [];
 t3.push(
-  "| Input | milsymbol as is | Options | Result | Symbol | Filled / dropped |",
+  "| Input | milsymbol as is | Options | Result | Symbol | Filled / lost |",
 );
 t3.push("| --- | --- | --- | --- | --- | --- |");
 RENDER_CASES.forEach((c, i) => {
   const r = toRenderableSidc(c.input, c.options);
-  if (!r.sidc) throw new Error(`no renderable SIDC for ${c.input}`);
+  if (!r.output) throw new Error(`no renderable SIDC for ${c.input}`);
   const asIs = drawable(c.input, "2525")
     ? svg(c.input, "2525", `render${i + 1}-input`)
     : "not drawn";
   const filled = r.filled
     .filter((f) => f.field !== "countryCode" && f.field !== "orderOfBattle")
     .map((f) => `${f.field} \`${f.value}\` (${f.from})`);
-  const notes = [...filled, ...r.dropped].join("<br>") || "—";
+  const notes = [...filled, ...r.lost].join("<br>") || "—";
   t3.push(
-    `| \`${c.input}\` | ${asIs} | ${optText(c.options as ConversionOptions)} | \`${r.sidc}\`<br>${r.matchQuality} | ${svg(r.sidc, "2525", `render${i + 1}-output`)} | ${notes} |`,
+    `| \`${c.input}\` | ${asIs} | ${optText(c.options as ConversionOptions)} | \`${r.output}\`<br>${r.matchQuality} | ${svg(r.output, "2525", `render${i + 1}-output`)} | ${notes} |`,
   );
 });
 
