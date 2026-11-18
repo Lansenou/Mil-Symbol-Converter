@@ -1,6 +1,6 @@
 {
   "name": "mil-symbol-converter",
-  "version": "0.12.0",
+  "version": "1.0.0",
   "description": "Convert MIL-STD-2525C letter SIDCs to MIL-STD-2525D/E and APP-6D/E numeric SIDCs and back; draw incomplete codes from real data, catch typos in codes you write.",
   "type": "module",
   "license": "MIT",
@@ -52,11 +52,12 @@
     "test:watch": "vitest",
     "verify-exports": "node scripts/verify-exports.mjs",
     "build-data": "node scripts/build-data.mjs",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run verify-exports",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run verify-exports && npm run api-report",
     "prepare": "npm run build",
     "site": "vite site",
     "build:site": "vite build site --base ./ --outDir ../site-dist --emptyOutDir",
-    "docs:api": "typedoc"
+    "docs:api": "typedoc",
+    "api-report": "node scripts/api-report.mjs"
   },
   "peerDependencies": {
     "react": ">=18"

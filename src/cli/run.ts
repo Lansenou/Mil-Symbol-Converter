@@ -186,22 +186,25 @@ function convertOne(
 ): Row {
   if (target === "DIS") {
     const r = sidcToDis(code);
-    return row(r, r.text && (r.aggregate ? `aggregate ${r.text}` : r.text));
+    return row(
+      r,
+      r.output && (r.aggregate ? `aggregate ${r.output}` : r.output),
+    );
   }
   if (target === "CoT") {
     const r = sidcToCot(code);
-    return row(r, r.cot);
+    return row(r, r.output);
   }
   if (isDis(code) && target === "MIL-STD-2525C") {
     const r = disToSidc(code.trim(), {
       ...(extra.forceId !== undefined && { forceId: extra.forceId }),
       ...(extra.aggregate && { aggregate: true }),
     });
-    return row(r, r.sidc);
+    return row(r, r.output);
   }
   if (isCot(code) && target === "MIL-STD-2525C") {
     const r = cotToSidc(code.trim());
-    return row(r, r.sidc);
+    return row(r, r.output);
   }
   return withFull(convertSidcOrNumeric(code, target, options));
 }

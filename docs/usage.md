@@ -15,8 +15,7 @@ readSidc("1.1.225.1.1.3", { forceId: 2 }).output; // "SHGPEVAT----US-"
 ```
 
 Every converter's result has `output` (the result, or null), `matchQuality`, `lost` (what the input
-said that the output leaves out) and `diagnostics`. Older names (`sidc`, `text`, `cot`, `dropped`)
-still work and are removed in 1.0.
+said that the output leaves out) and `diagnostics`.
 
 ### Older letter codes (2525B, APP-6B)
 
@@ -47,13 +46,13 @@ import { toRenderableSidc } from "mil-symbol-converter";
 const r = toRenderableSidc("S*G*UCMT--*****", {
   fallback: { affiliation: "Hostile", status: "Present" },
 });
-r.sidc; // "SHGPUCMT-------"
+r.output; // "SHGPUCMT-------"
 r.filled; // [{ field: "standardIdentity", value: "H", from: "fallback" }, ...]
-r.dropped; // [] (what the drawing leaves out, as text)
-if (r.sidc) new ms.Symbol(r.sidc).asSVG();
+r.lost; // [] (what the drawing leaves out, as text)
+if (r.output) new ms.Symbol(r.output).asSVG();
 ```
 
-| Input             | milsymbol as is                                                        | Options                               | Result                          | Symbol                                                                       | Filled / dropped                                                                                                                                                                                                                       |
+| Input             | milsymbol as is                                                        | Options                               | Result                          | Symbol                                                                       | Filled / lost                                                                                                                                                                                                                          |
 | ----------------- | ---------------------------------------------------------------------- | ------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `S*G*UCMT--*****` | not drawn                                                              | default                               | `SUGPUCMT-------`<br>exact      | <img src="images/render1-output.svg" alt="SUGPUCMT-------" height="40">      | standardIdentity `U` (default)<br>status `P` (default)<br>symbolModifier `--` (default)                                                                                                                                                |
 | `S*GPUCI---*****` | not drawn                                                              | `fallback: {"affiliation":"Hostile"}` | `SHGPUCI--------`<br>exact      | <img src="images/render2-output.svg" alt="SHGPUCI--------" height="40">      | standardIdentity `H` (fallback)<br>symbolModifier `--` (default)                                                                                                                                                                       |
@@ -61,7 +60,7 @@ if (r.sidc) new ms.Symbol(r.sidc).asSVG();
 | `SFGPUCIZE------` | not drawn                                                              | default                               | `SFGPUCIZ-------`<br>lossy      | <img src="images/render4-output.svg" alt="SFGPUCIZ-------" height="40">      | Function ID "UCIZE-" is not in the 2525C tables; drawn as its parent "UCIZ--" (INFANTRY MECHANIZED).                                                                                                                                   |
 | `SFGPUCVRW-*****` | <img src="images/render5-input.svg" alt="SFGPUCVRW-*****" height="40"> | `targetStandard: "MIL-STD-2525D"`     | `10031000001206000000`<br>lossy | <img src="images/render5-output.svg" alt="10031000001206000000" height="40"> | symbolModifier `--` (default)<br>Approximate result (ancestor, certainty 1.00): no mapping for "ANTISUBMARINE WARFARE ROTARY WING"; using its 2525C parent (2 levels up) "AVIATION" (SFGPUCV--------), which loses the specialisation. |
 
-The result is for display: `matchQuality`, `filled` and `dropped` say how far it is from the
+The result is for display: `matchQuality`, `filled` and `lost` say how far it is from the
 input. Use `convertSidc` when a wrong code would be worse than none.
 
 ## Converting codes
@@ -335,12 +334,12 @@ A DIS entity type (IEEE 1278.1, enumerations from SISO-REF-010) names a specific
 import { sidcToDis, disToSidc } from "mil-symbol-converter";
 
 const r = sidcToDis("SHGPEVAT----RU-"); // also numeric codes, and codes with "*"
-r.text; // "1.1.222.1.0.0.0": kind, domain, country, category; the rest is 0
+r.output; // "1.1.222.1.0.0.0": kind, domain, country, category; the rest is 0
 r.forceId; // 2 (opposing): affiliation travels as the Force ID, not in the entity type
 r.matchQuality; // "equivalent" | "lossy" (the symbol says more) | "approximate" (no category)
 
-disToSidc("1.1.225.1.1.3", { forceId: 2 }).sidc; // "SHGPEVAT----US-": every M1 is a tank
-disToSidc([1, 3, 224, 50]).sidc; // "S*SPCLFF----GB-": no Force ID, affiliation stays "*"
+disToSidc("1.1.225.1.1.3", { forceId: 2 }).output; // "SHGPEVAT----US-": every M1 is a tank
+disToSidc([1, 3, 224, 50]).output; // "S*SPCLFF----GB-": no Force ID, affiliation stays "*"
 ```
 
 Covered: land, air, surface, subsurface and space platforms (kind 1), munitions (kind 2) and
@@ -353,8 +352,8 @@ PDU) with `aggregate: true`: kind 1 (military hierarchy), domain, country, echel
 specific:
 
 ```ts
-sidcToDis("SFGPUCA---AH---").text; // "1.1.0.8.2.1.0": armor brigade with its headquarters
-disToSidc("1.1.225.6.3", { aggregate: true }).sidc; // "S*GPUCI----FUS-": infantry battalion
+sidcToDis("SFGPUCA---AH---").output; // "1.1.0.8.2.1.0": armor brigade with its headquarters
+disToSidc("1.1.225.6.3", { aggregate: true }).output; // "S*GPUCI----FUS-": infantry battalion
 ```
 
 The category table is
@@ -369,9 +368,9 @@ dimension, then each function ID character, joined with `-`. No table is involve
 ```ts
 import { sidcToCot, cotToSidc } from "mil-symbol-converter";
 
-sidcToCot("SHGPEVAT-------").cot; // "a-h-G-E-V-A-T"
-sidcToCot("SFGPUCI----E---").dropped; // the echelon: CoT types carry no status, modifiers or country
-cotToSidc("a-f-G-U-C-I").sidc; // "SFGPUCI--------"
+sidcToCot("SHGPEVAT-------").output; // "a-h-G-E-V-A-T"
+sidcToCot("SFGPUCI----E---").lost; // the echelon: CoT types carry no status, modifiers or country
+cotToSidc("a-f-G-U-C-I").output; // "SFGPUCI--------"
 ```
 
 Only warfighting symbols (scheme S) have CoT atom types. Exercise identities become their
@@ -445,14 +444,11 @@ import { useRenderableSidc } from "mil-symbol-converter/react";
 function UnitIcon({ sidc }: { sidc: string }) {
   const r = useRenderableSidc(sidc, { fallback: { affiliation: "Unknown" } });
   const svg = useMemo(
-    () => (r.sidc ? new ms.Symbol(r.sidc).asSVG() : ""),
-    [r.sidc],
+    () => (r.output ? new ms.Symbol(r.output).asSVG() : ""),
+    [r.output],
   );
   return (
-    <span
-      title={r.dropped.join("\n")}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    <span title={r.lost.join("\n")} dangerouslySetInnerHTML={{ __html: svg }} />
   );
 }
 ```

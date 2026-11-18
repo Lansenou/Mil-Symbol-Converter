@@ -27,7 +27,8 @@ import type {
   SidcStandard,
 } from "./types";
 
-type FallbackKey =
+/** The fields `toRenderableSidc` can take a fallback value for. */
+export type FallbackKey =
   "affiliation" | "status" | "symbolModifier" | "countryCode" | "orderOfBattle";
 
 export interface RenderOptions extends Pick<
@@ -55,19 +56,15 @@ export interface FilledField {
 export interface RenderableSidc {
   input: unknown;
   /** Code to draw, or null if nothing usable could be made (e.g. not a SIDC at all). */
-  sidc: string | null;
-  /** Same as `sidc`. Every converter's result has `output` and `lost`. */
   output: string | null;
-  /** Same as `dropped`. */
+  /** What the code said that the drawing leaves out. */
   lost: string[];
   targetStandard: SidcStandard;
   /** The repaired, filled 2525C code the result is based on. */
   source2525C: string | null;
-  /** exact/equivalent: nothing the code says was lost; lossy/approximate: see `dropped`. */
+  /** exact/equivalent: nothing the code says was lost; lossy/approximate: see `lost`. */
   matchQuality: MatchQuality;
   filled: FilledField[];
-  /** What the code said that the drawing leaves out. */
-  dropped: string[];
   diagnostics: Diagnostic[];
 }
 
@@ -112,14 +109,12 @@ function renderable(input: unknown, options: RenderOptions): RenderableSidc {
     dropped: string[] = [],
   ): RenderableSidc => ({
     input,
-    sidc,
     output: sidc,
     lost: dropped,
     targetStandard: target,
     source2525C,
     matchQuality,
     filled,
-    dropped,
     diagnostics: d.items,
   });
 

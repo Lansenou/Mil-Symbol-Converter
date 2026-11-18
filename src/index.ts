@@ -22,7 +22,7 @@ export {
   convertToNumeric,
   type NumericTarget,
 } from "./converters/numeric";
-export { validateSidc, parseLegacyFields, normalizeInput } from "./validation";
+export { validateSidc } from "./validation";
 export {
   readMsdl,
   MSDL_HOSTILITY_TO_AFFILIATION,
@@ -36,6 +36,7 @@ export {
   type RenderOptions,
   type RenderableSidc,
   type FilledField,
+  type FallbackKey,
 } from "./render";
 export {
   resolveWildcards,
@@ -100,7 +101,7 @@ export {
   ORDERS_OF_BATTLE,
   WILDCARD_POSITIONS,
 } from "./legacy/fields";
-export { SYMBOL_SET_NAMES } from "./data/index";
+export { SYMBOL_SET_NAMES, type EditionKey } from "./data/index";
 export { readSidc, type ReadSidcOptions, type ReadSidcResult } from "./read";
 export { detectInput, type InputKind } from "./input";
 export { setCacheSize } from "./cache";

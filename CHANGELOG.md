@@ -4,7 +4,19 @@ Notable changes per release. Each version is on npm as `mil-symbol-converter@<ve
 modules) and `<version>-cjs` (CommonJS, dist-tag `cjs`). The GitHub release of each version lists
 its pull requests.
 
-## Unreleased
+## 1.0.0 (2026-11-18)
+
+The public API is now stable: `api/*.d.ts` records it, and CI fails on any change that the pull
+request does not record. Breaking changes from 0.12:
+
+- Results use `output` and `lost` only. Removed: `sidc` and `dropped` on `toRenderableSidc`
+  results, `text` on `sidcToDis`, `sidc` on `disToSidc` and `cotToSidc`, `cot` and `dropped` on
+  `sidcToCot`.
+- `normalizeInput` and `parseLegacyFields` are no longer exported (undocumented; `normalizeInput`
+  took an internal type). Use `validateSidc`, whose result has `normalized` and `fields`.
+- New type exports: `EditionKey` and `FallbackKey`, which public types already referred to.
+
+Also in 1.0.0:
 
 - **Results cache:** `convertSidc`, `toRenderableSidc` and `convertNumericTo2525C` remember their
   last 1000 results, so repeated codes convert about 10x faster. `setCacheSize(n)` resizes it;

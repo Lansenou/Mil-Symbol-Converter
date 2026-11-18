@@ -11,7 +11,7 @@ import dis from "../src/data/dis.json";
 describe("sidcToDis", () => {
   it("fills kind, domain, country and category", () => {
     const r = sidcToDis("SHGPEVAT----RU-");
-    expect(r.text).toBe("1.1.222.1.0.0.0");
+    expect(r.output).toBe("1.1.222.1.0.0.0");
     expect(r.forceId).toBe(2);
     expect(r.matchQuality).toBe("equivalent");
   });
@@ -22,11 +22,11 @@ describe("sidcToDis", () => {
   });
 
   it("covers air, sea, subsurface, space and munitions", () => {
-    expect(sidcToDis("SFAPMFF--------").text).toBe("1.2.0.1.0.0.0");
-    expect(sidcToDis("SFSPCLFF----GB-").text).toBe("1.3.224.50.0.0.0");
-    expect(sidcToDis("SFUPSNB--------").text).toBe("1.4.0.1.0.0.0");
-    expect(sidcToDis("SFPPS----------").text).toBe("1.5.0.11.0.0.0");
-    expect(sidcToDis("SFAPWMSA-------").text).toBe("2.1.0.1.0.0.0");
+    expect(sidcToDis("SFAPMFF--------").output).toBe("1.2.0.1.0.0.0");
+    expect(sidcToDis("SFSPCLFF----GB-").output).toBe("1.3.224.50.0.0.0");
+    expect(sidcToDis("SFUPSNB--------").output).toBe("1.4.0.1.0.0.0");
+    expect(sidcToDis("SFPPS----------").output).toBe("1.5.0.11.0.0.0");
+    expect(sidcToDis("SFAPWMSA-------").output).toBe("2.1.0.1.0.0.0");
   });
 
   it("uses the mobility modifier to tell self-propelled from towed artillery", () => {
@@ -35,26 +35,26 @@ describe("sidcToDis", () => {
   });
 
   it("reads numeric codes and fills missing fields", () => {
-    expect(sidcToDis("10031500001201000000").text).toBe("1.1.0.2.0.0.0");
+    expect(sidcToDis("10031500001201000000").output).toBe("1.1.0.2.0.0.0");
     const open = sidcToDis("S*G*EVAT-------");
-    expect(open.text).toBe("1.1.0.1.0.0.0");
+    expect(open.output).toBe("1.1.0.1.0.0.0");
     expect(open.forceId).toBeNull();
   });
 
   it("falls back to the domain when DIS has no category", () => {
     const r = sidcToDis("SFGPEWM--------");
-    expect(r.text).toBe("1.1.0.0.0.0.0");
+    expect(r.output).toBe("1.1.0.0.0.0.0");
     expect(r.matchQuality).toBe("approximate");
   });
 
   it("gives units an aggregate type: echelon, unit type, headquarters", () => {
     const r = sidcToDis("SFGPUCA---AH---");
     expect(r.aggregate).toBe(true);
-    expect(r.text).toBe("1.1.0.8.2.1.0");
+    expect(r.output).toBe("1.1.0.8.2.1.0");
     expect(r.matchQuality).toBe("equivalent");
     // An artillery company is a battery.
-    expect(sidcToDis("SHGPUCFHE--E---").text).toBe("1.1.0.4.8.0.0");
-    expect(sidcToDis("SFSPGT---------").text).toBe("1.3.0.0.0.0.0");
+    expect(sidcToDis("SHGPUCFHE--E---").output).toBe("1.1.0.4.8.0.0");
+    expect(sidcToDis("SFSPGT---------").output).toBe("1.3.0.0.0.0.0");
     expect(sidcToDis("SFGPUSS----E---").matchQuality).toBe("approximate");
     expect(sidcToDis("SFGPEVAT-------").aggregate).toBe(false);
   });
@@ -68,7 +68,7 @@ describe("sidcToDis", () => {
 describe("disToSidc", () => {
   it("draws every model of a category as that category's symbol", () => {
     const r = disToSidc("1.1.225.1.1.3", { forceId: 2 });
-    expect(r.sidc).toBe("SHGPEVAT----US-");
+    expect(r.output).toBe("SHGPEVAT----US-");
     expect(r.matchQuality).toBe("lossy");
   });
 
@@ -82,21 +82,21 @@ describe("disToSidc", () => {
         subcategory: 0,
         specific: 0,
         extra: 0,
-      }).sidc,
+      }).output,
     ).toBe("S*SPCLFF----GB-");
-    expect(disToSidc([1, 2, 222, 1]).sidc).toBe("S*APMFF-----RU-");
+    expect(disToSidc([1, 2, 222, 1]).output).toBe("S*APMFF-----RU-");
   });
 
   it("falls back to the domain frame for categories without a symbol", () => {
     const r = disToSidc("1.1.0.99");
-    expect(r.sidc).toBe("S*GPE----------");
+    expect(r.output).toBe("S*GPE----------");
     expect(r.matchQuality).toBe("approximate");
   });
 
   it("refuses kinds it has no symbol for and bad input", () => {
-    expect(disToSidc("3.1.225").sidc).toBeNull();
-    expect(disToSidc("x").sidc).toBeNull();
-    expect(disToSidc("1.1.70000").sidc).toBeNull();
+    expect(disToSidc("3.1.225").output).toBeNull();
+    expect(disToSidc("x").output).toBeNull();
+    expect(disToSidc("1.1.70000").output).toBeNull();
   });
 
   it("round-trips every mapped category to a valid code with the same category", () => {
@@ -104,11 +104,12 @@ describe("disToSidc", () => {
     for (const domain of [1, 2, 3, 4, 5])
       for (const cat of Object.keys(tables[`1.${domain}`]!)) {
         const r = disToSidc([1, domain, 225, Number(cat)], { forceId: 1 });
-        expect(validateSidc(r.sidc).valid, `${domain}.${cat} ${r.sidc}`).toBe(
-          true,
-        );
+        expect(
+          validateSidc(r.output).valid,
+          `${domain}.${cat} ${r.output}`,
+        ).toBe(true);
         if (r.matchQuality === "equivalent")
-          expect(sidcToDis(r.sidc).entityType?.category).toBe(Number(cat));
+          expect(sidcToDis(r.output).entityType?.category).toBe(Number(cat));
       }
   });
 });
@@ -116,12 +117,12 @@ describe("disToSidc", () => {
 describe("disToSidc with aggregate types", () => {
   it("draws units with echelon and headquarters", () => {
     expect(
-      disToSidc("1.1.225.5.3.0.0", { aggregate: true, forceId: 1 }).sidc,
+      disToSidc("1.1.225.5.3.0.0", { aggregate: true, forceId: 1 }).output,
     ).toBe("SFGPUCI----EUS-");
-    expect(disToSidc("1.1.225.4.7.1", { aggregate: true }).sidc).toBe(
+    expect(disToSidc("1.1.225.4.7.1", { aggregate: true }).output).toBe(
       "S*GPUCF---AEUS-",
     );
-    expect(disToSidc("1.3.225.8", { aggregate: true }).sidc).toBe(
+    expect(disToSidc("1.3.225.8", { aggregate: true }).output).toBe(
       "S*SPG------HUS-",
     );
   });
@@ -134,9 +135,9 @@ describe("disToSidc with aggregate types", () => {
         aggregate: true,
         forceId: 2,
       });
-      expect(validateSidc(r.sidc).valid, `${sub} ${r.sidc}`).toBe(true);
+      expect(validateSidc(r.output).valid, `${sub} ${r.output}`).toBe(true);
       if (r.matchQuality === "equivalent")
-        expect(sidcToDis(r.sidc).entityType).toMatchObject({
+        expect(sidcToDis(r.output).entityType).toMatchObject({
           category: 6,
           subcategory: Number(sub),
           specific: 1,
@@ -145,7 +146,7 @@ describe("disToSidc with aggregate types", () => {
   });
 
   it("refuses aggregate kinds without a unit symbol", () => {
-    expect(disToSidc("2.1.225.6", { aggregate: true }).sidc).toBeNull();
+    expect(disToSidc("2.1.225.6", { aggregate: true }).output).toBeNull();
   });
 });
 

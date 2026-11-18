@@ -32,7 +32,7 @@ export function previewOf(
       ...(options.symbolModifier && { symbolModifier: options.symbolModifier }),
     },
   });
-  if (!p.sidc) return null;
+  if (!p.output) return null;
   const defaults = p.filled
     // Only identity and status change the drawing; the other defaults mean "none".
     .filter(
@@ -42,9 +42,9 @@ export function previewOf(
     )
     .map((f) => `${f.field} "${f.value}" assumed (no value given)`);
   return {
-    code: p.sidc,
+    code: p.output,
     quality: defaults.length > 0 ? "assumed" : p.matchQuality,
-    lost: [...defaults, ...p.dropped],
+    lost: [...defaults, ...p.lost],
   };
 }
 
@@ -143,7 +143,7 @@ export function IdCard({
       </header>
       <div className="row">
         {sidc && (
-          <Symbol sidc={text && toRenderableSidc(text).sidc} std="2525" />
+          <Symbol sidc={text && toRenderableSidc(text).output} std="2525" />
         )}
         <div className="code">
           {text ? (

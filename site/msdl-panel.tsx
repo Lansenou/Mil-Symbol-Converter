@@ -161,7 +161,7 @@ export function MsdlPanel({ onPick }: { onPick: (sidc: string) => void }) {
                   title="Open in the converter"
                 >
                   <td>
-                    <Symbol sidc={drawn.sidc} std="2525" />
+                    <Symbol sidc={drawn.output} std="2525" />
                   </td>
                   <td>
                     {s.name || s.handle}
@@ -177,10 +177,10 @@ export function MsdlPanel({ onPick }: { onPick: (sidc: string) => void }) {
                     <code
                       title={asDis.aggregate ? "aggregate type" : "entity type"}
                     >
-                      {asDis.text ?? "-"}
+                      {asDis.output ?? "-"}
                     </code>
                     <div>
-                      <code>{asCot.cot ?? "-"}</code>
+                      <code>{asCot.output ?? "-"}</code>
                     </div>
                   </td>
                   <td className="muted">{s.notes.join("; ")}</td>

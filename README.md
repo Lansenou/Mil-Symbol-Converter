@@ -37,13 +37,13 @@ import { toRenderableSidc } from "mil-symbol-converter";
 const r = toRenderableSidc("S*G*UCMT--*****", {
   fallback: { affiliation: "Hostile" }, // used only where the code has "*"
 });
-r.sidc; // "SHGPUCMT-------"
+r.output; // "SHGPUCMT-------"
 r.filled; // what was filled in, from your fallback or a neutral default
-r.dropped; // what the drawing leaves out
-new ms.Symbol(r.sidc!).asSVG();
+r.lost; // what the drawing leaves out
+new ms.Symbol(r.output!).asSVG();
 ```
 
-| Input             | milsymbol as is                                                             | Options                               | Result                          | Symbol                                                                            | Filled / dropped                                                                                                                                                                                                                       |
+| Input             | milsymbol as is                                                             | Options                               | Result                          | Symbol                                                                            | Filled / lost                                                                                                                                                                                                                          |
 | ----------------- | --------------------------------------------------------------------------- | ------------------------------------- | ------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `S*G*UCMT--*****` | not drawn                                                                   | default                               | `SUGPUCMT-------`<br>exact      | <img src="docs/images/render1-output.svg" alt="SUGPUCMT-------" height="40">      | standardIdentity `U` (default)<br>status `P` (default)<br>symbolModifier `--` (default)                                                                                                                                                |
 | `S*GPUCI---*****` | not drawn                                                                   | `fallback: {"affiliation":"Hostile"}` | `SHGPUCI--------`<br>exact      | <img src="docs/images/render2-output.svg" alt="SHGPUCI--------" height="40">      | standardIdentity `H` (fallback)<br>symbolModifier `--` (default)                                                                                                                                                                       |
