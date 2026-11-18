@@ -18,6 +18,14 @@ Every converter's result has `output` (the result, or null), `matchQuality`, `lo
 said that the output leaves out) and `diagnostics`. Older names (`sidc`, `text`, `cot`, `dropped`)
 still work and are removed in 1.0.
 
+### Older letter codes (2525B, APP-6B)
+
+MIL-STD-2525B Change 2 and APP-6B letter codes are read as 2525C codes: the layout is the same and
+almost every code carries over. The nine 2525B Change 2 symbols that 2525C retired (listed by
+JMSML, e.g. `S*SPSP----` "Military Combatant : Station : Picket") are named as such in the
+diagnostics, and `toRenderableSidc` draws them as their nearest 2525C parent. Other differences
+between 2525B, APP-6B and 2525C are not tracked: no licence-compatible source lists them.
+
 ## Drawing codes with missing fields
 
 Codes from real data often leave fields as `*` or arrive mangled by copy and paste, and milsymbol

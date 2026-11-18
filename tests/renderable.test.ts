@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toRenderableSidc } from "../src";
+import { toRenderableSidc, validateSidc } from "../src";
 
 describe("toRenderableSidc", () => {
   it("fills wildcards with neutral defaults and keeps every given field", () => {
@@ -64,5 +64,18 @@ describe("toRenderableSidc", () => {
   it("returns null for input that is not a SIDC", () => {
     expect(toRenderableSidc("hello").sidc).toBeNull();
     expect(toRenderableSidc(42).sidc).toBeNull();
+  });
+});
+
+describe("MIL-STD-2525B codes", () => {
+  it("names the 2525B Change 2 symbols that 2525C retired", () => {
+    const v = validateSidc("SFSPSP---------");
+    expect(v.valid).toBe(false);
+    expect(v.diagnostics[0]!.message).toMatch(/2525B Change 2.*Picket/);
+    const r = toRenderableSidc("SFSPSP---------");
+    expect(r.output).toBe("SFSP-----------");
+    expect(r.lost[0]).toMatch(
+      /2525B Change 2 symbol \(Military Combatant : Station : Picket\)/,
+    );
   });
 });

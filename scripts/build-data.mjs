@@ -279,9 +279,27 @@ const encodedCatalogs = Object.fromEntries(
     { entities: encodeTable(c.entities), modifiers: encodeTable(c.modifiers) },
   ]),
 );
+// MIL-STD-2525B Change 2 symbols that 2525C retired (JMSML lists them under the name "2525BC2"):
+// "template|name" lines, so a 2525B code can be recognized instead of called unknown.
+const retired2525B = [];
+for (const file of fs.readdirSync(`${SRC}/jmsml/instance`)) {
+  if (!file.endsWith(".xml")) continue;
+  const xml = fs.readFileSync(`${SRC}/jmsml/instance/${file}`, "utf8");
+  for (const m of xml.matchAll(
+    /<LegacySymbol\b([^>]*)>([\s\S]*?)<\/LegacySymbol>/g,
+  )) {
+    if (!/Name="2525BC2"/i.test(m[2])) continue;
+    const label = /Label="([^"]{15})"/.exec(m[1])?.[1];
+    const alias = /LabelAlias="([^"]*)"/.exec(m[2])?.[1] ?? "";
+    if (label) retired2525B.push(`${label}|${alias}`);
+  }
+}
+retired2525B.sort();
+
 write("legacy-mappings.json", {
   jmsml: encodeRows(jmsmlRows),
   milsym: encodeRows(milsymRows),
+  retired2525B: retired2525B.join("\n"),
 });
 write("edition-catalogs.json", {
   names: encodedNames,

@@ -16,6 +16,7 @@
 import { cached } from "./cache";
 import { convertSidc } from "./converters/converter";
 import { overrideLetters } from "./codes";
+import { retired2525BName } from "./data/index";
 import { DiagnosticList } from "./diagnostics";
 import { findCatalogEntry, validateSidc } from "./validation";
 import { WILDCARD_FIELDS, type WildcardFieldName } from "./wildcard";
@@ -183,8 +184,9 @@ function renderable(input: unknown, options: RenderOptions): RenderableSidc {
       if (parent[p - 1] !== "-") parent = put(parent, [p], "-");
     if (findCatalogEntry(parent)) {
       const lost = code.slice(4, 10).replace(/-+$/, "");
+      const retiredB = retired2525BName(code);
       dropped.push(
-        `Function ID "${code.slice(4, 10)}" is not in the 2525C tables; drawn as its parent "${parent.slice(4, 10)}" (${findCatalogEntry(parent)!.description}).`,
+        `${retiredB ? `"${code.slice(4, 10)}" is a 2525B Change 2 symbol (${retiredB}) that 2525C retired` : `Function ID "${code.slice(4, 10)}" is not in the 2525C tables`}; drawn as its parent "${parent.slice(4, 10)}" (${findCatalogEntry(parent)!.description}).`,
       );
       d.warn(
         "PARENT_SYMBOL_USED",

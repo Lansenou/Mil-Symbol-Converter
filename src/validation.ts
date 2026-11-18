@@ -5,6 +5,7 @@ import {
   catalog,
   catalogByKey,
   legacyKey,
+  retired2525BName,
   type CatalogEntry,
 } from "./data/index";
 import {
@@ -421,10 +422,13 @@ export function validateSidc(
     // An error unless asked for: the code names no 2525C symbol. Fuzzy matching handles it by
     // falling back to the nearest listed parent, so it implies allowUnlisted.
     const allow = options.allowUnlisted ?? options.fuzzy === true;
+    const retiredB = retired2525BName(normalized);
     d.add(
       allow ? "warning" : "error",
       "NOT_IN_2525C_TABLES",
-      `No row of the MIL-STD-2525C SIDC tables has function ID "${fields.functionId}" for coding scheme ${scheme}, dimension/category "${fields.battleDimension}"${badFn.length > 0 ? `; the closest listed function IDs differ at ${listPositions(badFn)}` : " together with the other fields given"}.${allow ? "" : " Pass allowUnlisted: true to accept it."}`,
+      retiredB
+        ? `"${fields.functionId}" is a MIL-STD-2525B Change 2 symbol (${retiredB}) that 2525C retired.${allow ? "" : " Pass allowUnlisted: true to accept it."}`
+        : `No row of the MIL-STD-2525C SIDC tables has function ID "${fields.functionId}" for coding scheme ${scheme}, dimension/category "${fields.battleDimension}"${badFn.length > 0 ? `; the closest listed function IDs differ at ${listPositions(badFn)}` : " together with the other fields given"}.${allow ? "" : " Pass allowUnlisted: true to accept it."}`,
       badFn,
     );
   }
