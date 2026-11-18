@@ -16,9 +16,18 @@ const pkg = {
   exports: {
     ".": { types: "./index.d.cts", default: "./index.cjs" },
     "./react": { types: "./react/index.d.cts", default: "./react/index.cjs" },
+    "./element": {
+      types: "./element/index.d.cts",
+      default: "./element/index.cjs",
+    },
     "./package.json": "./package.json",
   },
-  typesVersions: { "*": { react: ["./react/index.d.cts"] } },
+  typesVersions: {
+    "*": {
+      react: ["./react/index.d.cts"],
+      element: ["./element/index.d.cts"],
+    },
+  },
   engines: { node: ">=18" },
   peerDependencies: main.peerDependencies,
   peerDependenciesMeta: main.peerDependenciesMeta,

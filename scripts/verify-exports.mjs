@@ -45,6 +45,14 @@ for (const react of [
   assert.equal(typeof react.SidcConverter, "function");
   assert.equal(typeof react.useRenderableSidc, "function");
 }
+for (const element of [
+  await import("../dist/element/index.js"),
+  require("../dist-cjs/element/index.cjs"),
+]) {
+  assert.equal(typeof element.defineSidcSymbol, "function");
+  // Outside a browser it registers nothing and does not throw.
+  assert.equal(element.defineSidcSymbol({ Symbol: class {} }), undefined);
+}
 const cjsPkg = require("../dist-cjs/package.json");
 const mainPkg = require("../package.json");
 assert.equal(cjsPkg.name, mainPkg.name, "cjs build name");

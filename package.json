@@ -20,12 +20,19 @@
       "types": "./dist/react/index.d.ts",
       "default": "./dist/react/index.js"
     },
+    "./element": {
+      "types": "./dist/element/index.d.ts",
+      "default": "./dist/element/index.js"
+    },
     "./package.json": "./package.json"
   },
   "typesVersions": {
     "*": {
       "react": [
         "./dist/react/index.d.ts"
+      ],
+      "element": [
+        "./dist/element/index.d.ts"
       ]
     }
   },

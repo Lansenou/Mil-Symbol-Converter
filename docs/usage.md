@@ -400,6 +400,28 @@ Output is tab-separated (input, target, output, quality, note), or one JSON resu
 `--json`. Numeric codes, DIS entity types and CoT types convert back to 2525C. The exit status is 1 if any code did not convert, so
 it can gate a script. `--help` lists all options (`--fuzzy`, `--extended`, `--source`, ...).
 
+## Web component (any framework)
+
+`<sidc-symbol>` draws any identifier (2525C with missing fields, numeric, DIS, CoT) in plain HTML,
+Vue, Angular or Svelte. Pass in milsymbol, so this package does not depend on it:
+
+```ts
+import ms from "milsymbol";
+import { defineSidcSymbol } from "mil-symbol-converter/element";
+defineSidcSymbol(ms); // registers <sidc-symbol>; a second name: defineSidcSymbol(ms, "my-symbol")
+```
+
+```html
+<sidc-symbol code="S*G*UCI---*****" size="40"></sidc-symbol>
+<sidc-symbol code="1.1.225.1.1.3" force-id="2"></sidc-symbol>
+<sidc-symbol code="a-h-G-U-C-A" standard="APP6"></sidc-symbol>
+```
+
+Attributes: `code`, `size` (default 40), `standard` (`2525` or `APP6`), `affiliation` and `status`
+(used only where the code has `*`), `force-id` and `aggregate` (DIS input). After drawing, the
+element has `data-quality` (the match quality, or `none`) and a `title` tooltip listing what the
+drawing leaves out, or why nothing was drawn.
+
 ## React
 
 ```tsx
