@@ -246,6 +246,14 @@ analyzeSidc("S*GPUCI---*****").wildcards; // which option resolves each "*" and 
 | `allowUnlisted`                                                           | `false` (`true` with `fuzzy`) | accept a function ID that is not in the 2525C tables (warning instead of error)                                |
 | `strictInput`                                                             | `false`                       | reject lowercase, surrounding whitespace, typographic dashes and `*` in fixed positions instead of normalizing |
 
+### Speed and the results cache
+
+A conversion takes about 15 to 25 µs. `convertSidc`, `toRenderableSidc` and `convertNumericTo2525C`
+remember their last 1000 results (per function, keyed by input and options), so a dataset that
+repeats codes converts about ten times faster. Each call gets its own copy of the result.
+`setCacheSize(n)` changes the size; `setCacheSize(0)` turns the cache off. `node scripts/bench.mjs`
+(after `npm run build`) measures both.
+
 ### Compile-time checks for SIDC literals
 
 SIDC string literals are checked against the 2525C tables by the TypeScript compiler, in every

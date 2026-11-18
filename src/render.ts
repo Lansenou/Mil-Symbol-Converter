@@ -13,6 +13,7 @@
  *    target cannot carry is dropped.
  * Everything filled or dropped is listed, so the caller can show what the drawing leaves out.
  */
+import { cached } from "./cache";
 import { convertSidc } from "./converters/converter";
 import { overrideLetters } from "./codes";
 import { DiagnosticList } from "./diagnostics";
@@ -92,10 +93,14 @@ const put = (s: string, positions: number[], v: string) => {
   return c.join("");
 };
 
-export function toRenderableSidc(
+export const toRenderableSidc: (
   input: unknown,
-  options: RenderOptions = {},
-): RenderableSidc {
+  options?: RenderOptions,
+) => RenderableSidc = cached((input: unknown, options?: RenderOptions) =>
+  renderable(input, options ?? {}),
+);
+
+function renderable(input: unknown, options: RenderOptions): RenderableSidc {
   const target = options.targetStandard ?? "MIL-STD-2525C";
   const d = new DiagnosticList();
   const out = (

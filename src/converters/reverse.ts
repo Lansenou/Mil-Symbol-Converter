@@ -7,6 +7,7 @@
  * direction knows (source disagreements, contested codes, renumbered and common modifiers) is
  * therefore honoured in reverse as well, and the two directions cannot drift apart.
  */
+import { cached } from "../cache";
 import { catalog, catalogByKey, legacyKey } from "../data/index";
 import {
   SYMBOL_MODIFIERS,
@@ -216,9 +217,16 @@ const RANK: MatchQuality[] = [
   "unsupported",
 ];
 
-export function convertNumericTo2525C(
+export const convertNumericTo2525C: (
   input: unknown,
-  options: ReverseOptions = {},
+  options?: ReverseOptions,
+) => ConversionResult = cached((input: unknown, options?: ReverseOptions) =>
+  numericTo2525C(input, options ?? {}),
+);
+
+function numericTo2525C(
+  input: unknown,
+  options: ReverseOptions,
 ): ConversionResult {
   const d = new DiagnosticList();
   const source: SidcStandard = options.sourceStandard ?? "MIL-STD-2525D";

@@ -70,3 +70,31 @@ time(
   (i) => m.convertNumericTo2525C(nums[i % nums.length]),
   5000,
 );
+
+// Real datasets repeat codes: 300 distinct codes, 20 000 rows. Cached vs not.
+const repeated = Array.from(
+  { length: 20000 },
+  (_, i) => codes[(i * 7919) % 300],
+);
+m.setCacheSize(0);
+time(
+  "convertSidc, repeated codes, no cache",
+  (i) => m.convertSidc(repeated[i]),
+  20000,
+);
+time(
+  "toRenderableSidc, repeated, no cache",
+  (i) => m.toRenderableSidc(repeated[i]),
+  20000,
+);
+m.setCacheSize(1000);
+time(
+  "convertSidc, repeated codes, cache",
+  (i) => m.convertSidc(repeated[i]),
+  20000,
+);
+time(
+  "toRenderableSidc, repeated, cache",
+  (i) => m.toRenderableSidc(repeated[i]),
+  20000,
+);

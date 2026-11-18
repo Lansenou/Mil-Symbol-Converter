@@ -103,6 +103,7 @@ export {
 export { SYMBOL_SET_NAMES } from "./data/index";
 export { readSidc, type ReadSidcOptions, type ReadSidcResult } from "./read";
 export { detectInput, type InputKind } from "./input";
+export { setCacheSize } from "./cache";
 export {
   sidcToCot,
   cotToSidc,
