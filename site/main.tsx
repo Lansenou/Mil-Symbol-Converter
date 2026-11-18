@@ -15,6 +15,7 @@ import {
   validateSidc,
   type ConversionOptions,
 } from "../src";
+import { BatchPanel } from "./batch-panel";
 import { IdCard, ResultCard, previewOf } from "./cards";
 import { EXAMPLES, NAMES, TARGETS } from "./data";
 import { MsdlPanel } from "./msdl-panel";
@@ -358,6 +359,8 @@ function App() {
           )}
         </section>
       )}
+
+      <BatchPanel />
 
       <MsdlPanel
         onPick={(sidc) => {
