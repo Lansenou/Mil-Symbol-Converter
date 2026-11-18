@@ -55,7 +55,8 @@
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run verify-exports",
     "prepare": "npm run build",
     "site": "vite site",
-    "build:site": "vite build site --base ./ --outDir ../site-dist --emptyOutDir"
+    "build:site": "vite build site --base ./ --outDir ../site-dist --emptyOutDir",
+    "docs:api": "typedoc"
   },
   "peerDependencies": {
     "react": ">=18"
@@ -82,6 +83,7 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "tsup": "^8.5.1",
+    "typedoc": "^0.28.20",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.71.1",
     "vite": "^8.3.4",

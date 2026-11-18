@@ -372,7 +372,8 @@ function App() {
       <footer>
         Mappings from Esri JMSML and US Army mil-sym-ts; DIS enumerations from
         SISO-REF-010, reprinted with permission from SISO Inc.; symbols drawn by
-        milsymbol. Install: <code>npm install mil-symbol-converter</code>
+        milsymbol. Install: <code>npm install mil-symbol-converter</code> ·{" "}
+        <a href="./api/">API reference</a>
       </footer>
     </main>
   );

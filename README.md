@@ -75,6 +75,9 @@ There is also a command line: `npx mil-symbol-converter SFGPUCIC---E---`.
 - [Examples](docs/examples.md): codes side by side in every edition, with symbols
 - [Conversion rules](docs/conversion-rules.md) and [limitations and coverage](docs/limitations.md)
 - [Standards research](docs/standards-research.md): field layouts, APP-6D vs 2525D, existing converters
+- [API reference](https://lansenou.github.io/Mil-Symbol-Converter/api/): every export, from the doc
+  comments
+- [Changelog](CHANGELOG.md)
 - [Development](docs/development.md): data sources, tests, publishing
 
 ## License

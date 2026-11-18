@@ -34,6 +34,12 @@ Expected values in `tests/fixtures/verified-sidcs.json` were written by hand fro
 2525D tables. `scripts/review-fixture.mjs` prints the cited table lines for review. The fixtures
 were not produced by the converter.
 
+## Changelog and API reference
+
+Add user-facing changes to "Unreleased" in [CHANGELOG.md](../CHANGELOG.md); the version bump PR
+renames that heading to the version. `npm run docs:api` builds the API reference (TypeDoc, from
+the doc comments) into `site-dist/api/`; the Pages workflow publishes it next to the demo.
+
 ## Publishing
 
 Releases are automatic: merging a change to `version` in `package.json` into `main` runs

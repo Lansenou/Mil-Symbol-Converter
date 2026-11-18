@@ -1,0 +1,11 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "mil-symbol-converter",
+  "entryPoints": ["src/index.ts", "src/react/index.ts", "src/element/index.ts"],
+  "out": "site-dist/api",
+  "readme": "none",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "githubPages": false,
+  "treatWarningsAsErrors": false
+}
