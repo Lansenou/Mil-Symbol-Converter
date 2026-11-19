@@ -399,6 +399,85 @@ Output is tab-separated (input, target, output, quality, note), or one JSON resu
 `--json`. Numeric codes, DIS entity types and CoT types convert back to 2525C. The exit status is 1 if any code did not convert, so
 it can gate a script. `--help` lists all options (`--fuzzy`, `--extended`, `--source`, ...).
 
+## On a map: direction, speed and the anchor
+
+Heading and speed are not part of a SIDC: MIL-STD-2525 draws them as amplifiers around the symbol
+(field Q, the direction of movement arrow; field Z, speed as text; 2525D/E also have a speed
+leader). milsymbol draws them from its `direction` (degrees clockwise from north), `speed` (text)
+and `speedLeader` options. CoT carries them in `<track course speed>`, DIS in the Entity State PDU.
+
+![Direction arrows and speed leaders drawn by milsymbol](images/direction-speed.png)
+
+For ground symbols the arrow stands on a staff below the frame, and the free end of that staff is
+the symbol's location (2525C 3.2.38). milsymbol draws the staff but its `getAnchor()` still returns
+the frame center, so a symbol placed by it sits about 1.5 frame heights off its position.
+`symbolAnchor(symbol, sidc)` returns the right point: the end of the staff for moving ground
+symbols, milsymbol's own anchor otherwise (headquarters staffs, air, sea, symbols without an
+arrow).
+
+![milsymbol's anchor (red) and the end of the staff (green)](images/map-anchor.png)
+
+With React and Leaflet (`react-leaflet`):
+
+```tsx
+import { useMemo } from "react";
+import L from "leaflet";
+import { Marker } from "react-leaflet";
+import ms from "milsymbol";
+import { useRenderableSidc } from "mil-symbol-converter/react";
+import { symbolAnchor } from "mil-symbol-converter/element";
+
+interface Unit {
+  sidc: string; // from your data, may have missing fields
+  lat: number;
+  lon: number;
+  heading?: number; // degrees from north
+  speed?: number; // m/s
+}
+
+export function UnitMarker({ unit }: { unit: Unit }) {
+  const { output } = useRenderableSidc(unit.sidc);
+
+  const icon = useMemo(() => {
+    if (!output) return null;
+    const symbol = new ms.Symbol(output, {
+      size: 35,
+      ...(unit.heading !== undefined && { direction: unit.heading }),
+      ...(unit.speed !== undefined && {
+        speed: `${Math.round(unit.speed * 3.6)} km/h`,
+      }),
+    });
+    const { width, height } = symbol.getSize();
+    const anchor = symbolAnchor(symbol, output);
+    return L.divIcon({
+      html: symbol.asSVG(),
+      className: "", // no default Leaflet box
+      iconSize: [width, height],
+      iconAnchor: [anchor.x, anchor.y], // this pixel sits on [lat, lon]
+    });
+  }, [output, unit.heading, unit.speed]);
+
+  return icon ? <Marker position={[unit.lat, unit.lon]} icon={icon} /> : null;
+}
+```
+
+Without a map library, shift the SVG so the anchor lands on the point:
+
+```tsx
+<div
+  style={{
+    position: "absolute",
+    left: x,
+    top: y,
+    transform: `translate(${-anchor.x}px, ${-anchor.y}px)`,
+  }}
+  dangerouslySetInnerHTML={{ __html: symbol.asSVG() }}
+/>
+```
+
+`<sidc-symbol>` takes `direction`, `speed` and `speed-unit` attributes and exposes the same point
+as `data-anchor-x` and `data-anchor-y`.
+
 ## Web component (any framework)
 
 `<sidc-symbol>` draws any identifier (2525C with missing fields, numeric, DIS, CoT) in plain HTML,
@@ -417,9 +496,11 @@ defineSidcSymbol(ms); // registers <sidc-symbol>; a second name: defineSidcSymbo
 ```
 
 Attributes: `code`, `size` (default 40), `standard` (`2525` or `APP6`), `affiliation` and `status`
-(used only where the code has `*`), `force-id` and `aggregate` (DIS input). After drawing, the
-element has `data-quality` (the match quality, or `none`) and a `title` tooltip listing what the
-drawing leaves out, or why nothing was drawn.
+(used only where the code has `*`), `force-id` and `aggregate` (DIS input), `direction` (degrees
+from north) and `speed` with `speed-unit` (a number; `km/h`, `kn`, `m/s` or `mph`). After drawing,
+the element has `data-quality` (the match quality, or `none`), `data-anchor-x` and `data-anchor-y`
+(the pixel that belongs on the map position) and a `title` tooltip listing what the drawing leaves
+out, or why nothing was drawn.
 
 ## React
 

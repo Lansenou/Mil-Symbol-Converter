@@ -34,6 +34,31 @@ describe("<sidc-symbol>", () => {
     expect(el.title).not.toBe("");
   });
 
+  it("draws direction and speed, and exposes the map anchor", () => {
+    const el = make({
+      code: "SFGPUCI----E---",
+      size: "50",
+      direction: "45",
+      speed: "30",
+    });
+    expect(el.shadowRoot!.innerHTML).toContain("30 km/h");
+    // The speed text widens the SVG to the left, so x moves with the frame; y is the staff end.
+    const svgX = Number(el.dataset.anchorX);
+    expect(el.dataset.anchorY).toBe("122");
+    el.removeAttribute("speed");
+    expect(Number(el.dataset.anchorX)).toBeLessThan(svgX);
+    expect([el.dataset.anchorX, el.dataset.anchorY]).toEqual(["39.5", "122"]);
+    el.setAttribute("speed", "30");
+    // Text in attributes never reaches the markup: speed must be a number.
+    el.setAttribute("speed", "<img src=x onerror=alert(1)>");
+    expect(el.shadowRoot!.innerHTML).not.toContain("<img");
+    el.setAttribute("speed-unit", "<b>");
+    el.setAttribute("speed", "12");
+    expect(el.shadowRoot!.innerHTML).toContain("12 km/h");
+    el.removeAttribute("direction");
+    expect(el.dataset.anchorY).toBe("47");
+  });
+
   it("registers once", () => {
     expect(defineSidcSymbol(ms)).toBeUndefined();
   });

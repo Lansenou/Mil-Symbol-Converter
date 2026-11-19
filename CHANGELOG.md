@@ -4,6 +4,15 @@ Notable changes per release. Each version is on npm as `mil-symbol-converter@<ve
 modules) and `<version>-cjs` (CommonJS, dist-tag `cjs`). The GitHub release of each version lists
 its pull requests.
 
+## 1.1.0 (2026-11-19)
+
+- `symbolAnchor(symbol, sidc)` from `mil-symbol-converter/element`: the pixel of a milsymbol SVG
+  that belongs on the map position. For ground symbols with a direction arrow that is the free end
+  of the staff (2525C 3.2.38), where milsymbol's `getAnchor()` returns the frame center.
+- `<sidc-symbol>`: `direction`, `speed` and `speed-unit` attributes; `data-anchor-x` and
+  `data-anchor-y` after drawing.
+- Docs: "On a map" (direction, speed, anchor) with a React and Leaflet example.
+
 ## 1.0.0 (2026-11-18)
 
 The public API is now stable: `api/*.d.ts` records it, and CI fails on any change that the pull

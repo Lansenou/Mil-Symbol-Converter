@@ -72,6 +72,8 @@ There is also a command line: `npx mil-symbol-converter SFGPUCIC---E---`.
 - [Usage](docs/usage.md): drawing, conversion options, wildcards, lossy and fuzzy modes, numeric
   back to 2525C, MSDL scenarios, DIS entity types, Cursor on Target types, compile-time checks,
   command line, React, web component
+- [On a map](docs/usage.md#on-a-map-direction-speed-and-the-anchor): direction arrows, speed, and
+  placing symbols at the right point (React and Leaflet example)
 - [Examples](docs/examples.md): codes side by side in every edition, with symbols
 - [Conversion rules](docs/conversion-rules.md) and [limitations and coverage](docs/limitations.md)
 - [Standards research](docs/standards-research.md): field layouts, APP-6D vs 2525D, existing converters
