@@ -11,19 +11,30 @@
  *
  * Attributes: `code` (required), `size` (default 40), `standard` ("2525" or "APP6"),
  * `affiliation` and `status` (fallbacks used only where the code has "*"), `force-id` and
- * `aggregate` (for DIS input). After each drawing the element carries `data-quality` (the match
- * quality, or "none") and a `title` listing what the drawing leaves out.
+ * `aggregate` (for DIS input), `direction` (heading in degrees from north: the direction of
+ * movement arrow) and `speed` with `speed-unit` (a number; "km/h", "kn", "m/s" or "mph", default
+ * "km/h"). After each drawing the element carries `data-quality` (the match quality, or "none"),
+ * `data-anchor-x` and `data-anchor-y` (the pixel that belongs on the map position; see
+ * `symbolAnchor`) and a `title` listing what the drawing leaves out.
  */
 import { readSidc } from "../read";
 import { toRenderableSidc } from "../render";
 import type { RenderOptions } from "../render";
+import { symbolAnchor, type MilsymbolSymbolLike } from "./anchor";
+
+export { symbolAnchor, type MilsymbolSymbolLike } from "./anchor";
 
 /** The part of milsymbol the element uses. */
 export interface MilsymbolLike {
   Symbol: new (
     sidc: string,
-    options: { size: number; standard?: string },
-  ) => { asSVG(): string; isValid(): unknown };
+    options: {
+      size: number;
+      standard?: string;
+      direction?: number;
+      speed?: string;
+    },
+  ) => { asSVG(): string; isValid(): unknown } & Partial<MilsymbolSymbolLike>;
 }
 
 const ATTRIBUTES = [
@@ -34,7 +45,18 @@ const ATTRIBUTES = [
   "status",
   "force-id",
   "aggregate",
+  "direction",
+  "speed",
+  "speed-unit",
 ] as const;
+
+const SPEED_UNITS = new Set(["km/h", "kn", "m/s", "mph"]);
+
+/** A finite number from an attribute, or undefined. */
+const numberOf = (v: string | null) =>
+  v !== null && v.trim() !== "" && Number.isFinite(Number(v))
+    ? Number(v)
+    : undefined;
 
 /**
  * Registers the element (default tag "sidc-symbol"). Does nothing outside a browser or if the tag
@@ -82,19 +104,42 @@ export function defineSidcSymbol(
         read.diagnostics[0]?.message;
 
       let svg = "";
+      let anchor: { x: number; y: number } | undefined;
       if (drawn?.output) {
         const size = Number(this.getAttribute("size")) || 40;
         const standard =
           this.getAttribute("standard") === "APP6" ? "APP6" : "2525";
+        const direction = numberOf(this.getAttribute("direction"));
+        const speed = numberOf(this.getAttribute("speed"));
+        const unit = this.getAttribute("speed-unit") ?? "km/h";
         try {
-          const s = new ms.Symbol(drawn.output, { size, standard });
-          // The code is a validated SIDC, so the markup comes from milsymbol alone.
-          if (s.isValid() === true) svg = s.asSVG();
+          // Only numbers and fixed unit names reach milsymbol, so the markup holds no
+          // attribute text: the code is a validated SIDC and the speed is formatted here.
+          const s = new ms.Symbol(drawn.output, {
+            size,
+            standard,
+            ...(direction !== undefined && { direction }),
+            ...(speed !== undefined && {
+              speed: `${Math.round(speed)} ${SPEED_UNITS.has(unit) ? unit : "km/h"}`,
+            }),
+          });
+          if (s.isValid() === true) {
+            svg = s.asSVG();
+            if (s.getAnchor)
+              anchor = symbolAnchor(s as MilsymbolSymbolLike, drawn.output);
+          }
         } catch {
           svg = "";
         }
       }
       this.root.innerHTML = svg;
+      if (anchor) {
+        this.dataset.anchorX = String(anchor.x);
+        this.dataset.anchorY = String(anchor.y);
+      } else {
+        delete this.dataset.anchorX;
+        delete this.dataset.anchorY;
+      }
       this.dataset.quality = svg ? (drawn?.matchQuality ?? "none") : "none";
       if (svg && lost.length > 0) this.title = lost.join("\n");
       else if (!svg) this.title = why ?? "Nothing to draw";
