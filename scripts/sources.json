@@ -5,7 +5,7 @@
   },
   "mil-sym-ts": {
     "url": "https://github.com/missioncommand/mil-sym-ts.git",
-    "commit": "9f3c5512ecc8b9458da32328991b899910dafe7b"
+    "commit": "52f0bdb1799fa800e4a534450304305eedb7534d"
   },
   "siso-ref-010": {
     "url": "https://github.com/open-dis/opendis7-source-generator.git",
